@@ -22,7 +22,7 @@ The authors claiming copyright, if they wish to be known, can list their names h
 ## Team Members
 
 1. Sam Fritz, fritz1
-2. a
+2. Kaustav Sikder, ksikder
 3. a
 4. a
 5. a
