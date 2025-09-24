@@ -26,6 +26,6 @@ The authors claiming copyright, if they wish to be known, can list their names h
 3. Sam Fritz, fritz1
 4. Evelyn Chiew, echiew
 5. Ervin Lanada, elanada
-6. a
+6. Tiandra Wallace, tiandra
 
 
