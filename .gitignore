@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.venv/
+.env
+
+# Django collectstatic
+/staticfiles/
+
+# OS
+.DS_Store
+
+# Node 
+node_modules/
+dist/
+build/
