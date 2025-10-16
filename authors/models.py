@@ -1,18 +1,47 @@
 from django.db import models
+from django.core.validators import RegexValidator
 
-class Author(models.Model):
-    # the id would be created in the serializer by generating a uuid to attach
-    # to the end of the host url
-    id = models.URLField(primary_key=True) 
-    # can use the host to differentiate local and remote users
-    # could aslo consider having a bool field for whether a user is local or not
-    host = models.URLField() 
-    displayName = models.CharField()
-    github = models.URLField()
-    profileImage = models.URLField()
-    web = models.URLField()
+MAX_URL = 1024
 
-    # i saw a this user story:
-    # As an author, I want to be able to edit my profile: name, description, picture, and GitHub.
-    # so we might need a description field?
-    description = models.CharField()
+serial_validator = RegexValidator(
+    regex=r"^(?!http)(?!.*:).+$",
+    message="Serial must not start with 'http' and must not contain ':'."
+)
+
+class TimeStampedModel(models.Model):
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class Author(TimeStampedModel):
+    """
+    API identity is the fully-qualified URL (FQID). This is the PK to avoid collisions.
+    """
+    id = models.URLField(max_length=MAX_URL, primary_key=True)  # FQID
+    host = models.URLField(max_length=MAX_URL, help_text="Full API base, e.g., https://node/api/")
+    displayName = models.CharField(max_length=200, db_index=True)
+    github = models.URLField(max_length=MAX_URL, blank=True)
+    profileImage = models.URLField(max_length=MAX_URL, blank=True)
+    web = models.URLField(max_length=MAX_URL, blank=True)
+    description = models.TextField(blank=True)
+    # Convenience: whether this author account is hosted locally on this node
+    is_local = models.BooleanField(default=True, db_index=True)
+
+    # Optional: a locally convenient serial (NOT used for relations between nodes)
+    serial = models.CharField(
+        max_length=200, blank=True, null=True, validators=[serial_validator], db_index=True
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["displayName"]),
+            models.Index(fields=["host"]),
+            models.Index(fields=["is_local"]),
+            models.Index(fields=["serial"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.displayName} ({self.id})"

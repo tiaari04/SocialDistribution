@@ -1,31 +1,58 @@
 from django.db import models
-from authors.models import Author
+from django.utils import timezone
+from authors.models import Author, MAX_URL, TimeStampedModel
 
-class FollowRequest(models.Model):
-    # by querying this table we should be able to tell who is being followed by who, who rejected/accepted
-    # or has pending requests, and which users are friends whether or not they are from different nodes
-    id = models.AutoField(primary_key=True)
+class FollowRequest(TimeStampedModel):
+    """
+    Stores follow workflow between authors (local or remote).
+    We use Author FKs (which are FQID PKs) to ensure global uniqueness.
+    """
+    actor = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="follow_requests_sent")
+    author_followed = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="follow_requests_received")
 
-    # the author requesting to follow
-    actor = models.ForeignKey(Author)
-    # the author recieving the request
-    # might need to change the name back to object
-    author_followed = models.ForeignKey(Author)
-
-    # if a local user sends a request to another local user we store it as any of the choices
-    # based on what the recieving local user decides.
-    # if a local user sends a request to a remote user we store it as accepted since we won't
-    # recieve a response back
-    # if a local user recieves a request from a remote user it is stored as whatever choice they made
     class State(models.TextChoices):
-        REQ = "requesting",
-        ACC = "accepted",
-        REJ = "rejected"
-    state = models.CharField(choices=State)
+        REQUESTING = "requesting", "requesting"
+        ACCEPTED = "accepted", "accepted"
+        REJECTED = "rejected", "rejected"
 
-    # i asssume we would want to be able to order a user's follow requests somehow?
-    published = models.DateTimeField()
+    state = models.CharField(max_length=20, choices=State.choices, default=State.REQUESTING, db_index=True)
+    published = models.DateTimeField(default=timezone.now, db_index=True)  # ordering and API visibility
 
-    # so requests can't be sent to the same people multiple times
     class Meta:
-        unique_together = ('actor', 'author_followed')
+        constraints = [
+            models.UniqueConstraint(
+                fields=["actor", "author_followed"], name="unique_follow_request_pair"
+            )
+        ]
+        indexes = [
+            models.Index(fields=["author_followed", "state"]),
+            models.Index(fields=["actor", "state"]),
+            models.Index(fields=["published"]),
+        ]
+        ordering = ["-published", "-created"]
+
+    def __str__(self) -> str:
+        return f"{self.actor.displayName} -> {self.author_followed.displayName} ({self.state})"
+
+
+class InboxItem(TimeStampedModel):
+    """
+    Optional convenience store for remote POSTs to /inbox so you can audit what arrived.
+    For entries/comments/likes you should ALSO persist the concrete models (Entry/Comment/Like).
+    """
+    recipient = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="inbox_items")
+    # 'entry' | 'follow' | 'like' | 'comment'
+    type = models.CharField(max_length=20, db_index=True)
+    object_fqid = models.URLField(max_length=MAX_URL, blank=True, help_text="FQID of the primary object, if applicable.")
+    payload = models.JSONField()  # raw body you received (sanitized)
+    received_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["recipient", "received_at"]),
+            models.Index(fields=["type"]),
+        ]
+        ordering = ["-received_at", "-created"]
+
+    def __str__(self) -> str:
+        return f"InboxItem({self.type}) for {self.recipient.displayName}"
