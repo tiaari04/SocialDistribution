@@ -4,7 +4,7 @@ __pycache__/
 *.sqlite3
 .venv/
 .env
-
+venv
 # Django collectstatic
 /staticfiles/
 
