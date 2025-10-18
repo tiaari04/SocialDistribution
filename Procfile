@@ -1,0 +1,1 @@
+web: gunicorn f25-project-red.wsgi
