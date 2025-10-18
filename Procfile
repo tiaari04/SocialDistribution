@@ -1,1 +1,1 @@
-web: gunicorn f25-project-red.wsgi
+web: gunicorn socialdistribution.wsgi
