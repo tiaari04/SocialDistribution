@@ -321,12 +321,12 @@
                 async function likeComment(entryFqid, commentFqid, authorFqid) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const cEncoded = encodeURIComponent(commentFqid);
+                    //const res = await fetch(`/api/authors/author1serial/entries/entry6serial/comments/${cEncoded}/likes/`, {
                     const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
-                    //const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the comment
                         body: JSON.stringify({}),
-                    })
+                    }) .then(() => openComments(entryFqid, authorFqid));
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
                 }
