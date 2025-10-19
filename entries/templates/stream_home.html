@@ -334,23 +334,38 @@
                 async function openComments(postId, author) {
                     currentPost = document.getElementById(`post_${postId}`);
 
-                    const commentRes = await getComments(postId, author);
-                    const comments = commentRes.results;
+                    let commentRes = await getComments(postId, author);
                     commentsContent.innerHTML = '';
-                    comments.forEach(comment => {
-                        const clone = commentTemplate.content.cloneNode(true);
-                        clone.id = comment.fqid;
-                        clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
-                        clone.querySelector('.commentText').textContent = comment.content; 
-                        clone.querySelector('.commentLikes').textContent = comment.likes_count; 
+                    while (commentRes) {
+                        const comments = commentRes.results;
 
-                        const likeButton = clone.querySelector('.likeButton');
-                        likeButton.addEventListener('click', async () => {
-                            await likeComment(postId, clone.id, author);
-                        });
+                        comments.forEach(comment => {
+                            const clone = commentTemplate.content.cloneNode(true);
+                            clone.id = comment.fqid;
+                            clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
+                            clone.querySelector('.commentText').textContent = comment.content; 
+                            clone.querySelector('.commentLikes').textContent = comment.likes_count; 
 
-                        commentsContent.appendChild(clone);
-                    })
+                            const likeButton = clone.querySelector('.likeButton');
+                            likeButton.addEventListener('click', async () => {
+                                await likeComment(postId, clone.id, author);
+                            });
+
+                            commentsContent.appendChild(clone);
+                        })
+                        if (commentRes.next) {
+                            const res = await fetch(commentRes.next, {
+                                method: 'GET',
+                                headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid },
+                            });
+                            if (!res.ok) throw new Error(await res.text());
+                            commentRes = await res.json();
+                        } else {
+                            commentRes = null; // No more pages, exit loop
+                        }
+                    }
+                    
+                    console.log(commentRes);
 
                     commentPanel.classList.add('visible');
                     document.body.classList.add('no-scroll');
