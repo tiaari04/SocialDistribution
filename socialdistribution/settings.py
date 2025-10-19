@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     'adminpage',
 
     'rest_framework',
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 SITE_ID = 1
@@ -182,8 +184,14 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+
+USE_CLOUDINARY_MEDIA = os.getenv("DJANGO_USE_CLOUDINARY_MEDIA") == "1"
+if USE_CLOUDINARY_MEDIA:
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = "/media/"  
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
