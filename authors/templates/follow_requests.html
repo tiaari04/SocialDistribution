@@ -59,6 +59,11 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
+                    // line 62 should be used for authentication. I haven't tested with the
+                    // credentials line yet since I'm not sure what the credential
+                    // should be.
+
+                    // credentials: 'include' 
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -80,6 +85,12 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
+                
+                    // line 93 should be used for authentication. I haven't tested with the
+                    // credentials line yet since I'm not sure what the credential
+                    // should be.
+                    
+                    // credentials: 'include' 
                 })
                 .then(response => response.json())
                 .then(data => {

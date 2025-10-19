@@ -1,9 +1,11 @@
 from django.http import JsonResponse
+from urllib.parse import unquote
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 import json
 from entries import services as entries_services
 from inbox import services as followers_services
-
+#from django.contrib.auth.models import User
 
 def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
@@ -19,20 +21,36 @@ def api_author_followers(request, author_serial):
 	return _not_implemented("api_author_followers")
 
 def api_author_follower_detail(request, author_serial, foreign_encoded):
-	print("here")
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	actor_fqid = unquote(foreign_encoded)
+	actor = get_object_or_404(Author, id=actor_fqid)
+
 	if request.method == "GET":
-		result = followers_services.get_follower(author_serial, foreign_encoded)
+		result = followers_services.get_follower(author, actor)
 		if result:
 			return JsonResponse(result)
 		return JsonResponse({"is_follower": False}, status=404)
 
-	elif request.method == "PUT":
-		followers_services.add_follower(author_serial, foreign_encoded)
+	''' 
+	If the 2 if statements under this are commented out, everything works but 
+	doesn't use authentication.
+	I'm not sure what should go here on line 40
+		 str(request.user.____) != str(author_serial) for them to match.
+	'''
+	# if not request.user.is_authenticated:
+    #     return JsonResponse({"detail": "Authentication required"}, status=403)
+
+    # if str(request.user.id) != str(author_serial):
+    #     return JsonResponse({"detail": "Forbidden"}, status=403)
+
+	if request.method == "PUT":
+		followers_services.add_follower(author, actor)
 		return JsonResponse({"detail": "Follower added"}, status=201)
 
 	elif request.method == "DELETE":
-		success = followers_services.remove_follower(author_serial, foreign_encoded)
-		return JsonResponse({"detail": "Follower removed"}, status=201)
+		success = followers_services.remove_follower(author, actor)
+		return JsonResponse({"detail": "Follower removed"}, status=200)
 
 	return JsonResponse({"detail": "Method not allowed"}, status=405)
 
