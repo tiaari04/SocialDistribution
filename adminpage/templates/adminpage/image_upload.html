@@ -1,16 +1,17 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Upload Image{% endblock %}
 {% block content %}
-<div class="rounded-xl border border-slate-800 bg-slate-900 p-6 max-w-xl">
-  <h1 class="text-xl font-semibold mb-4">Upload Image</h1>
-  <form method="post" enctype="multipart/form-data" class="space-y-3">
+<h1 class="text-2xl font-semibold mb-6 text-blue-800">Upload Image</h1>
+
+<div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-xl">
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
     {% csrf_token %}
     {{ form.as_p }}
     <div class="flex gap-2">
-      <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500" type="submit">Upload</button>
-      <a class="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800" href="{% url 'adminpage:images' %}">Cancel</a>
+      <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500" type="submit">Upload</button>
+      <a class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-100" href="{% url 'adminpage:images' %}">Cancel</a>
     </div>
   </form>
-  <p class="text-slate-400 mt-3 text-sm">Accepted: JPG/PNG/GIF/WEBP · Max 8MB</p>
+  <p class="text-gray-500 mt-3 text-sm">Accepted: JPG/PNG/GIF/WEBP · Max 8MB</p>
 </div>
 {% endblock %}
