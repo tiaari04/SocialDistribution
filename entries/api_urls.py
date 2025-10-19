@@ -15,6 +15,11 @@ urlpatterns = [
 
     # FQID based endpoints
     path(
+        "entries/<path:entry_fqid>/comments/<path:comment_fqid>/likes/",
+        api_views.CommentLikesViewSet.as_view({"get": "list", "post": "create"}),
+        name="api-entry-comment-likes-fqid",
+    ),
+    path(
         "entries/<path:entry_fqid>/comments/",
         api_views.EntryCommentsViewSet.as_view({"get": "list", "post": "create"}),
         name="api-entry-comments-fqid",
@@ -24,6 +29,7 @@ urlpatterns = [
         api_views.EntryLikesViewSet.as_view({"get": "list", "post": "create"}),
         name="api-entry-likes-fqid",
     ),
+
 
     # comment likes
     path(
