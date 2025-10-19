@@ -1,51 +1,93 @@
 from django.db import models
+from authors.models import Author  # Import from your authors app
+from django.utils import timezone
+
 
 class Entry(models.Model):
-    title = models.CharField()
     id = models.URLField(primary_key=True)
-    web = models.URLField()
-    description = models.CharField() # or possible a textfield
+    title = models.CharField(max_length=200)
+    web = models.URLField(blank=True, null=True)
+    description = models.TextField(blank=True)
+
     class ContentType(models.TextChoices):
-        MARKDOWN = "text/markdown",
-        PLAIN = "text/plain",
-        NOTJPEGORPNG = "application/base64",
-        PNG = "image/png;base64",
-        JPEG = "image/jpeg;base64"
-    contentType = models.CharField(choices=ContentType)
-    content = models.TextField()
-    author = models.ForeignKey(Author)
-    # ManyToManyField:
-    # https://docs.djangoproject.com/en/5.2/ref/models/fields/#field-types
-    # https://stackoverflow.com/questions/67623667/django-models-to-hold-a-list-of-objects-from-another-model
-    comments = models.ManyToManyField(Comment)
-    likes = models.ManyToManyField(Like)
-    published = models.DateTimeField()
-    # TextChoices : https://docs.djangoproject.com/en/5.2/ref/models/fields/#field-types
+        MARKDOWN = "text/markdown", "Markdown"
+        PLAIN = "text/plain", "Plain text"
+        PNG = "image/png;base64", "PNG Image (Base64)"
+        JPEG = "image/jpeg;base64", "JPEG Image (Base64)"
+        APPLICATION = "application/base64", "Other Base64"
+
+    contentType = models.CharField(
+        max_length=50,
+        choices=ContentType.choices,
+        default=ContentType.PLAIN,
+    )
+
+    content = models.TextField(blank=True)
+    author = models.ForeignKey(
+        Author,
+        on_delete=models.CASCADE,
+        related_name="entries"
+    )
+
+    published = models.DateTimeField(default=timezone.now)
+
     class Visibility(models.TextChoices):
-        PUBLIC = "PUBLIC",
-        FRIENDS = "FRIENDS",
-        UNLISTED = "UNLISTED",
-        DELETED = "DELETED"
-    visibility = models.CharField(choices=Visibility)
+        PUBLIC = "PUBLIC", "Public"
+        FRIENDS = "FRIENDS", "Friends Only"
+        UNLISTED = "UNLISTED", "Unlisted"
+        DELETED = "DELETED", "Deleted"
+
+    visibility = models.CharField(
+        max_length=10,
+        choices=Visibility.choices,
+        default=Visibility.PUBLIC
+    )
+
+    def __str__(self):
+        return f"{self.title} by {self.author.displayName}"
+
 
 class Like(models.Model):
-    author = models.ForeignKey(Author)
-    # https://docs.djangoproject.com/en/5.2/ref/utils/#django.utils.timezone.now
-    # https://stackoverflow.com/questions/26063681/django-model-datetimefield-from-an-iso8601-timestamp-string
-    # the serializer for the Likes model should handle parsing the datetimefield
-    published = models.DateTimeField()
     id = models.URLField(primary_key=True)
-    object_liked = models.URLField()
+    author = models.ForeignKey(
+        Author,
+        on_delete=models.CASCADE,
+        related_name="likes"
+    )
+    published = models.DateTimeField(default=timezone.now)
+    object_liked = models.URLField()  # The URL of the object being liked (Entry or Comment)
+
+    def __str__(self):
+        return f"{self.author.displayName} liked {self.object_liked}"
+
 
 class Comment(models.Model):
-    author = models.ForeignKey(Author)
-    comment = models.CharField()
-    # will content type for comments always be markdown?
-    # or should I change it to be choices like content type in the Entry class
-    contentType = models.CharField()
-    published = models.DateTimeField() 
     id = models.URLField(primary_key=True)
-    entry = models.URLField()
-    likes = models.ManyToManyField(Like)
-    # the web field is in the Comments object in the Project descrtiption so i added it here
-    web = models.URLField() # keep if we decide we will have an html page with the ability to only view one comment at a time
+    author = models.ForeignKey(
+        Author,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    comment = models.TextField()
+
+    class ContentType(models.TextChoices):
+        MARKDOWN = "text/markdown", "Markdown"
+        PLAIN = "text/plain", "Plain text"
+
+    contentType = models.CharField(
+        max_length=50,
+        choices=ContentType.choices,
+        default=ContentType.PLAIN
+    )
+
+    published = models.DateTimeField(default=timezone.now)
+    entry = models.ForeignKey(
+        Entry,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    likes = models.ManyToManyField(Like, blank=True)
+    web = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.displayName} on {self.entry.title}"
