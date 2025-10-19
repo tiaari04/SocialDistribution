@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Make Django form widgets look like Tailwind inputs */
+    input, textarea {
+      width: 100%;
+      border: 1px solid #d1d5db; /* gray-300 */
+      border-radius: 0.5rem; /* rounded-lg */
+      padding: 0.5rem 0.75rem;
+      outline: none;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    input:focus, textarea:focus {
+      border-color: #6366f1; /* indigo-500 */
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.3); /* focus ring */
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-10">
+
+  <div class="bg-white shadow-xl rounded-2xl px-10 py-8 w-full max-w-4xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+      Create an Account
+    </h1>
+
+   <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <!-- Full-width button -->
+      <div class="md:col-span-2">
+        <button type="submit"
+          class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 rounded-lg shadow transition">
+          Sign Up
+        </button>
+      </div>
+    </form>
+
+    <p class="text-center text-gray-600 mt-5">
+      Already have an account?
+      <a href="{% url 'login:login' %}" class="text-indigo-500 hover:underline font-medium">Log in</a>
+    </p>
+  </div>
+
+</body>
+</html>
