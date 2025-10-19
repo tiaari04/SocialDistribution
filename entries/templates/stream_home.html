@@ -366,6 +366,7 @@
                 commentButtons.forEach(button => {
                     button.addEventListener('click', () => {
                         authorFqid = button.dataset.author;
+                        entryFqid = button.dataset.fqid;
                         openComments(button.dataset.fqid, authorFqid);
                     });
                 });
@@ -376,8 +377,8 @@
                     const text = commentInput.value.trim();
                     commentInput.value = '';
                     if (!text) return;
-                    await postComment(currentPostId, authorFqid, text);
-                    openComments(currentPostId, authorFqid);
+                    await postComment(entryFqid, authorFqid, text);
+                    openComments(entryFqid, authorFqid);
                 });
 
                 closeComments.addEventListener('click', closeCommPanel);
