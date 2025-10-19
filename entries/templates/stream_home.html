@@ -278,7 +278,8 @@
 
                 // like functions 
                 async function likeEntry(entryFqid, authorFqid) {
-                    const res = await fetch(`/api/entries/${entryFqid}/likes/`, {
+                    const eEncoded = encodeURIComponent(entryFqid);
+                    const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the post
                         body: JSON.stringify({}),
@@ -297,7 +298,8 @@
 
                 // comment panel functions 
                 async function getComments(entryFqid, authorFqid) {
-                    const res = await fetch(`/api/entries/${entryFqid}/comments/`, {
+                    const eEncoded = encodeURIComponent(entryFqid);
+                    const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid },
                     })
@@ -306,7 +308,8 @@
                 }
 
                 async function postComment(entryFqid, authorFqid, text) {
-                    const res = await fetch(`/api/entries/${entryFqid}/comments/`, {
+                    const eEncoded = encodeURIComponent(entryFqid);
+                    const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that sent the comment
                         body: JSON.stringify({ comment: text }),
@@ -319,6 +322,7 @@
                     const eEncoded = encodeURIComponent(entryFqid);
                     const cEncoded = encodeURIComponent(commentFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
+                    //const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the comment
                         body: JSON.stringify({}),
@@ -332,6 +336,7 @@
 
                     const commentRes = await getComments(postId, author);
                     const comments = commentRes.results;
+                    commentsContent.innerHTML = '';
                     comments.forEach(comment => {
                         const clone = commentTemplate.content.cloneNode(true);
                         clone.id = comment.fqid;
@@ -404,11 +409,9 @@
 
                     <section class="reactions">
                         <p>{{ entry.likeCount }}</p>
-                        <form action="/like_post/">
-                            <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
-                                Like
-                            </button>
-                        </form>
+                        <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
+                            Like
+                        </button>
                         <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
                             Comment
                         </button>
