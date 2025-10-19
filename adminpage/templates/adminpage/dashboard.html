@@ -1,0 +1,28 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="grid gap-4 sm:grid-cols-3">
+  <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+    <div class="text-slate-400 text-sm">Total Images</div>
+    <div class="mt-2 text-3xl font-semibold">{{ total_images }}</div>
+  </div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+    <div class="text-slate-400 text-sm">Total Authors</div>
+    <div class="mt-2 text-3xl font-semibold">{{ total_authors }}</div>
+  </div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900 p-5">
+    <div class="text-slate-400 text-sm">Pending Users</div>
+    <div class="mt-2 text-3xl font-semibold">{{ pending_users }}</div>
+  </div>
+</div>
+
+<div class="rounded-xl border border-slate-800 bg-slate-900 p-6 mt-6">
+  <h2 class="text-lg font-semibold mb-3">Quick links</h2>
+  <div class="flex flex-wrap gap-3">
+    <a class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500" href="{% url 'adminpage:image-upload' %}">Upload image</a>
+    <a class="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800" href="{% url 'adminpage:images' %}">Manage images</a>
+    <a class="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800" href="{% url 'adminpage:authors' %}">Manage authors</a>
+    <a class="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800" href="{% url 'adminpage:pending-users' %}">Review approvals</a>
+  </div>
+</div>
+{% endblock %}

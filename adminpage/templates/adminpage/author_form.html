@@ -1,0 +1,18 @@
+{% extends "base_adminpage.html" %}
+{% block title %}{{ mode }} Author{% endblock %}
+{% block content %}
+<div class="rounded-xl border border-slate-800 bg-slate-900 p-6 max-w-2xl">
+  <h1 class="text-xl font-semibold mb-4">{{ mode }} Author</h1>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="flex gap-2">
+      <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500" type="submit">{{ mode }}</button>
+      <a class="rounded-lg border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800" href="{% url 'adminpage:authors' %}">Cancel</a>
+    </div>
+  </form>
+  <p class="text-slate-400 mt-3 text-sm">
+    For local authors, leave “id” blank to auto-generate an FQID if your view supports it.
+  </p>
+</div>
+{% endblock %}

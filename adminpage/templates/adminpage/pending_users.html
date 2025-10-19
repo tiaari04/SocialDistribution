@@ -1,0 +1,40 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+  <h1 class="text-xl font-semibold mb-4">Pending Users</h1>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-slate-400">
+        <tr class="border-b border-slate-800">
+          <th class="py-2 pr-3">Username</th>
+          <th class="py-2 pr-3">Email</th>
+          <th class="py-2 pr-3">Joined</th>
+          <th class="py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in pending %}
+        <tr class="border-b border-slate-800">
+          <td class="py-2 pr-3">{{ u.username }}</td>
+          <td class="py-2 pr-3">{{ u.email|default:"" }}</td>
+          <td class="py-2 pr-3">{{ u.date_joined }}</td>
+          <td class="py-2 whitespace-nowrap">
+            <form action="{% url 'adminpage:approve-user' u.id %}" method="post" class="inline">
+              {% csrf_token %}
+              <button class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-medium hover:bg-emerald-600" type="submit">Approve</button>
+            </form>
+            <form action="{% url 'adminpage:reject-user' u.id %}" method="post" class="inline" onsubmit="return confirm('Reject & delete this pending user?');">
+              {% csrf_token %}
+              <button class="rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-medium hover:bg-rose-600" type="submit">Reject</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="py-6 text-center text-slate-400">No pending users 🎉</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
