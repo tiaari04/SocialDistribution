@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+
+    <div class="bg-white shadow-xl rounded-2xl px-10 py-8 w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Edit Your Profile
+        </h1>
+
+        <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% csrf_token %}
+
+            <!-- Display Name -->
+            <div class="col-span-2">
+                <label class="block text-gray-700 font-medium mb-1">Display Name</label>
+                <input type="text" name="displayName" value="{{ author.displayName }}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                       placeholder="Display Name" required>
+            </div>
+
+
+            <!-- GitHub -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">GitHub URL</label>
+                <input type="url" name="github" value="{{ author.github }}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                       placeholder="https://github.com/username">
+            </div>
+
+            <!-- Website -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Website</label>
+                <input type="url" name="web" value="{{ author.web }}"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                       placeholder="https://example.com">
+            </div>
+
+            <!-- Profile Image -->
+            <div class="col-span-2 mt-4">
+                <label class="block text-gray-700 font-medium mb-1">Upload Profile Image</label>
+                <input type="file" name="profileImageFile"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                    accept="image/*">
+            </div>
+
+            <!-- Description -->
+            <div class="col-span-2">
+                <label class="block text-gray-700 font-medium mb-1">Description</label>
+                <textarea name="description" rows="4"
+                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                          placeholder="Tell others about yourself...">{{ author.description }}</textarea>
+            </div>
+
+            <!-- Save Button -->
+            <div class="col-span-2 flex justify-center mt-4">
+                <button type="submit"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+
+        <p class="text-center text-gray-600 mt-6">
+            <a href="{% url 'authors:detail' author.serial %}" class="text-indigo-500 hover:underline font-medium">
+                Back to Profile
+            </a>
+        </p>
+    </div>
+
+</body>
+</html>

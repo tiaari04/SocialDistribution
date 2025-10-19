@@ -1,5 +1,7 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from authors import views
+
 
 urlpatterns = [
     path("", views.author_list, name="list"),  
