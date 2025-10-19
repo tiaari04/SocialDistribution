@@ -24,6 +24,11 @@ urlpatterns = [
         api_views.EntryLikesViewSet.as_view({"get": "list", "post": "create"}),
         name="api-entry-likes-fqid",
     ),
+    path(
+        "entries/<path:entry_fqid>/comments/<path:comment_fqid>/likes/",
+        api_views.CommentLikesViewSet.as_view({"get": "list", "post": "create"}),
+        name="api-entry-comment-likes",
+    ),
 
     # comment likes
     path(

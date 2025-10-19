@@ -32,7 +32,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         if not can_access_entry(req_author, entry):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
-        qs = entry.comments.all().order_by('-published', '-created')
+        qs = entry.comments.all().order_by('published', 'created')
         paginator = SmallPage()
         page = paginator.paginate_queryset(qs, request)
         serializer = CommentSerializer(page, many=True)

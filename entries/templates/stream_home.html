@@ -56,9 +56,14 @@
 
             .post {
                 width: 50vw;
-                background-color: darkblue;
+                background-color: #d9d9d9;
                 padding-left: 10px;
                 padding-right: 10px;
+            }
+
+            .post.comment {
+                background-color: #acacac;
+                width: 50vw;
             }
 
             .postContent {
@@ -94,7 +99,7 @@
             }
 
             .sharePoint {
-                background-color: white;
+                background-color: black;
                 width: 3px;
                 height: 3px;
                 border-radius: 3px;
@@ -102,7 +107,7 @@
 
             .user a {
                 text-decoration: none;
-                color: white;
+                color: black;
             }
 
             .user a:hover {
@@ -118,6 +123,12 @@
                 gap: 10px;
             }
 
+            .reactions p {
+                color: black;
+                margin: 0;
+                padding: 0;
+            }
+
             .sharePopup {
                 position: absolute;
                 background: white;
@@ -129,6 +140,22 @@
                 flex-direction: column;
                 gap: 8px;
                 z-index: 1000;
+            }
+
+            #comments {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: start;
+                align-items: center;
+                gap: 20px;
+                overflow: auto;
+            }
+
+            .comment {
+                width: 30vw;
+                border: solid 1px #aaa;
+                padding: 10px;
             }
 
             #commentsPanel {
@@ -161,30 +188,44 @@
                 padding: 8px;
                 border-radius: 3px;
                 font-family: "Times New Roman", Times, serif;
+                border: 1px solid #aaa;
             }
 
             #sendComment {
                 padding: 8px 12px;
             }
+
+            .commentLike {
+                width: full;
+                display: flex;
+                justify-content: end;
+            }
         </style>
         <script>
             'use strict';
-            console.log('hi');
             document.addEventListener("DOMContentLoaded", () => {
                 // share popup variables
                 const shareButtons = document.querySelectorAll('.share')
                 let activeShare = null;
 
-                const likeButtons = document.querySelectorAll('.like');
+                // like variables
+                const likeButtons = document.querySelectorAll('.likeButton');
 
                 // comment panel variables 
-                const commentButtons = document.querySelectorAll('.comment');
+                const commentButtons = document.querySelectorAll('.commentButton');
                 const commentPanel = document.getElementById('commentsPanel');
                 const closeComments = document.getElementById('closePanel');
                 const commentsContent = document.getElementById('comments');
                 const commentInput = document.getElementById('commentInput');
                 const sendCommentBtn = document.getElementById('sendComment');
-                let currentPostId = null;
+                const commentTemplate = document.getElementById('commentTemplate');
+                let currentPost = null;
+
+                // author/entry specific variables for (local) API calls
+                let authorSerial = null;
+                let authorFqid = null;
+                let entrySerial = null;
+                let entryFqid = null;
 
                 // share popup functions 
                 function closeShare() {
@@ -224,7 +265,7 @@
                         activeShare = sharePopup;
 
                         sharePopup.querySelector('.copyLink').addEventListener('click', () => {
-                            const link = button.id;
+                            const link = button.dataset.fqid;
                             navigator.clipboard.writeText(link).then(() => {
                                 alert('Post link copied!');
                                 closeShare();
@@ -235,39 +276,103 @@
                     });
                 });
 
+                // like functions 
+                async function likeEntry(entryFqid, authorFqid) {
+                    const res = await fetch(`/api/entries/${entryFqid}/likes/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the post
+                        body: JSON.stringify({}),
+                    }) .then(() => window.location.reload());
+                    if (!res.ok) throw new Error(await res.text());
+                    return res.json();
+                }
+                
                 likeButtons.forEach(button => {
                     button.addEventListener('click', () => {
-                        console.log('Clicked:', button.id);
+                        entryFqid = button.dataset.fqid;
+                        authorFqid = button.dataset.author;
+                        likeEntry(entryFqid, authorFqid);
                     });
                 });
 
                 // comment panel functions 
-                function openComments(postId) {
-                    currentPostId = postId;
-                    commentsContent.innerHTML = '';
+                async function getComments(entryFqid, authorFqid) {
+                    const res = await fetch(`/api/entries/${entryFqid}/comments/`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid },
+                    })
+                    if (!res.ok) throw new Error(await res.text());
+                    return res.json();
+                }
 
-                    const comments = ['hello', 'some comment', postId];
-                    comments.forEach(text => {
-                        const commentEl = document.createElement('div');
-                        commentEl.textContent = text;
-                        commentEl.className = 'comment';
-                        commentsContent.appendChild(commentEl);
+                async function postComment(entryFqid, authorFqid, text) {
+                    const res = await fetch(`/api/entries/${entryFqid}/comments/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that sent the comment
+                        body: JSON.stringify({ comment: text }),
+                    })
+                    if (!res.ok) throw new Error(await res.text());
+                    return res.json();
+                }
+
+                async function likeComment(entryFqid, commentFqid, authorFqid) {
+                    const eEncoded = encodeURIComponent(entryFqid);
+                    const cEncoded = encodeURIComponent(commentFqid);
+                    const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the comment
+                        body: JSON.stringify({}),
+                    })
+                    if (!res.ok) throw new Error(await res.text());
+                    return res.json();
+                }
+
+                async function openComments(postId, author) {
+                    currentPost = document.getElementById(`post_${postId}`);
+
+                    const commentRes = await getComments(postId, author);
+                    const comments = commentRes.results;
+                    comments.forEach(comment => {
+                        const clone = commentTemplate.content.cloneNode(true);
+                        clone.id = comment.fqid;
+                        clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
+                        clone.querySelector('.commentText').textContent = comment.content; 
+                        clone.querySelector('.commentLikes').textContent = comment.likes_count; 
+
+                        const likeButton = clone.querySelector('.likeButton');
+                        likeButton.addEventListener('click', async () => {
+                            await likeComment(postId, clone.id, author);
+                        });
+
+                        commentsContent.appendChild(clone);
                     })
 
                     commentPanel.classList.add('visible');
                     document.body.classList.add('no-scroll');
+                    currentPost.classList.add('comment');
                 }
 
                 function closeCommPanel() {
                     commentPanel.classList.remove('visible');
                     document.body.classList.remove('no-scroll');
-                    currentPostId = null;
+                    currentPost.classList.remove('comment');
                 }
 
                 commentButtons.forEach(button => {
                     button.addEventListener('click', () => {
-                        openComments(button.id);
+                        authorFqid = button.dataset.author;
+                        openComments(button.dataset.fqid, authorFqid);
                     });
+                });
+                
+                // adding comments
+                // on submission: must POST comment info AND update comment panel
+                sendCommentBtn.addEventListener('click', async () => {
+                    const text = commentInput.value.trim();
+                    commentInput.value = '';
+                    if (!text) return;
+                    await postComment(currentPostId, authorFqid, text);
+                    openComments(currentPostId, authorFqid);
                 });
 
                 closeComments.addEventListener('click', closeCommPanel);
@@ -282,23 +387,31 @@
         </header>
         <ul class="stream">
             {% for entry in entries %}
-                <li class="post">
+                <li id="post_{{ entry.fqid }}" class="post">
                     <section class="user">
                         <a href='/'>{{ entry.author.displayName }}</a>
-                        <button id="{{ entry.fqid }}" class="share">
+                        <button data-fqid="{{ entry.fqid }}" class="share">
                             <div class="sharePoint"></div>
                             <div class="sharePoint"></div>
                             <div class="sharePoint"></div>
                         </button>
                     </section>
+
                     <section class="postContent">
                         <h3>{{ entry.title }}</h3>
                         <p>{{ entry.content }}</p>
                     </section>  
+
                     <section class="reactions">
                         <p>{{ entry.likeCount }}</p>
-                        <button id="{{ entry.fqid }}" class="like">Like</button>
-                        <button id="{{ entry.fqid }}" class="comment">Comment</button>
+                        <form action="/like_post/">
+                            <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
+                                Like
+                            </button>
+                        </form>
+                        <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
+                            Comment
+                        </button>
                     </section>
                 </li>
             {% endfor %}
@@ -311,14 +424,26 @@
                 <button id="closePanel">&times;</button>
             </header>
 
-            <section id="comments">
-                <!-- TODO: dynamically insert comments -->
-            </section>
+            <!-- dynamically insert comments -->
+            <section id="comments"></section>   
 
             <footer>
                 <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
                 <button id="sendComment">Send</button>
             </footer>
         </section>
+
+        <!-- Comment template -->
+        <template id="commentTemplate" class="comment">
+            <section class="comment">
+                <strong class="commentAuthor"></strong>
+                <p class="commentText"></p>
+                <section class="reactions">
+                    <p class="commentLikes"></p>
+                    <button class="likeButton">Like</button>
+                </section>
+            </section>
+        </template>
+
     </body>
 </html>

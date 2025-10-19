@@ -2,7 +2,8 @@ from django.urls import path
 from entries import views
 
 urlpatterns = [
-    path("", views.stream_home, name="home"),
+    path("", views.stream_home, name="stream_home"),
+    path('like_post/', views.like_post, name='like_post'),
     path("public/", views.public_entries, name="public"),
     path("create/", views.entry_create, name="create"),
     path("entries/<str:entry_serial>/", views.entry_detail, name="entry-detail"),
