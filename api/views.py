@@ -1,4 +1,8 @@
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from entries import services as entries_services
+
 
 def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
@@ -17,7 +21,21 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 	return _not_implemented("api_author_follower_detail")
 
 def api_author_inbox(request, author_serial):
-	return _not_implemented("api_author_inbox")
+	# Accept POSTs from remote nodes to deliver comments/likes/follows
+	if request.method != 'POST':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+
+	try:
+		payload = json.loads(request.body.decode('utf-8'))
+	except Exception:
+		return JsonResponse({'detail': 'Invalid JSON'}, status=400)
+
+	result = entries_services.process_inbox_for(author_serial, payload)
+	if result.get('status') in ('created', 'exists'):
+		return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
+	if result.get('status') == 'ignored':
+		return JsonResponse({'detail': 'ignored'}, status=200)
+	return JsonResponse({'detail': 'error', 'error': result.get('error')}, status=400)
 
 # Entries
 def api_author_entries(request, author_serial):
@@ -37,17 +55,26 @@ def api_entry_image(request, entry_fqid):
 
 # Comments & Likes (per-entry serial)
 def api_entry_comments(request, author_serial, entry_serial):
-	return _not_implemented("api_entry_comments")
+	# delegate to entries.api_views EntryCommentsViewSet
+	from entries.api_views import EntryCommentsViewSet
+	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
+	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
 def api_entry_likes(request, author_serial, entry_serial):
-	return _not_implemented("api_entry_likes")
+	from entries.api_views import EntryLikesViewSet
+	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
+	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
 # ENTRY FQID based endpoints
 def api_entry_comments_by_fqid(request, entry_fqid):
-	return _not_implemented("api_entry_comments_by_fqid")
+	from entries.api_views import EntryCommentsViewSet
+	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
+	return view(request, entry_fqid=entry_fqid)
 
 def api_entry_likes_by_fqid(request, entry_fqid):
-	return _not_implemented("api_entry_likes_by_fqid")
+	from entries.api_views import EntryLikesViewSet
+	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
+	return view(request, entry_fqid=entry_fqid)
 
 # Liked / Commented lists
 def api_author_liked(request, author_serial):
@@ -58,10 +85,15 @@ def api_author_commented(request, author_serial):
 
 # Comment detail and likes on comment
 def api_entry_comment_detail(request, author_serial, entry_serial, comment_fqid):
-	return _not_implemented("api_entry_comment_detail")
+	# Return a single comment (delegates to Entries comment list view for GET)
+	from entries.api_views import EntryCommentsViewSet
+	view = EntryCommentsViewSet.as_view({'get': 'list'})
+	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
 def api_entry_comment_likes(request, author_serial, entry_serial, comment_fqid):
-	return _not_implemented("api_entry_comment_likes")
+	from entries.api_views import CommentLikesViewSet
+	view = CommentLikesViewSet.as_view({'get': 'list', 'post': 'create'})
+	return view(request, author_serial=author_serial, entry_serial=entry_serial, comment_fqid=comment_fqid)
 
 # Global FQID endpoints
 def api_comment_by_fqid(request, comment_fqid):
