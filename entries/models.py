@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Q, F
+from django.db.models.signals import post_save, post_delete
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from authors.models import Author, MAX_URL, TimeStampedModel
@@ -35,6 +37,8 @@ class Entry(TimeStampedModel):
     published = models.DateTimeField(default=timezone.now, db_index=True)
     # auto_now sits in TimeStampedModel.updated
     is_edited = models.BooleanField(default=False, db_index=True)
+    # denormalized count of likes (kept in sync by signals)
+    likes_count = models.PositiveIntegerField(default=0, db_index=True)
 
     class Visibility(models.TextChoices):
         PUBLIC = "PUBLIC", "PUBLIC"
@@ -85,6 +89,8 @@ class Comment(TimeStampedModel):
     )
     published = models.DateTimeField(default=timezone.now, db_index=True)
     web = models.URLField(max_length=MAX_URL, blank=True)
+    # denormalized count of likes for this comment
+    likes_count = models.PositiveIntegerField(default=0, db_index=True)
 
     class Meta:
         indexes = [
@@ -112,6 +118,10 @@ class Like(TimeStampedModel):
             models.Index(fields=["published"]),
             models.Index(fields=["author", "published"]),
         ]
+        constraints = [
+            # Prevent a local (non-null) author from liking the same object multiple times
+            models.UniqueConstraint(fields=["author", "object_fqid"], condition=Q(author__isnull=False), name="unique_like_per_author_object"),
+        ]
         ordering = ["-published", "-created"]
 
     def __str__(self) -> str:
@@ -138,3 +148,26 @@ class EntryDelivery(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.entry.fqid} -> {self.recipient_author_fqid}"
+
+
+# Signal handlers to maintain denormalized likes_count on Entry and Comment
+def _increment_like_count(sender, instance, created, **kwargs):
+    if not created:
+        return
+    obj_fqid = instance.object_fqid
+    # Try update Entry first, if not found try Comment
+    updated = Entry.objects.filter(fqid=obj_fqid).update(likes_count=F('likes_count') + 1)
+    if not updated:
+        Comment.objects.filter(fqid=obj_fqid).update(likes_count=F('likes_count') + 1)
+
+
+def _decrement_like_count(sender, instance, **kwargs):
+    obj_fqid = instance.object_fqid
+    # decrement but don't go below zero
+    updated = Entry.objects.filter(fqid=obj_fqid, likes_count__gt=0).update(likes_count=F('likes_count') - 1)
+    if not updated:
+        Comment.objects.filter(fqid=obj_fqid, likes_count__gt=0).update(likes_count=F('likes_count') - 1)
+
+
+post_save.connect(_increment_like_count, sender=Like)
+post_delete.connect(_decrement_like_count, sender=Like)
