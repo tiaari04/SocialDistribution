@@ -22,11 +22,11 @@ def author_edit(request, author_serial):
 
     if request.method == "POST":
         # Update text fields
+        author.displayName = request.POST.get("displayName", author.displayName)
         author.description = request.POST.get("description", author.description)
         author.web = request.POST.get("web", author.web)
         author.github = request.POST.get("github", author.github)
 
-        # 1️⃣ Priority: use uploaded file if provided
         if "profileImageFile" in request.FILES:
             uploaded_file = request.FILES["profileImageFile"]
             # Save file in MEDIA_ROOT/profile_images/
@@ -34,7 +34,6 @@ def author_edit(request, author_serial):
             # Generate full URL
             author.profileImage = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
         else:
-            # 2️⃣ Fallback: use URL field if provided
             url_input = request.POST.get("profileImage", "").strip()
             if url_input:
                 author.profileImage = url_input
