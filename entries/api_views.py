@@ -32,7 +32,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         if not can_access_entry(req_author, entry):
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
-        qs = entry.comments.all().order_by('-published', '-created')
+        qs = entry.comments.all().order_by('published', 'created')
         paginator = SmallPage()
         page = paginator.paginate_queryset(qs, request)
         serializer = CommentSerializer(page, many=True)
@@ -111,11 +111,11 @@ class EntryLikesViewSet(viewsets.ViewSet):
 
 class CommentLikesViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
-    def _resolve_comment(self, author_serial=None, entry_serial=None, comment_fqid=None):
+    def _resolve_comment(self, author_serial=None, entry_serial=None, entry_fqid=None, comment_fqid=None):
         return get_object_or_404(Comment, fqid=comment_fqid)
 
-    def list(self, request, author_serial=None, entry_serial=None, comment_fqid=None):
-        comment = self._resolve_comment(author_serial, entry_serial, comment_fqid)
+    def list(self, request, author_serial=None, entry_serial=None, entry_fqid=None, comment_fqid=None):
+        comment = self._resolve_comment(author_serial, entry_serial, entry_fqid, comment_fqid)
         # determine requesting author
         req_author = None
         req_author = resolve_author_from_request(request)
@@ -134,8 +134,8 @@ class CommentLikesViewSet(viewsets.ViewSet):
         return Response({'type': 'likes', 'count': qs.count(), 'src': serializer.data})
 
     @transaction.atomic
-    def create(self, request, author_serial=None, entry_serial=None, comment_fqid=None):
-        comment = self._resolve_comment(author_serial, entry_serial, comment_fqid)
+    def create(self, request, author_serial=None, entry_serial=None, entry_fqid=None, comment_fqid=None):
+        comment = self._resolve_comment(author_serial, entry_serial, entry_fqid, comment_fqid)
         req_author = resolve_author_from_request(request)
 
         if not can_access_entry(req_author, comment.entry):
