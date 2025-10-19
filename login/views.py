@@ -19,7 +19,7 @@ def signup_view(request):
             # Get current site domain
             current_site = Site.objects.get_current()
             domain = f"https://{current_site.domain}"  # full domain
-
+            profile_url = ""
             # Handle profile image upload
             uploaded_file = form.cleaned_data.get("profileImageFile")
             if "profileImageFile" in request.FILES:

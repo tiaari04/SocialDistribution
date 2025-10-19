@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'entries',
     'inbox',
     'api',
+    'adminpage',
 
     'rest_framework',
 ]
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'adminpage.middleware.AuthorAdminOnlyMiddleware',           
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django.middleware.security.SecurityMiddleware",
