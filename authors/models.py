@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
 MAX_URL = 1024
 
@@ -21,6 +22,7 @@ class Author(TimeStampedModel):
     API identity is the fully-qualified URL (FQID). This is the PK to avoid collisions.
     """
     id = models.URLField(max_length=MAX_URL, primary_key=True)  # FQID
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     host = models.URLField(max_length=MAX_URL, help_text="Full API base, e.g., https://node/api/")
     displayName = models.CharField(max_length=200, db_index=True)
     github = models.URLField(max_length=MAX_URL, blank=True)
