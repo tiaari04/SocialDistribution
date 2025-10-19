@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+
+    <div class="bg-white shadow-xl rounded-2xl px-10 py-8 w-full max-w-md">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Sign In <span class="text-4xl"></span>
+        </h1>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label for="username" class="block text-gray-700 font-medium mb-1">Username</label>
+                <input type="text" id="username" name="username"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="password" class="block text-gray-700 font-medium mb-1">Password</label>
+                <input type="password" id="password" name="password"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 rounded-lg shadow transition">
+                Log In
+            </button>
+        </form>
+
+        <p class="text-center text-gray-600 mt-5">
+            Don’t have an account?
+            <a href="{% url 'login:signup' %}" class="text-indigo-500 hover:underline font-medium">Sign up</a>
+        </p>
+    </div>
+</body>
+</html>
