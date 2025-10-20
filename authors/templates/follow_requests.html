@@ -7,26 +7,29 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <h1>Follow Requests for {{ author.displayName }}</h1>
+    {% if request.user.is_authenticated and request.user == author.user %}
+        <h1>Follow Requests for {{ author.displayName }}</h1>
+        {% if requests %}
+            <ul>
+            {% for req in requests %}
+                <li>
+                    {{ req.actor.displayName }} wants to follow you.
 
-    {% if requests %}
-        <ul>
-        {% for req in requests %}
-            <li>
-                {{ req.actor.displayName }} wants to follow you.
+                    <button class="approve-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
+                        Approve
+                    </button>
 
-                <button class="approve-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
-                    Approve
-                </button>
-
-                <button class="reject-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
-                    Reject
-                </button>
-            </li>
-        {% endfor %}
-        </ul>
+                    <button class="reject-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
+                        Reject
+                    </button>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No pending follow requests.</p>
+        {% endif %}
     {% else %}
-        <p>No pending follow requests.</p>
+    <h1>You don't have access to this page!</h1>
     {% endif %}
 
     <script>
@@ -59,11 +62,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
-                    // line 62 should be used for authentication. I haven't tested with the
-                    // credentials line yet since I'm not sure what the credential
-                    // should be.
-
-                    // credentials: 'include' 
+                    credentials: 'include' 
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -85,12 +84,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
-                
-                    // line 93 should be used for authentication. I haven't tested with the
-                    // credentials line yet since I'm not sure what the credential
-                    // should be.
-                    
-                    // credentials: 'include' 
+                    credentials: 'include' 
                 })
                 .then(response => response.json())
                 .then(data => {
