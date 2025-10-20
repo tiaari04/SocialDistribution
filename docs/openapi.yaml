@@ -484,6 +484,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Like'
+    LikeCreate:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+        object:
+          type: string
+          format: uri
+        object_fqid:
+          type: string
+      required:
+        - author
     InboxActivity:
       type: object
       description: "ActivityStreams-like payload used when remote nodes deliver items to an inbox (type: comment|like|follow)"
