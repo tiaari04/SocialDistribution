@@ -11,39 +11,42 @@
       const button = document.getElementById('follow-btn');
       button.addEventListener('click', async () => {
         const button = document.getElementById('follow-btn');
-        const payload = {
-          type: "follow",
-          summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
-          actor: {
-            type: "author",
-            id: "{{ request.user.author.id }}",
-            host: "{{ request.user.author.host }}",
-            displayName: "{{ request.user.username }}",
-            github: "{{ request.user.author.github }}",
-            profileImage: "{{ request.user.author.profileImage }}",
-            web: "{{ request.user.author.web }}"
-          },
-          object: {
-            type: "author",
-            id: "{{ author.id }}",
-            host: "{{ author.host }}",
-            displayName: "{{ author.displayName }}",
-            github: "{{ author.github }}",
-            profileImage: "{{ author.profileImage }}",
-            web: "{{ author.web }}"
-          }
-        };
-        const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify(payload)
-        });
 
         if (button.textContent.trim() === "Follow") {
-          button.textContent = "Unfollow";
+          const payload = {
+            type: "follow",
+            summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
+            actor: {
+              type: "author",
+              id: "{{ request.user.author.id }}",
+              host: "{{ request.user.author.host }}",
+              displayName: "{{ request.user.username }}",
+              github: "{{ request.user.author.github }}",
+              profileImage: "{{ request.user.author.profileImage }}",
+              web: "{{ request.user.author.web }}"
+            },
+            object: {
+              type: "author",
+              id: "{{ author.id }}",
+              host: "{{ author.host }}",
+              displayName: "{{ author.displayName }}",
+              github: "{{ author.github }}",
+              profileImage: "{{ author.profileImage }}",
+              web: "{{ author.web }}"
+            }
+          };
+          const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (button.textContent.trim() === "Follow") {
+            button.textContent = "Unfollow";
+          }
         }
       });
     });
@@ -96,7 +99,7 @@
         </a>
         {% else %}
           
-          <button type="submit" id="follow-btn"
+          <button type="button" id="follow-btn"
             class="inline-block mt-5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
               {% if is_following %}
                 Unfollow
