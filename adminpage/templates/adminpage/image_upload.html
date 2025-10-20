@@ -3,22 +3,17 @@
 {% block content %}
 
 <ul class="container gap-6">
-  <!-- Page heading -->
   <li>
     <h1 class="text-xl semibold text-primary p-4">Upload Image</h1>
   </li>
 
-  <!-- Upload form card -->
   <li class="card p-6" style="max-width:40rem;">
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <ul class="gap-4">
         <li>{{ form.file }}</li>
         <li>
-          <button
-            type="submit"
-            class="bg-primary rounded px-4 py-2 text-sm bold text-white"
-          >
+          <button type="submit" class="bg-primary rounded px-4 py-2 text-sm bold text-white">
             Upload
           </button>
         </li>

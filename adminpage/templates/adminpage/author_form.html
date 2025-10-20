@@ -15,7 +15,6 @@
     <form method="post">
       {% csrf_token %}
 
-      {# Non-field errors #}
       {% if form.non_field_errors %}
       <ul class="p-2 border rounded bg-neutral-100 text-sm text-strong">
         {% for err in form.non_field_errors %}
@@ -24,7 +23,6 @@
       </ul>
       {% endif %}
 
-      <!-- Fields -->
       <ul class="grid cols-2 gap-6 p-4">
         {% for field in form.visible_fields %}
         <li>
@@ -34,14 +32,10 @@
                 {{ field.label }}
               </label>
             </li>
-            <li>
-              {{ field }}
-            </li>
+            <li>{{ field }}</li>
 
             {% if field.help_text %}
-            <li class="text-sm text-muted">
-              {{ field.help_text|safe }}
-            </li>
+            <li class="text-sm text-muted">{{ field.help_text|safe }}</li>
             {% endif %}
 
             {% if field.errors %}
@@ -58,7 +52,6 @@
         {% endfor %}
       </ul>
 
-      <!-- Actions -->
       <ul class="row gap-3 p-4">
         <li>
           <button type="submit" class="bg-primary rounded px-4 py-2 text-sm bold text-white">
@@ -66,7 +59,7 @@
           </button>
         </li>
         <li>
-          <a href="{% url 'adminpage:author-list' %}" class="border rounded px-4 py-2 text-sm bg-white">
+          <a href="{% url 'adminpage:authors' %}" class="border rounded px-4 py-2 text-sm bg-white">
             Cancel
           </a>
         </li>

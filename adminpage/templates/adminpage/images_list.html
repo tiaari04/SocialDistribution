@@ -3,12 +3,10 @@
 {% block content %}
 
 <ul class="container gap-6">
-  <!-- Page heading -->
   <li>
     <h1 class="text-xl semibold text-primary p-4">Hosted Images</h1>
   </li>
 
-  <!-- Search / Upload -->
   <li>
     <form method="get">
       <ul class="row gap-3">
@@ -22,20 +20,15 @@
           />
         </li>
         <li>
-          <button class="bg-primary rounded px-4 py-2 text-sm bold text-white">
-            Search
-          </button>
+          <button class="bg-primary rounded px-4 py-2 text-sm bold text-white">Search</button>
         </li>
         <li>
-          <a href="{% url 'adminpage:image-upload' %}" class="border rounded px-4 py-2 text-sm bg-white">
-            Upload
-          </a>
+          <a href="{% url 'adminpage:image-upload' %}" class="border rounded px-4 py-2 text-sm bg-white">Upload</a>
         </li>
       </ul>
     </form>
   </li>
 
-  <!-- Header row -->
   <li>
     <ul class="grid cols-3 gap-2 border bg-neutral-100 text-strong rounded p-3 text-sm semibold">
       <li>Preview</li>
@@ -44,43 +37,28 @@
     </ul>
   </li>
 
-  <!-- Body rows -->
   <li>
     <ul class="grid gap-0 border rounded shadow text-sm">
       {% for i in images %}
       <li class="grid cols-3 gap-2 p-3" style="border-top:1px solid var(--neutral-200);">
-        <!-- Preview -->
         <ul>
           <li>
-            <img
-              src="{{ i.url }}"
-              alt="image"
-              style="height:4rem;width:4rem;object-fit:cover;border-radius:0.5rem;"
-            />
+            <img src="{{ i.url }}" alt="image"
+                 style="height:4rem;width:4rem;object-fit:cover;border-radius:0.5rem;" />
           </li>
         </ul>
 
-        <!-- URL -->
         <li class="text-muted" style="word-break:break-all;">
           <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
             {{ i.url }}
           </span>
         </li>
 
-        <!-- Actions -->
         <li>
-          <form
-            action="{% url 'adminpage:image-delete' i.id %}"
-            method="post"
-            onsubmit="return confirm('Delete this image?');"
-          >
+          <form action="{% url 'adminpage:image-delete' i.id %}" method="post"
+                onsubmit="return confirm('Delete this image?');">
             {% csrf_token %}
-            <button
-              type="submit"
-              aria-label="Delete image {{ i.id }}"
-              class="rounded px-3 py-1 text-xs text-white"
-              style="background:#e11d48;"
-            >
+            <button type="submit" class="rounded px-3 py-1 text-xs text-white" style="background:#e11d48;">
               Delete
             </button>
           </form>

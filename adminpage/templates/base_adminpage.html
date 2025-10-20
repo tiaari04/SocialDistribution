@@ -22,25 +22,16 @@
         <a href="{% url 'adminpage:dashboard' %}">Dashboard</a>
       </li>
 
-      <!-- Authors -->
-      <li class="{% if current == 'author-list' %}active{% endif %}">
-        <a href="{% url 'adminpage:author-list' %}">Authors</a>
+      <li class="{% if current == 'authors' %}active{% endif %}">
+        <a href="{% url 'adminpage:authors' %}">Authors</a>
       </li>
 
-      <!-- Pending / Approvals -->
-      <li class="{% if current == 'pending-users' or current == 'approvals' %}active{% endif %}">
-        {# Use the one that exists in your urls.py #}
+      <li class="{% if current == 'pending-users' %}active{% endif %}">
         <a href="{% url 'adminpage:pending-users' %}">Pending</a>
-        {# If your name is 'approvals' instead, swap the line above for: #}
-        {# <a href="{% url 'adminpage:approvals' %}">Pending</a> #}
       </li>
 
-      <!-- Images -->
-      <li class="{% if current == 'images-list' or current == 'image-list' %}active{% endif %}">
-        {# Use the one that exists in your urls.py #}
-        <a href="{% url 'adminpage:images-list' %}">Images</a>
-        {# If your name is 'image-list' instead, swap the line above for: #}
-        {# <a href="{% url 'adminpage:image-list' %}">Images</a> #}
+      <li class="{% if current == 'images' %}active{% endif %}">
+        <a href="{% url 'adminpage:images' %}">Images</a>
       </li>
     </ul>
     {% endwith %}
