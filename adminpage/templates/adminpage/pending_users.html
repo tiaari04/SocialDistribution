@@ -16,28 +16,18 @@
 <ul role="list" class="w-full text-sm border border-t-0 border-gray-200 rounded-b-xl shadow-sm">
   {% for u in pending %}
   <li role="listitem" class="grid grid-cols-3 gap-2 items-center border-t first:border-t-0 py-2 px-3">
-    <span class="truncate">{{ u.username }}</span>
-    <span class="text-gray-600">{{ u.date_joined }}</span>
+    <span class="truncate">{{ u.displayName }}</span>
+    <span class="text-gray-600">{{ u.created }}</span>
     <span class="flex items-center gap-2 justify-start">
-      <form action="{% url 'adminpage:approve-user' u.id %}" method="post">
+      <form action="{% url 'adminpage:approve-user' u.displayName %}" method="post">
         {% csrf_token %}
         <button
           class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
           type="submit"
-          aria-label="Approve {{ u.username }}">
+          aria-label="Approve {{ u.displayName }}">
           Approve
         </button>
-      </form>
-
-      <form action="{% url 'adminpage:reject-user' u.id %}" method="post" onsubmit="return confirm('Reject & delete this pending user?');">
-        {% csrf_token %}
-        <button
-          class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500"
-          type="submit"
-          aria-label="Reject {{ u.username }}">
-          Reject
-        </button>
-      </form>
+    </form>
     </span>
   </li>
   {% empty %}

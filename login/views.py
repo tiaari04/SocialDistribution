@@ -7,14 +7,13 @@ from .forms import CustomSignupForm
 from authors.models import Author
 from django.utils.crypto import get_random_string
 from django.contrib.sites.models import Site
-import os
-from django.utils.text import slugify
 from django.urls import reverse
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.urls import reverse
 from authors.models import Author
+
 
 def login_view(request):
     if request.method == "POST":
@@ -27,7 +26,9 @@ def login_view(request):
             login(request, user)
             try:
                 author = Author.objects.get(user=user)
-                if author.is_approved:
+                if author.is_admin:
+                    return redirect(reverse("adminpage:dashboard"))
+                if author.is_approved and author.is_active:
                     return redirect(reverse("entries:stream_home", kwargs={"author_serial": author.serial}))
                 else:
                     return render(request, "login/login.html", {"error": "Your account is pending approval."})
@@ -77,8 +78,9 @@ def signup_view(request):
                 serial=get_random_string(12),
             )
 
-            login(request, user)
-            return redirect(reverse("entries:stream_home", kwargs={"author_serial": author.serial}))
+            # do not log in until validated
+            #login(request, user)
+            return render(request, "login/login.html", {"message": "Signup successful! Please wait for account approval before logging in."})
 
     else:
         form = CustomSignupForm()

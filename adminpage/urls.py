@@ -19,6 +19,6 @@ urlpatterns = [
 
     # Approvals (Users are still int PKs)
     path("approvals/", views.pending_users, name="pending-users"),
-    path("approvals/<int:user_id>/approve/", views.approve_user, name="approve-user"),
-    path("approvals/<int:user_id>/reject/", views.reject_user, name="reject-user"),
+    path('approvals/<path:user_id>/approve/', views.approve_user, name='approve-user'),
+
 ]
