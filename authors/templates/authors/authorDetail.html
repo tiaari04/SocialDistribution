@@ -143,40 +143,41 @@
       if (!button) return;
 
       button.addEventListener('click', async () => {
-        const payload = {
-          type: "follow",
-          summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
-          actor: {
-            type: "author",
-            id: "{{ request.user.author.id }}",
-            host: "{{ request.user.author.host }}",
-            displayName: "{{ request.user.username }}",
-            github: "{{ request.user.author.github }}",
-            profileImage: "{{ request.user.author.profileImage }}",
-            web: "{{ request.user.author.web }}"
-          },
-          object: {
-            type: "author",
-            id: "{{ author.id }}",
-            host: "{{ author.host }}",
-            displayName: "{{ author.displayName }}",
-            github: "{{ author.github }}",
-            profileImage: "{{ author.profileImage }}",
-            web: "{{ author.web }}"
-          }
-        };
+        if (button.textContent.trim() === "Follow") {
+          const payload = {
+            type: "follow",
+            summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
+            actor: {
+              type: "author",
+              id: "{{ request.user.author.id }}",
+              host: "{{ request.user.author.host }}",
+              displayName: "{{ request.user.username }}",
+              github: "{{ request.user.author.github }}",
+              profileImage: "{{ request.user.author.profileImage }}",
+              web: "{{ request.user.author.web }}"
+            },
+            object: {
+              type: "author",
+              id: "{{ author.id }}",
+              host: "{{ author.host }}",
+              displayName: "{{ author.displayName }}",
+              github: "{{ author.github }}",
+              profileImage: "{{ author.profileImage }}",
+              web: "{{ author.web }}"
+            }
+          };
+          const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(payload)
+          });
 
-        const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        button.textContent =
-          button.textContent.trim() === "Follow" ? "Unfollow" : "Follow";
+          button.textContent =
+            button.textContent.trim() === "Follow" ? "Unfollow" : "Follow";
+        }
       });
     });
   </script>
