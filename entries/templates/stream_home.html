@@ -404,7 +404,7 @@
     <body>
         <header>
             <h3>CMPUT404</h3>
-            <a href="/">Profile</a>
+            <a href="{% url 'authors:detail' author.serial %}">Profile</a>
         </header>
         <ul class="stream">
             {% for entry in entries %}

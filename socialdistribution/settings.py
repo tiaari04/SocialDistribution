@@ -7,9 +7,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 LOGIN_REDIRECT_URL = "/authors"
 LOGIN_URL = "/login/"
 
-# ─────────────────────────────
-# Security / debug
-# ─────────────────────────────
+LOGIN_REDIRECT_URL = "/redirect/"       # where to go after successful login
+#LOGOUT_REDIRECT_URL = "/login"      # where to go after logout
+LOGIN_URL = "/login/"          # used when @login_required redirects users
+# Where uploaded files are stored
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Base URL to serve media files
+MEDIA_URL = "/media/"
+
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-du**gb#&9&=ouwz+5&wt4*h(n5fqxmk(i9ve2r(c#74+rhvda!'
 DEBUG = True
 ALLOWED_HOSTS = ['*']

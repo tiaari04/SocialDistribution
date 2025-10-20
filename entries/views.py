@@ -1,10 +1,10 @@
 from django.http import HttpResponse, JsonResponse
 from .models import Entry
 from authors.models import Author
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
-def stream_home(request):
+def stream_home(request, author_serial):
     entries = []
     # IDs not being automatically set 
     #new_entry = Entry(title='title', content='content', fqid='', author=author_obj)
@@ -21,7 +21,9 @@ def stream_home(request):
             'serial': entry.serial,
         })
         # makes the list of pages to display in index.html
-    return render(request, "stream_home.html", { "entries": entries })
+	
+    author = get_object_or_404(Author, serial=author_serial)
+    return render(request, "stream_home.html", { "entries": entries, "author" : author })
 
 def public_entries(request):
 	return HttpResponse("public entries (not implemented)")
