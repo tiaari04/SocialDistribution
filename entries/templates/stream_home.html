@@ -13,6 +13,7 @@
             main {
                 background-color: aliceblue;
                 padding-top: 30px;
+                z-index: 50;
             }
 
             button {
@@ -33,16 +34,25 @@
                 background-color: #7584da;
             }
 
+            button a {
+                color: white;
+                text-decoration: none;
+            }
+
             body.no-scroll {
                 overflow: hidden;
             }
 
             header {
+                position: sticky;
+                top: 0;
+                z-index: 100;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 border-bottom: solid gray 2px;
                 padding: 0px 20px;
+                background-color: white;
             }
 
             header a {
@@ -235,6 +245,15 @@
                 border: solid white 2px;
                 color: white;
             }
+
+            #createPost {
+                position: sticky;
+                bottom: 30px;
+                left: 30px;
+                font-size: 20px;
+                border-radius: 30px;
+                padding: 5px 10px;
+            }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <!-- Parse different content types -->
@@ -257,6 +276,31 @@
                 })
             })
         </script>
+        <!-- Get cookies -->
+        <script>
+            'use strict';
+            // following function from Stack Overflow, https://stackoverflow.com/questions/62416617/add-csrf-in-fetch-js-for-django. 2025-10-20
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        </script>
+        <!-- User session info -->
+        <script>
+            'use strict';
+            const userName = '{{ author.displayName }}';
+            const userFqid = '{{ author.id }}';
+        </script>
         <!-- Handle like functionality -->
         <script>
             'use strict';
@@ -264,11 +308,11 @@
                 const likeButtons = document.querySelectorAll('.likeButton');
 
                 // like functions 
-                async function likeEntry(entryFqid, authorFqid) {
+                async function likeEntry(entryFqid) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the post
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the post
                         body: JSON.stringify({}),
                     }) .then(() => window.location.reload());
                     if (!res.ok) throw new Error(await res.text());
@@ -277,7 +321,7 @@
                 
                 likeButtons.forEach(button => {
                     button.addEventListener('click', () => {
-                        likeEntry(button.dataset.fqid, button.dataset.author);
+                        likeEntry(button.dataset.fqid);
                     });
                 });
             })
@@ -356,49 +400,49 @@
 
                 // author/entry specific variables for (local) API calls
                 let authorSerial = null;
-                let authorFqid = null;
                 let entrySerial = null;
                 let entryFqid = null;
 
                 // comment panel functions 
-                async function getComments(entryFqid, authorFqid) {
+                async function getComments(entryFqid) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid },
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
                     })
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
                 }
 
-                async function postComment(entryFqid, authorFqid, text) {
+                async function postComment(entryFqid, text) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that sent the comment
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that sent the comment
                         body: JSON.stringify({ comment: text }),
                     })
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
                 }
 
-                async function likeComment(entryFqid, commentFqid, authorFqid) {
+                async function likeComment(entryFqid, commentFqid) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const cEncoded = encodeURIComponent(commentFqid);
                     //const res = await fetch(`/api/authors/author1serial/entries/entry6serial/comments/${cEncoded}/likes/`, {
                     const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the comment
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the comment
                         body: JSON.stringify({}),
-                    }) .then(() => openComments(entryFqid, authorFqid));
+                    }) .then(() => openComments(entryFqid));
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
                 }
 
-                async function openComments(postId, author) {
+                async function openComments(postId) {
                     currentPost = document.getElementById(`post_${postId}`);
 
-                    let commentRes = await getComments(postId, author);
+                    let commentRes = await getComments(postId);
                     commentsContent.innerHTML = '';
                     while (commentRes) {
                         const comments = commentRes.results;
@@ -412,7 +456,7 @@
 
                             const likeButton = clone.querySelector('.likeButton');
                             likeButton.addEventListener('click', async () => {
-                                await likeComment(postId, clone.id, author);
+                                await likeComment(postId, clone.id, userFqid);
                             });
 
                             commentsContent.appendChild(clone);
@@ -420,7 +464,7 @@
                         if (commentRes.next) {
                             const res = await fetch(commentRes.next, {
                                 method: 'GET',
-                                headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid },
+                                headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
                             });
                             if (!res.ok) throw new Error(await res.text());
                             commentRes = await res.json();
@@ -429,8 +473,6 @@
                         }
                     }
                     
-                    console.log(commentRes);
-
                     commentPanel.classList.add('visible');
                     document.body.classList.add('no-scroll');
                     currentPost.classList.add('comment');
@@ -446,10 +488,9 @@
 
                 commentButtons.forEach(button => {
                     button.addEventListener('click', () => {
-                        // store authorFqid and entryFqid for handling adding comments
-                        authorFqid = button.dataset.author;
+                        // store entryFqid for handling adding comments
                         entryFqid = button.dataset.fqid;
-                        openComments(button.dataset.fqid, authorFqid);
+                        openComments(button.dataset.fqid);
                     });
                 });
                 
@@ -459,8 +500,8 @@
                     const text = commentInput.value.trim();
                     commentInput.value = '';
                     if (!text) return;
-                    await postComment(entryFqid, authorFqid, text);
-                    openComments(entryFqid, authorFqid);
+                    await postComment(entryFqid, text);
+                    openComments(entryFqid);
                 });
 
                 closeComments.addEventListener('click', closeCommPanel);
@@ -478,7 +519,7 @@
                 {% for entry in entries %}
                     <li id="post_{{ entry.fqid }}" class="post">
                         <section class="user">
-                            <a href='/'>{{ entry.author.displayName }}</a>
+                            <a href="{% url 'authors:detail' entry.author.serial %}">{{ entry.author.displayName }}</a>
                             <button data-fqid="{{ entry.fqid }}" class="share">
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>
@@ -507,6 +548,8 @@
                     </li>
                 {% endfor %}
             </ul>
+
+            <button id="createPost"><a href="">New Post</a></button>
 
             <!-- Comments panel -->
             <section id="commentsPanel">
