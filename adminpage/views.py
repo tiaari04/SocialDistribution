@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 
 from .models import HostedImage
-from .forms import HostedImageForm, SignupForm, AuthorForm
+from .forms import HostedImageForm, AuthorForm
 from authors.models import Author
 
 User = get_user_model()

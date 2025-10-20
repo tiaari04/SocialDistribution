@@ -9,7 +9,7 @@ User = get_user_model()
 class HostedImageForm(forms.ModelForm):
     class Meta:
         model = HostedImage
-        fields = ['file', 'alt_text', 'is_public']
+        fields = ['file']
 
 class AuthorForm(forms.ModelForm):
     """

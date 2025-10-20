@@ -23,10 +23,6 @@ def image_upload_to(instance, filename):
 
 
 class HostedImage(models.Model):
-    """
-    Stores a single uploaded image that is always public.
-    Intended for reuse in CommonMark posts by all users.
-    """
 
     file = models.ImageField(upload_to=image_upload_to, validators=[validate_image_file])
     uploaded_by = models.ForeignKey(
