@@ -1,5 +1,5 @@
 from authors.models import Author
-from inbox.models import InboxItem
+from inbox.models import InboxItem, FollowRequest
 from .models import Entry, Comment, Like
 from django.utils import timezone
 
@@ -83,5 +83,26 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
         )
         return {'status': 'created', 'object': like}
+
+    if typ == 'follow':
+        actor_payload = payload.get('actor')
+        object_payload = payload.get('object')
+
+        if not actor_payload or not object_payload:
+            return {'status': 'error', 'error': 'missing_actor_or_object'}
+
+        actor = _ensure_author(actor_payload)
+        author_followed = _ensure_author(object_payload)
+
+        existing_request = FollowRequest.objects.filter(actor=actor, author_followed=author_followed).first()
+
+        if existing_request:
+            return {'status': 'exists', 'object': existing_request}
+
+        follow_request = FollowRequest.objects.create(
+            actor=actor,
+            author_followed = author_followed,
+        )
+        return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
