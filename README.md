@@ -8,6 +8,10 @@ See [the web page](https://uofa-cmput404.github.io/general/project.html) for a d
 
 Make a distributed social network!
 
+## Documentation
+* There is a `docs` folder which includes `api.md`, `endpoints.md`, and `user-stories.md`
+* There is a OpenAPI ("Swagger") specification hosted on [Github Pages](https://uofa-cmput404.github.io/f25-project-red/swagger.html)
+
 ## License
 
 * This project is licensed under the MIT License.
