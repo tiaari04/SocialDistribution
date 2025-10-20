@@ -1,10 +1,11 @@
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from authors.models import Author
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.conf import settings
 from inbox.models import FollowRequest
+from entries.models import Entry
 
 def author_list(request):
     authors = Author.objects.all()
@@ -15,7 +16,8 @@ def author_create(request):
 
 def author_detail(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
-    return render(request, "authors/authorDetail.html", {"author": author})
+    entries = get_list_or_404(Entry, author_id=author.id)
+    return render(request, "authors/authorDetail.html", {"author": author, "entries": entries})
 
 @login_required
 def author_edit(request, author_serial):
