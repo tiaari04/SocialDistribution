@@ -16,7 +16,15 @@ def stream_home(request, author_serial):
     return render(request, "stream_home.html", { "entries": entry_objs, "author" : author })
 
 def public_entries(request):
-	return HttpResponse("public entries (not implemented)")
+    """
+    Returns all public entries.
+    """
+    if request.method == "GET":
+        entries = Entry.objects.filter(visibility=Entry.Visibility.PUBLIC).order_by("-published")
+        data = [model_to_dict(e) for e in entries]
+        return JsonResponse(data, safe=False)
+    return HttpResponseNotAllowed(["GET"])
+
 
 def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
