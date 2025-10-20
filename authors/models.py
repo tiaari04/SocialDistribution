@@ -29,6 +29,7 @@ class Author(TimeStampedModel):
     profileImage = models.URLField(max_length=MAX_URL, blank=True)
     web = models.URLField(max_length=MAX_URL, blank=True)
     description = models.TextField(blank=True)
+    is_approved = models.BooleanField(default=False, db_index=True)
     # Convenience: whether this author account is hosted locally on this node
     is_local = models.BooleanField(default=True, db_index=True)
     is_admin = models.BooleanField(default=False, db_index=True)
@@ -49,3 +50,23 @@ class Author(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.displayName} ({self.id})"
+
+    def is_friend(self, other: "Author") -> bool:
+        """
+        Returns True if `self` and `other` have mutually accepted follow requests.
+        This relies on the `FollowRequest` model in the `inbox` app.
+        """
+        try:
+            from inbox.models import FollowRequest
+        except Exception:
+            return False
+
+        if self.id == other.id:
+            return True
+
+        # accepted follow where self -> other and other -> self
+        accepted = FollowRequest.State.ACCEPTED
+        return (
+            FollowRequest.objects.filter(actor=self, author_followed=other, state=accepted).exists()
+            and FollowRequest.objects.filter(actor=other, author_followed=self, state=accepted).exists()
+        )
