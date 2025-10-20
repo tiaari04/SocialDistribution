@@ -7,12 +7,10 @@ from django.conf import settings
 from inbox.models import FollowRequest
 from entries.models import Entry
 
+@login_required
 def author_list(request):
     authors = Author.objects.all()
     return render(request, "authors/authorList.html", {"authors": authors})
-
-def author_create(request):
-	return HttpResponse("author create (not implemented)")
 
 def author_detail(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
@@ -24,7 +22,7 @@ def author_edit(request, author_serial):
     author = Author.objects.get(serial=author_serial)
 
     if request.method == "POST":
-        # Update text fields
+        # save updates
         author.displayName = request.POST.get("displayName", author.displayName)
         author.description = request.POST.get("description", author.description)
         author.web = request.POST.get("web", author.web)
@@ -32,9 +30,7 @@ def author_edit(request, author_serial):
 
         if "profileImageFile" in request.FILES:
             uploaded_file = request.FILES["profileImageFile"]
-            # Save file in MEDIA_ROOT/profile_images/
             path = default_storage.save(f"profile_images/{uploaded_file.name}", uploaded_file)
-            # Generate full URL
             author.profileImage = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
         else:
             url_input = request.POST.get("profileImage", "").strip()
@@ -48,12 +44,15 @@ def author_edit(request, author_serial):
 
     return render(request, "authors/authorEdit.html", {"author": author})
 
+@login_required
 def author_entries_page(request, author_serial):
 	return HttpResponse(f"author entries {author_serial} (not implemented)")
 
+@login_required
 def author_followers_page(request, author_serial):
 	return HttpResponse(f"author followers {author_serial} (not implemented)")
 
+@login_required
 def follow_requests_page(request, author_serial):
 	author = get_object_or_404(Author, serial=author_serial)
 

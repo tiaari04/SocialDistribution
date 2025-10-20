@@ -5,12 +5,144 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ author.displayName }}'s Profile</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ----------- Base Layout ----------- */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    main {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      header {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    figure img {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #c7d2fe;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    section.profile-info {
+      flex: 1;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .followers {
+      color: #4b5563;
+      margin-bottom: 1rem;
+    }
+
+    a.link {
+      color: #4f46e5;
+      font-weight: 500;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    a.link:hover {
+      text-decoration: underline;
+    }
+
+    p.bio {
+      color: #374151;
+      white-space: pre-line;
+      margin-top: 1rem;
+    }
+
+    /* ----------- Buttons ----------- */
+    .button {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background-color: #6366f1;
+      color: white;
+      font-weight: 600;
+      padding: 0.6rem 1.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.25s ease, transform 0.1s ease;
+    }
+
+    .button:hover {
+      background-color: #4f46e5;
+    }
+
+    .button:active {
+      transform: scale(0.98);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #d1d5db;
+      margin: 2rem 0;
+    }
+
+    /* ----------- Entries Section ----------- */
+    article.entries {
+      text-align: left;
+    }
+
+    article.entries h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.75rem;
+    }
+
+    article.entries p {
+      color: #6b7280;
+      font-style: italic;
+    }
+  </style>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const button = document.getElementById('follow-btn');
+      if (!button) return;
+
       button.addEventListener('click', async () => {
-        const button = document.getElementById('follow-btn');
         const payload = {
           type: "follow",
           summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
@@ -33,6 +165,7 @@
             web: "{{ author.web }}"
           }
         };
+
         const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
           method: "POST",
           headers: {
@@ -42,81 +175,55 @@
           body: JSON.stringify(payload)
         });
 
-        if (button.textContent.trim() === "Follow") {
-          button.textContent = "Unfollow";
-        }
+        button.textContent =
+          button.textContent.trim() === "Follow" ? "Unfollow" : "Follow";
       });
     });
   </script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center py-10">
 
-  <div class="bg-white shadow-xl rounded-2xl w-full max-w-3xl p-8">
-    <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
-      <!-- Profile image -->
-      <img src="{{ author.profileImage|default:'https://via.placeholder.com/150' }}"
-           alt="{{ author.displayName }}"
-           class="w-40 h-40 rounded-full object-cover border-4 border-indigo-200 shadow-md">
-      <!-- Profile info -->
-      <div class="flex-1">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">
-          {{ author.displayName }}
-        </h1>
+<body>
+  <main>
+    <header>
+      <figure>
+        <img src="{{ author.profileImage|default:'https://via.placeholder.com/150' }}"
+             alt="{{ author.displayName }}">
+      </figure>
 
-        <span class="text-gray-600">{{ author.follower_count|default:0 }} Followers</span>
+      <section class="profile-info">
+        <h1>{{ author.displayName }}</h1>
+        <span class="followers">{{ author.follower_count|default:0 }} Followers</span>
 
         {% if author.github %}
-          <p class="text-indigo-600 font-medium mb-2">
-            <a href="{{ author.github }}" target="_blank" class="hover:underline">
-              GitHub: {{ author.github }}
-            </a>
-          </p>
+          <a href="{{ author.github }}" target="_blank" class="link">GitHub: {{ author.github }}</a>
         {% endif %}
 
         {% if author.web %}
-          <p class="text-indigo-600 font-medium mb-2">
-            <a href="{{ author.web }}" target="_blank" class="hover:underline">
-              Website: {{ author.web }}
-            </a>
-          </p>
+          <a href="{{ author.web }}" target="_blank" class="link">Website: {{ author.web }}</a>
         {% endif %}
 
-        <p class="text-gray-700 mt-3 whitespace-pre-line">
+        <p class="bio">
           {{ author.description|default:"This author hasn’t added a bio yet." }}
         </p>
 
         {% if request.user.is_authenticated and request.user == author.user %}
-          <a href="{% url 'authors:edit' author.serial %}"
-             class="inline-block mt-5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
-            Edit Profile
-          </a>
-          <a href="{% url 'authors:follow-requests' author.serial %}"
-                  class="inline-block mt-5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
-            Follow Requests
-        </a>
+          <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
+          <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests</a>
         {% else %}
-          
-          <button type="submit" id="follow-btn"
-            class="inline-block mt-5 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
-              {% if is_following %}
-                Unfollow
-              {% else %}
-                Follow
-              {% endif %}
+          <button type="button" id="follow-btn" class="button">
+            {% if is_following %}Unfollow{% else %}Follow{% endif %}
           </button>
         {% endif %}
-      </div>
-    </div>
+      </section>
+    </header>
 
-    <hr class="my-8 border-gray-300">
+    <hr>
 
-    <!-- Placeholder for entries -->
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Public Entries</h2>
-      <p class="text-gray-600 italic">No entries yet — this section will display posts or GitHub activity.</p>
-      <!-- TODO: create and reuse stream component (just posts) -->
-    </div>
-  </div>
-
+    <article class="entries">
+      <h2>Public Entries</h2>
+      <p>No entries yet — this section will display posts or GitHub activity.</p>
+      <!-- TODO: create and reuse stream component in homestream and authordetail? -->
+    </article>
+  </main>
 </body>
 </html>
