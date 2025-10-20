@@ -1,115 +1,99 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Authors{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* optional page tweaks */
+</style>
+{% endblock %}
+
 {% block content %}
-
 <ul class="container gap-6">
-  <!-- Page heading -->
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">Authors</h1>
-  </li>
+  <!-- Heading -->
+  <li><h1 class="text-xl semibold text-primary p-4">Authors</h1></li>
 
-  <!-- Search form -->
+  <!-- Search -->
   <li>
     <form method="get">
-      <ul class="row gap-3 p-4">
+      <ul class="row p-4">
         <li style="flex:1 1 auto; min-width:0;">
-          <input
-            name="q"
-            value="{{ q }}"
-            placeholder="Search displayName..."
-            class="border rounded px-3 py-2 text-sm bg-white"
-            style="width:100%;"
-          />
+          <input name="q" value="{{ q }}" placeholder="Search displayName..." />
         </li>
-        <li>
-          <button class="bg-primary rounded px-4 py-2 text-sm bold text-white">
-            Search
-          </button>
-        </li>
-        <li>
-          <a href="{% url 'adminpage:author-create' %}" class="border rounded px-4 py-2 text-sm bg-white">
-            Add Author
-          </a>
-        </li>
+        <li><button class="btn btn-primary">Search</button></li>
+        <li><a class="btn btn-outline" href="{% url 'adminpage:author-create' %}">Add Author</a></li>
       </ul>
     </form>
   </li>
 
-  <!-- Table header -->
+  <!-- Header -->
   <li>
-    <ul class="grid cols-6 gap-2 border bg-neutral-100 text-strong rounded p-3 text-sm semibold">
-      <li>Author</li>
-      <li>User</li>
-      <li>Local</li>
-      <li>Admin</li>
-      <li>Active</li>
-      <li>Actions</li>
+    <ul class="grid cols-6 gap-2 header-row p-3 text-sm">
+      <li class="cell">Author</li>
+      <li class="cell">User</li>
+      <li class="cell">Local</li>
+      <li class="cell">Admin</li>
+      <li class="cell">Active</li>
+      <li class="cell">Actions</li>
     </ul>
   </li>
 
-  <!-- Table body -->
+  <!-- Body -->
   <li>
-    <ul class="grid gap-0 border rounded shadow text-sm">
+    <ul class="border rounded shadow text-sm">
       {% for a in authors %}
-      <li class="grid cols-6 gap-2 p-3" style="border-top:1px solid var(--neutral-200);">
-        <!-- Author name + ID -->
-        <ul>
-          <li class="bold">{{ a.displayName }}</li>
-          <li class="text-sm text-muted" style="word-break:break-all;">{{ a.id }}</li>
+      <li class="border-top">
+        <!-- ROW GRID (cells go here) -->
+        <ul class="grid cols-6 gap-2 p-3">
+          <!-- Author cell (name + id stacked) -->
+          <li>
+            <ul class="gap-2">
+              <li class="bold">{{ a.displayName }}</li>
+              <li class="text-sm text-muted mono" style="word-break:break-all;">{{ a.id }}</li>
+            </ul>
+          </li>
+
+          <!-- User -->
+          <li>
+            {% if a.user %}{{ a.user.username }}{% else %}<span class="text-muted">—</span>{% endif %}
+          </li>
+
+          <!-- Local -->
+          <li>{{ a.is_local }}</li>
+
+          <!-- Admin -->
+          <li>
+            {% if a.is_admin %}
+              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem; color:var(--blue-700);">admin</span>
+            {% else %}
+              <span class="text-muted">no</span>
+            {% endif %}
+          </li>
+
+          <!-- Active -->
+          <li>
+            {% if a.is_active %}
+              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem;">active</span>
+            {% else %}
+              <span class="text-muted">inactive</span>
+            {% endif %}
+          </li>
+
+          <!-- Actions -->
+          <li>
+            <ul class="row">
+              <li>
+                <a href="{% url 'adminpage:author-update' a.pk %}" class="btn btn-outline" style="padding:.375rem .75rem; font-size:.75rem;">Edit</a>
+              </li>
+              <li>
+                <form action="{% url 'adminpage:author-delete' a.pk %}" method="post" onsubmit="return confirm('Delete this author?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger" style="padding:.375rem .75rem; font-size:.75rem;">Delete</button>
+                </form>
+              </li>
+            </ul>
+          </li>
         </ul>
-
-        <!-- Linked user -->
-        <li>
-          {% if a.user %}
-            {{ a.user.username }}
-          {% else %}
-            <span class="text-muted">—</span>
-          {% endif %}
-        </li>
-
-        <!-- Local -->
-        <li>{{ a.is_local }}</li>
-
-        <!-- Admin -->
-        <li>
-          {% if a.is_admin %}
-            <span class="border rounded px-2 py-1 text-xs text-primary">admin</span>
-          {% else %}
-            <span class="text-muted">no</span>
-          {% endif %}
-        </li>
-
-        <!-- Active -->
-        <li>
-          {% if a.is_active %}
-            <span class="border rounded px-2 py-1 text-xs text-strong">active</span>
-          {% else %}
-            <span class="text-muted">inactive</span>
-          {% endif %}
-        </li>
-
-        <!-- Actions -->
-        <li>
-          <ul class="row gap-2 center">
-            <li>
-              <a href="{% url 'adminpage:author-update' a.pk %}" class="border rounded px-3 py-1 text-xs bg-white">
-                Edit
-              </a>
-            </li>
-            <li>
-              <form
-                action="{% url 'adminpage:author-delete' a.pk %}"
-                method="post"
-                onsubmit="return confirm('Delete this author?');"
-              >
-                {% csrf_token %}
-                <button type="submit" class="rounded px-3 py-1 text-xs text-white" style="background:#e11d48;">
-                  Delete
-                </button>
-              </form>
-            </li>
-          </ul>
-        </li>
       </li>
       {% empty %}
       <li class="p-6 text-center text-muted">No authors found.</li>
@@ -117,5 +101,4 @@
     </ul>
   </li>
 </ul>
-
 {% endblock %}

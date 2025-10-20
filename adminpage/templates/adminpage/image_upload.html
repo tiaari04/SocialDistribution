@@ -1,25 +1,26 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Upload Image{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* page-specific (optional) */
+.maxw-xl{ max-width:40rem; }
+</style>
+{% endblock %}
+
 {% block content %}
-
 <ul class="container gap-6">
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">Upload Image</h1>
-  </li>
+  <li><h1 class="text-xl semibold text-primary p-4">Upload Image</h1></li>
 
-  <li class="card p-6" style="max-width:40rem;">
+  <li class="card p-6 maxw-xl">
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      <ul class="gap-4">
+      <ul class="gap-3">
         <li>{{ form.file }}</li>
-        <li>
-          <button type="submit" class="bg-primary rounded px-4 py-2 text-sm bold text-white">
-            Upload
-          </button>
-        </li>
+        <li><button type="submit" class="btn btn-primary">Upload</button></li>
       </ul>
     </form>
   </li>
 </ul>
-
 {% endblock %}

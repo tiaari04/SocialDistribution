@@ -1,36 +1,42 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Approvals{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* optional */
+</style>
+{% endblock %}
+
 {% block content %}
-
 <ul class="container gap-6">
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">Pending Users</h1>
-  </li>
+  <li><h1 class="text-xl semibold text-primary p-4">Pending Users</h1></li>
 
+  <!-- Header -->
   <li>
-    <ul class="grid cols-3 gap-2 border bg-neutral-100 text-strong rounded p-3 text-sm semibold">
-      <li>Username</li>
-      <li>Joined</li>
-      <li>Actions</li>
+    <ul class="grid cols-3 gap-2 header-row p-3 text-sm">
+      <li class="cell">Username</li>
+      <li class="cell">Joined</li>
+      <li class="cell">Actions</li>
     </ul>
   </li>
 
+  <!-- Body -->
   <li>
-    <ul class="grid gap-0 border rounded shadow text-sm">
+    <ul class="border rounded shadow text-sm">
       {% for u in pending %}
-      <li class="grid cols-3 gap-2 p-3" style="border-top:1px solid var(--neutral-200);">
-        <li class="truncate">{{ u.displayName }}</li>
-        <li class="text-muted">{{ u.created }}</li>
-        <li>
-          <form action="{% url 'adminpage:approve-user' u.id %}" method="post"
-                onsubmit="return confirm('Approve {{ u.displayName }}?');">
-            {% csrf_token %}
-            <button type="submit" class="rounded px-3 py-1 text-xs text-white"
-                    style="background:#16a34a;" aria-label="Approve {{ u.displayName }}">
-              Approve
-            </button>
-          </form>
-        </li>
+      <li class="border-top">
+        <!-- ROW GRID -->
+        <ul class="grid cols-3 gap-2 p-3">
+          <li class="truncate">{{ u.displayName }}</li>
+          <li class="text-muted">{{ u.created }}</li>
+          <li>
+            <form action="{% url 'adminpage:approve-user' u.id %}" method="post" onsubmit="return confirm('Approve {{ u.displayName }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success" style="padding:.375rem .75rem; font-size:.75rem;">Approve</button>
+            </form>
+          </li>
+        </ul>
       </li>
       {% empty %}
       <li class="p-6 text-center text-muted">No pending users.</li>
@@ -38,5 +44,4 @@
     </ul>
   </li>
 </ul>
-
 {% endblock %}
