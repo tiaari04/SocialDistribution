@@ -141,12 +141,33 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 USE_CLOUDINARY_MEDIA = os.getenv("DJANGO_USE_CLOUDINARY_MEDIA") == "1"
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 
-if USE_CLOUDINARY_MEDIA:
-    # Cloudinary for MEDIA (Heroku)
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    MEDIA_URL = "/media/" 
+CLOUDINARY_SECURE = os.getenv("CLOUDINARY_SECURE", "true").lower() in ("1", "true", "yes")
+CLOUDINARY_STORAGE = {
+    "SECURE": CLOUDINARY_SECURE,
+    "PREFIX": os.getenv("CLOUDINARY_MEDIA_PREFIX", "socialdistribution/media"),
+}
+
+if USE_CLOUDINARY_MEDIA and CLOUDINARY_URL:
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    MEDIA_URL = "/media/"
 else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
