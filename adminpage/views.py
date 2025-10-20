@@ -46,13 +46,20 @@ def dashboard(request):
 # --------- Images ---------
 
 def images_list(request):
+    """
+    List all hosted images (always public). Optional ?q= filters by file name.
+    """
     q = request.GET.get('q', '')
     qs = HostedImage.objects.all().order_by('-created_at')
     if q:
-        qs = qs.filter(alt_text__icontains=q)
+        # 'file' holds the relative storage name (e.g., uploads/images/<uuid>.png)
+        qs = qs.filter(file__icontains=q)
     return render(request, 'adminpage/images_list.html', {'images': qs, 'q': q})
 
 def image_upload(request):
+    """
+    Upload a single image (always public). Backend relies on storage (Cloudinary in prod).
+    """
     if request.method == 'POST':
         form = HostedImageForm(request.POST, request.FILES)
         if form.is_valid():
@@ -182,12 +189,11 @@ def reject_user(request, user_id):
 
 def public_images_json(request):
     """
-    Public JSON endpoint for any user to fetch all public images.
+    Public JSON endpoint for any user to fetch all hosted images.
     """
     data = [{
         'id': i.id,
         'url': i.url,
-        'alt_text': i.alt_text,
         'created_at': i.created_at.isoformat(),
-    } for i in HostedImage.objects.filter(is_public=True).order_by('-created_at')]
+    } for i in HostedImage.objects.order_by('-created_at')]
     return JsonResponse({'images': data})

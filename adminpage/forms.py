@@ -6,11 +6,6 @@ from authors.models import Author  # <- your Author
 
 User = get_user_model()
 
-class SignupForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ("username", "email")
-
 class HostedImageForm(forms.ModelForm):
     class Meta:
         model = HostedImage
@@ -24,10 +19,10 @@ class AuthorForm(forms.ModelForm):
     class Meta:
         model = Author
         fields = [
-            'id',           # FQID (URL). Show only if you want manual control; otherwise hide/auto-generate.
+            'id',   
             'user',
             'host',
-            'displayName',  # camelCase per your model
+            'displayName',
             'github',
             'profileImage',
             'web',
