@@ -154,7 +154,7 @@ def pending_users(request):
 @require_POST
 def approve_user(request, user_id):
     author_url = unquote(user_id).rstrip('/')
-    author = get_object_or_404(Author, url__in=[author_url, author_url + '/']))
+    author = get_object_or_404(Author, url__in=[author_url, author_url + '/'])
 
     author.is_approved = True
     author.save(update_fields=['is_approved'])
