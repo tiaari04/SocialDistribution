@@ -2,6 +2,8 @@ from django.test import TestCase, Client
 from authors.models import Author
 from .models import Entry, Comment, Like, EntryDelivery
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.urls import reverse
 
 
 class CommentsLikesTests(TestCase):
@@ -50,3 +52,66 @@ class CommentsLikesTests(TestCase):
 		resp = self.client.post(f'/api/authors/2/entries/12/comments/', data={'comment': 'secret'}, content_type='application/json', **{'HTTP_X_AUTHOR_ID': self.a1.id})
 		self.assertEqual(resp.status_code, 201)
 
+class EntryViewsTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="password")
+        self.client = Client()
+        self.client.login(username="testuser", password="password")
+
+        self.author = Author.objects.create(
+            user=self.user,
+            displayName="Test Author",
+            host="http://localhost"
+        )
+        self.author.serial = "testauthor"
+        self.author.save()
+
+        self.entry = Entry.objects.create(
+            author=self.author,
+            serial="testentry",
+            fqid=f"{self.author.host}/authors/{self.author.serial}/entries/testentry",
+            title="Initial Post",
+            content="Initial content",
+            content_type="text/plain",
+            visibility="PUBLIC",
+            published=timezone.now()
+        )
+
+    def test_create_entry(self):
+        url = reverse("entries:create", kwargs={"author_serial": self.author.serial})
+        data = {
+            "title": "New Post",
+            "content": "New content",
+            "content_type": "text/plain",
+            "visibility": "PUBLIC"
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Entry.objects.filter(title="New Post").exists())
+
+    def test_edit_entry(self):
+        url = reverse(
+            "entries:edit", 
+            kwargs={"author_serial": self.author.serial, "entry_serial": self.entry.serial}
+        )
+        data = {
+            "title": "Edited Post",
+            "content": "Edited content",
+            "content_type": "text/plain",
+            "visibility": "PUBLIC"
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.title, "Edited Post")
+        self.assertEqual(self.entry.content, "Edited content")
+
+    def test_delete_entry(self):
+        url = reverse(
+            "entries:entry_delete",
+            kwargs={"author_serial": self.author.serial, "entry_serial": self.entry.serial}
+        )
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Entry.objects.filter(serial=self.entry.serial).exists())
