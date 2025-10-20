@@ -1,33 +1,55 @@
 {% extends "base_adminpage.html" %}
-{% block title %}{{ mode }} Author{% endblock %}
-{% block content %}
-<h1 class="text-2xl font-semibold mb-6 text-blue-800">{{ mode }} Author</h1>
+{% block title %}Author{% endblock %}
 
-<ul role="list" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-2xl">
-  <li role="listitem">
-    <form method="post" class="space-y-4">
+{% block styles %}
+{{ block.super }}
+<style>
+/* page-specific (optional) */
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li>
+    <h1 class="text-xl semibold text-primary p-4">
+      {% if form.instance.pk %}Edit Author{% else %}Add Author{% endif %}
+    </h1>
+  </li>
+
+  <li class="card p-4">
+    <form method="post">
       {% csrf_token %}
-      <ul role="list" class="space-y-3">
-        {{ form.as_ul }}
-        <li role="listitem" class="flex gap-2">
-          <button
-            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
-            type="submit"
-          >
-            {{ mode }}
-          </button>
-          <a
-            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-100"
-            href="{% url 'adminpage:authors' %}"
-          >
-            Cancel
-          </a>
+
+      {% if form.non_field_errors %}
+      <ul class="p-3 border rounded" style="background:var(--gray-100);">
+        {% for err in form.non_field_errors %}<li class="text-sm text-strong">{{ err }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+
+      <ul class="grid cols-2 gap-6 p-4">
+        {% for field in form.visible_fields %}
+        <li>
+          <ul class="gap-3">
+            <li><label for="{{ field.id_for_label }}" class="text-sm semibold text-strong">{{ field.label }}</label></li>
+            <li>{{ field }}</li>
+            {% if field.help_text %}<li class="text-sm text-muted">{{ field.help_text|safe }}</li>{% endif %}
+            {% if field.errors %}
+              <li>
+                <ul class="text-sm" style="color:#b91c1c;">
+                  {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+              </li>
+            {% endif %}
+          </ul>
         </li>
+        {% endfor %}
+      </ul>
+
+      <ul class="row p-4">
+        <li><button type="submit" class="btn btn-primary">Save</button></li>
+        <li><a href="{% url 'adminpage:authors' %}" class="btn btn-outline">Cancel</a></li>
       </ul>
     </form>
-  </li>
-  <li role="listitem" class="text-gray-500 mt-3 text-sm">
-    For local authors, leave “id” blank to auto-generate an FQID if your view supports it.
   </li>
 </ul>
 {% endblock %}
