@@ -166,3 +166,220 @@ class FollowersAndFollowRequestsTests(TestCase):
             state=FollowRequest.State.REQUESTING,
         ).exists()
         self.assertFalse(fr_exists)
+
+    def test_approve_follow_request(self):
+        """ Approving follow request logged in as correct author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user2)
+
+        # A1 sends request to A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.REQUESTING
+        )
+
+        # DELETE request to reject follow request
+        response = self.client.put(
+            f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json(), {"detail": "Follower added"})
+
+        # Check that the FollowRequest state has been updated
+        follow_request.refresh_from_db()
+        self.assertEqual(follow_request.state, FollowRequest.State.ACCEPTED)
+
+    def test_reject_follow_request(self):
+        """ Rejecting follow request logged in as correct author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user2)
+
+        # A1 sends request to A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.REQUESTING
+        )
+
+        # PUT request to approve follow request
+        response = self.client.delete(
+            f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"detail": "Follower removed"})
+
+        # Check that the FollowRequest state has been updated
+        follow_request.refresh_from_db()
+        self.assertEqual(follow_request.state, FollowRequest.State.REJECTED)
+
+    def test_reject_follow_request_wrong_author(self):
+        """ Rejecting follow request logged in as incorrect author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user1)
+
+        # A1 sends request to A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.REQUESTING
+        )
+
+        # PUT request to approve follow request
+        response = self.client.delete(
+            f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"detail": "Forbidden"})
+
+        # Check that the FollowRequest state has been updated
+        follow_request.refresh_from_db()
+        self.assertEqual(follow_request.state, FollowRequest.State.REQUESTING)
+
+    def test_approve_follow_request_fake_author(self):
+        """ Approving follow request logged in as correct author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user2)
+
+        # A1 sends request to A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.REQUESTING
+        )
+        
+        # fake author serial
+        fake_serial = "3"
+
+        # DELETE request to reject follow request
+        response = self.client.put(
+            f"/api/authors/{fake_serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.status_code, 404)
+
+        # Check that the FollowRequest state has been updated
+        follow_request.refresh_from_db()
+        self.assertEqual(follow_request.state, FollowRequest.State.REQUESTING)
+
+    def test_get_follower_exists(self):
+        """ Approving follow request logged in as correct author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user2)
+
+        # A1 sends request to A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # GET request to check if author is follower
+        response = self.client.get(
+            f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.json(), {"is_follower": True})
+
+    def test_get_follower_not_exists(self):
+        """ Approving follow request logged in as correct author"""
+        # Login as a1 (the follower)
+        self.client = Client()
+        self.client.force_login(self.user2)
+
+        # GET request to check if author is follower
+        response = self.client.get(
+            f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
+            content_type="application/json",
+        )
+
+        # Check the response
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"is_follower": False})
+
+
+    def test_is_friend(self):
+        """Test if 2 authors have accepted requests they are friends"""
+        # A1 accepts request from A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # A2 accepts request from A1
+        follow_request2 = FollowRequest.objects.create(
+            actor=self.a2,
+            author_followed=self.a1,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # Check if they are friends
+        self.assertTrue(self.a1.is_friend(self.a2))
+        self.assertTrue(self.a2.is_friend(self.a1))
+
+    def test_is_friend_not_friends(self):
+        """Test if 1 authors have accepted request and the other hasn't they are not friends"""
+        # A1 accepts request from A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # A2 accepts request from A1
+        follow_request = FollowRequest.objects.create(
+            actor=self.a2,
+            author_followed=self.a1,
+            state=FollowRequest.State.REQUESTING
+        )
+
+        # Check if they are friends
+        self.assertFalse(self.a1.is_friend(self.a2))
+        self.assertFalse(self.a2.is_friend(self.a1))
+
+    def test_is_friend_not_friends_accepted_then_rejected(self):
+        """Test if 1 authors have accepted request and the other hasn't they are not friends"""
+        # A1 accepts request from A2
+        follow_request = FollowRequest.objects.create(
+            actor=self.a1,
+            author_followed=self.a2,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # A2 accepts request from A1
+        follow_request2 = FollowRequest.objects.create(
+            actor=self.a2,
+            author_followed=self.a1,
+            state=FollowRequest.State.ACCEPTED
+        )
+
+        # Initially they are friends
+        self.assertTrue(self.a1.is_friend(self.a2))
+        self.assertTrue(self.a2.is_friend(self.a1))
+
+        # Now one author rejects the request
+        follow_request2.state = FollowRequest.State.REJECTED
+        follow_request2.save()
+
+        # They are no longer friends
+        self.assertFalse(self.a1.is_friend(self.a2))
+        self.assertFalse(self.a2.is_friend(self.a1))
