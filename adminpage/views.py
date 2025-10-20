@@ -5,6 +5,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from urllib.parse import unquote
 from django.contrib.auth import get_user_model
 
 from .models import HostedImage
@@ -152,7 +153,8 @@ def pending_users(request):
 
 @require_POST
 def approve_user(request, user_id):
-    author = get_object_or_404(Author, displayName=user_id)
+    author_url = unquote(user_id).rstrip('/')
+    author = get_object_or_404(Author, url__in=[author_url, author_url + '/']))
 
     author.is_approved = True
     author.save(update_fields=['is_approved'])
