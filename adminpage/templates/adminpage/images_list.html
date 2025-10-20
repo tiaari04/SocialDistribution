@@ -7,7 +7,7 @@
   <input
     name="q"
     value="{{ q }}"
-    placeholder="Search alt text..."
+    placeholder="Search images..."
     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
   />
   <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">
@@ -21,42 +21,24 @@
   </a>
 </form>
 
-<!-- Header row -->
 <ul role="list" class="w-full text-sm bg-gray-100 text-gray-700 rounded-t-xl border border-gray-200">
-  <li role="listitem" class="grid grid-cols-5 gap-2 py-2 px-3">
+  <li role="listitem" class="grid grid-cols-3 gap-2 py-2 px-3">
     <span class="text-left font-medium">Preview</span>
-    <span class="text-left font-medium">Alt</span>
-    <span class="text-left font-medium">Public</span>
     <span class="text-left font-medium">URL</span>
     <span class="text-left font-medium">Actions</span>
   </li>
 </ul>
 
-<!-- Body rows -->
 <ul role="list" class="w-full text-sm border border-t-0 border-gray-200 rounded-b-xl shadow-sm overflow-x-auto">
   {% for i in images %}
-  <li role="listitem" class="grid grid-cols-5 gap-2 items-center border-t first:border-t-0 py-2 px-3">
-    <!-- Preview -->
+  <li role="listitem" class="grid grid-cols-3 gap-2 items-center border-t first:border-t-0 py-2 px-3">
     <span class="h-16 w-16">
-      <img src="{{ i.url }}" alt="{{ i.alt_text }}" class="h-16 w-16 rounded-md object-cover" />
+      <img src="{{ i.url }}" alt="image" class="h-16 w-16 rounded-md object-cover" />
     </span>
 
-    <!-- Alt -->
-    <span class="truncate">{{ i.alt_text|default:"" }}</span>
 
-    <!-- Public badge -->
-    <span>
-      {% if i.is_public %}
-        <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700 border border-blue-200">public</span>
-      {% else %}
-        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 border border-gray-200">private</span>
-      {% endif %}
-    </span>
-
-    <!-- URL -->
     <span class="text-gray-600 break-all font-mono">{{ i.url }}</span>
 
-    <!-- Actions -->
     <span class="flex items-center gap-2 justify-start">
       <form action="{% url 'adminpage:image-delete' i.id %}" method="post" onsubmit="return confirm('Delete this image?');">
         {% csrf_token %}
