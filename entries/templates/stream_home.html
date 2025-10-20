@@ -5,12 +5,32 @@
         <title>Red Social Dist | Home</title>
         <meta charset="UTF-8">
         <style>
-            li {
-                list-style-type: none;
-            }
-
             body {
                 overflow: auto;
+                font-family: sans-serif;
+            }
+
+            main {
+                background-color: aliceblue;
+                padding-top: 30px;
+            }
+
+            button {
+                background-color: #3f51b5;
+                border: solid white 2px;
+                color: white;
+                font-weight: 600;
+                border-radius: 12px;
+                padding: 2px 8px;
+                margin-top: 3px;
+                margin-bottom: 3px;
+                margin-left: 5px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            button:hover {
+                cursor: pointer;
+                background-color: #7584da;
             }
 
             body.no-scroll {
@@ -22,7 +42,6 @@
                 justify-content: space-between;
                 align-items: center;
                 border-bottom: solid gray 2px;
-                margin-bottom: 20px;
                 padding: 0px 20px;
             }
 
@@ -35,16 +54,12 @@
                 text-decoration: underline;
             }
 
-            button {
-                background-color: white;
-                border: solid black 1px;
-                border-radius: 2px;
-                font-family: "Times New Roman", Times, serif;
+            li {
+                list-style-type: none;
             }
 
-            button:hover {
-                cursor: pointer;
-                background-color: rgb(226, 226, 226);
+            p {
+                font-size: 14px;
             }
 
             .stream {
@@ -54,34 +69,44 @@
                 gap: 30px;
             }
 
+            .stream.comment {
+                align-items: start;
+            }
+
             .post {
                 width: 50vw;
-                background-color: #d9d9d9;
-                padding-left: 10px;
-                padding-right: 10px;
+                background-color: #3f51b5;
+                padding: 10px 20px;
+                border-radius: 20px;
             }
 
             .post.comment {
-                background-color: #acacac;
+                background-color: #13237c;
                 width: 50vw;
+                padding: 10px 20px;
             }
 
             .postContent {
                 background-color: white;
+                color: #374151;
                 width: full;
-                padding-left: 10px;
-                padding-right: 10px;
-                padding-top: 1px;
-                padding-bottom: 1px;
+                padding: 1px 15px;
                 border-radius: 10px;
             }
 
-            .user {
+            .postText img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .reactions {
+                width: full;
                 display: flex;
                 justify-content: space-between;
-                margin-left: 4px;
-                margin-top: 10px;
-                margin-bottom: 10px;
+                align-items: center;
+                text-align: right;
+                padding-top: 10px;
+                gap: 10px;
             }
 
             .share {
@@ -99,32 +124,14 @@
             }
 
             .sharePoint {
-                background-color: black;
+                background-color: white;
                 width: 3px;
                 height: 3px;
                 border-radius: 3px;
             }
 
-            .user a {
-                text-decoration: none;
-                color: black;
-            }
-
-            .user a:hover {
-                text-decoration: underline;
-            }
-
-            .reactions {
-                width: full;
-                display: flex;
-                justify-content: end;
-                text-align: right;
-                margin: 5px;
-                gap: 10px;
-            }
-
             .reactions p {
-                color: black;
+                color: white;
                 margin: 0;
                 padding: 0;
             }
@@ -142,6 +149,24 @@
                 z-index: 1000;
             }
 
+            .user {
+                display: flex;
+                justify-content: space-between;
+                margin-left: 4px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+
+            .user a {
+                text-decoration: none;
+                color: white;
+                font-weight: 600;
+            }
+
+            .user a:hover {
+                text-decoration: underline;
+            }
+
             #comments {
                 height: 100%;
                 display: flex;
@@ -150,12 +175,14 @@
                 align-items: center;
                 gap: 20px;
                 overflow: auto;
+                margin-top: 30px;
             }
 
             .comment {
                 width: 30vw;
                 border: solid 1px #aaa;
-                padding: 10px;
+                padding: 10px 15px;
+                border-radius: 20px;
             }
 
             #commentsPanel {
@@ -180,52 +207,87 @@
             #commentsPanel footer {
                 border-top: 1px solid #aaa;
                 display: flex;
-                margin: 8px;
+                padding: 8px;
             }
 
             #commentInput {
                 flex: 1;
-                padding: 8px;
-                border-radius: 3px;
-                font-family: "Times New Roman", Times, serif;
+                padding: 5px;
+                border-radius: 10px;
+                font-family: sans-serif;
                 border: 1px solid #aaa;
+                margin-right: 10px;
             }
 
             #sendComment {
                 padding: 8px 12px;
             }
 
-            .commentLike {
+            .commentLikes {
                 width: full;
                 display: flex;
                 justify-content: end;
+                color: #374151 !important;
+            }
+
+            .likeButton {
+                background-color: #3f51b5;
+                border: solid white 2px;
+                color: white;
             }
         </style>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <!-- Parse different content types -->
         <script>
             'use strict';
             document.addEventListener("DOMContentLoaded", () => {
-                // share popup variables
-                const shareButtons = document.querySelectorAll('.share')
-                let activeShare = null;
+                const posts = document.querySelectorAll('.postText');
+                posts.forEach(post => {
+                    const contentType = post.dataset.type;
+                    if (contentType === "text/markdown") {
+                        const html = marked.parse(post.dataset.content);
+                        post.innerHTML = html;
+                    }
+                    else if (contentType === "image/png;base64") {
 
-                // like variables
+                    }
+                    else if (contentType === "image/jpeg;base64") {
+                        
+                    }
+                })
+            })
+        </script>
+        <!-- Handle like functionality -->
+        <script>
+            'use strict';
+            document.addEventListener("DOMContentLoaded", () => {
                 const likeButtons = document.querySelectorAll('.likeButton');
 
-                // comment panel variables 
-                const commentButtons = document.querySelectorAll('.commentButton');
-                const commentPanel = document.getElementById('commentsPanel');
-                const closeComments = document.getElementById('closePanel');
-                const commentsContent = document.getElementById('comments');
-                const commentInput = document.getElementById('commentInput');
-                const sendCommentBtn = document.getElementById('sendComment');
-                const commentTemplate = document.getElementById('commentTemplate');
-                let currentPost = null;
-
-                // author/entry specific variables for (local) API calls
-                let authorSerial = null;
-                let authorFqid = null;
-                let entrySerial = null;
-                let entryFqid = null;
+                // like functions 
+                async function likeEntry(entryFqid, authorFqid) {
+                    const eEncoded = encodeURIComponent(entryFqid);
+                    const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the post
+                        body: JSON.stringify({}),
+                    }) .then(() => window.location.reload());
+                    if (!res.ok) throw new Error(await res.text());
+                    return res.json();
+                }
+                
+                likeButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        likeEntry(button.dataset.fqid, button.dataset.author);
+                    });
+                });
+            })
+        </script>
+        <!-- Handle share functionality -->
+        <script>
+            'use strict';
+            document.addEventListener("DOMContentLoaded", () => {
+                const shareButtons = document.querySelectorAll('.share')
+                let activeShare = null;
 
                 // share popup functions 
                 function closeShare() {
@@ -275,26 +337,28 @@
                         document.addEventListener('click', handleShareOutside);
                     });
                 });
+            })
+        </script>
+        <!-- Handle comment functionality -->
+        <script>
+            'use strict';
+            document.addEventListener("DOMContentLoaded", () => {
+                // comment panel variables 
+                const commentButtons = document.querySelectorAll('.commentButton');
+                const commentPanel = document.getElementById('commentsPanel');
+                const closeComments = document.getElementById('closePanel');
+                const commentsContent = document.getElementById('comments');
+                const commentInput = document.getElementById('commentInput');
+                const sendCommentBtn = document.getElementById('sendComment');
+                const commentTemplate = document.getElementById('commentTemplate');
+                const stream = document.getElementById("stream");
+                let currentPost = null;
 
-                // like functions 
-                async function likeEntry(entryFqid, authorFqid) {
-                    const eEncoded = encodeURIComponent(entryFqid);
-                    const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': authorFqid }, //author that liked the post
-                        body: JSON.stringify({}),
-                    }) .then(() => window.location.reload());
-                    if (!res.ok) throw new Error(await res.text());
-                    return res.json();
-                }
-                
-                likeButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        entryFqid = button.dataset.fqid;
-                        authorFqid = button.dataset.author;
-                        likeEntry(entryFqid, authorFqid);
-                    });
-                });
+                // author/entry specific variables for (local) API calls
+                let authorSerial = null;
+                let authorFqid = null;
+                let entrySerial = null;
+                let entryFqid = null;
 
                 // comment panel functions 
                 async function getComments(entryFqid, authorFqid) {
@@ -344,7 +408,7 @@
                             clone.id = comment.fqid;
                             clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
                             clone.querySelector('.commentText').textContent = comment.content; 
-                            clone.querySelector('.commentLikes').textContent = comment.likes_count; 
+                            clone.querySelector('.commentLikes').textContent = `${comment.likes_count} likes`; 
 
                             const likeButton = clone.querySelector('.likeButton');
                             likeButton.addEventListener('click', async () => {
@@ -370,16 +434,19 @@
                     commentPanel.classList.add('visible');
                     document.body.classList.add('no-scroll');
                     currentPost.classList.add('comment');
+                    stream.classList.add('comment');
                 }
 
                 function closeCommPanel() {
                     commentPanel.classList.remove('visible');
                     document.body.classList.remove('no-scroll');
                     currentPost.classList.remove('comment');
+                    stream.classList.remove('comment');
                 }
 
                 commentButtons.forEach(button => {
                     button.addEventListener('click', () => {
+                        // store authorFqid and entryFqid for handling adding comments
                         authorFqid = button.dataset.author;
                         entryFqid = button.dataset.fqid;
                         openComments(button.dataset.fqid, authorFqid);
@@ -406,63 +473,69 @@
             <h3>CMPUT404</h3>
             <a href="/">Profile</a>
         </header>
-        <ul class="stream">
-            {% for entry in entries %}
-                <li id="post_{{ entry.fqid }}" class="post">
-                    <section class="user">
-                        <a href='/'>{{ entry.author.displayName }}</a>
-                        <button data-fqid="{{ entry.fqid }}" class="share">
-                            <div class="sharePoint"></div>
-                            <div class="sharePoint"></div>
-                            <div class="sharePoint"></div>
-                        </button>
-                    </section>
+        <main>
+            <ul class="stream" id="stream">
+                {% for entry in entries %}
+                    <li id="post_{{ entry.fqid }}" class="post">
+                        <section class="user">
+                            <a href='/'>{{ entry.author.displayName }}</a>
+                            <button data-fqid="{{ entry.fqid }}" class="share">
+                                <div class="sharePoint"></div>
+                                <div class="sharePoint"></div>
+                                <div class="sharePoint"></div>
+                            </button>
+                        </section>
 
-                    <section class="postContent">
-                        <h3>{{ entry.title }}</h3>
-                        <p>{{ entry.content }}</p>
-                    </section>  
+                        <section class="postContent">
+                            <h3>{{ entry.title }}</h3>
+                            <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
+                                {{ entry.content }}
+                            </p>
+                        </section>  
 
-                    <section class="reactions">
-                        <p>{{ entry.likeCount }}</p>
-                        <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
-                            Like
-                        </button>
-                        <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
-                            Comment
-                        </button>
-                    </section>
-                </li>
-            {% endfor %}
-        </ul>
+                        <section class="reactions">
+                            <p>{{ entry.likes_count }} likes</p>
+                            <div>
+                                <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
+                                    Like
+                                </button>
+                                <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
+                                    Comment
+                                </button>
+                            </div>
+                        </section>
+                    </li>
+                {% endfor %}
+            </ul>
 
-        <!-- Comments panel -->
-        <section id="commentsPanel">
-            <header>
-                <h3>Comments</h3>
-                <button id="closePanel">&times;</button>
-            </header>
+            <!-- Comments panel -->
+            <section id="commentsPanel">
+                <header>
+                    <h3>Comments</h3>
+                    <button id="closePanel">&times;</button>
+                </header>
 
-            <!-- dynamically insert comments -->
-            <section id="comments"></section>   
+                <!-- dynamically insert comments -->
+                <section id="comments"></section>   
 
-            <footer>
-                <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
-                <button id="sendComment">Send</button>
-            </footer>
-        </section>
-
-        <!-- Comment template -->
-        <template id="commentTemplate" class="comment">
-            <section class="comment">
-                <strong class="commentAuthor"></strong>
-                <p class="commentText"></p>
-                <section class="reactions">
-                    <p class="commentLikes"></p>
-                    <button class="likeButton">Like</button>
-                </section>
+                <footer>
+                    <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+                    <button id="sendComment">Send</button>
+                </footer>
             </section>
-        </template>
 
+            <!-- Comment template -->
+            <template id="commentTemplate" class="comment">
+                <section class="comment">
+                    <strong class="commentAuthor"></strong>
+                    <p class="commentText"></p>
+                    <section class="reactions">
+                        <p class="commentLikes"></p>
+                        <button class="likeButton">Like</button>
+                    </section>
+                </section>
+            </template>
+
+        </main>
     </body>
 </html>
