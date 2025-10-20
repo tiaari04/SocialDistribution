@@ -18,7 +18,7 @@
     <form method="get">
       <ul class="row p-4">
         <li style="flex:1 1 auto; min-width:0;">
-          <input name="q" value="{{ q }}" placeholder="Search displayName..." />
+          <input name="q" value="{{ q }}" placeholder="Search Display Name..." />
         </li>
         <li><button class="btn btn-primary">Search</button></li>
         <li><a class="btn btn-outline" href="{% url 'adminpage:author-create' %}">Add Author</a></li>
@@ -43,25 +43,17 @@
     <ul class="border rounded shadow text-sm">
       {% for a in authors %}
       <li class="border-top">
-        <!-- ROW GRID (cells go here) -->
         <ul class="grid cols-6 gap-2 p-3">
-          <!-- Author cell (name + id stacked) -->
           <li>
             <ul class="gap-2">
               <li class="bold">{{ a.displayName }}</li>
               <li class="text-sm text-muted mono" style="word-break:break-all;">{{ a.id }}</li>
             </ul>
           </li>
-
-          <!-- User -->
           <li>
             {% if a.user %}{{ a.user.username }}{% else %}<span class="text-muted">—</span>{% endif %}
           </li>
-
-          <!-- Local -->
           <li>{{ a.is_local }}</li>
-
-          <!-- Admin -->
           <li>
             {% if a.is_admin %}
               <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem; color:var(--blue-700);">admin</span>

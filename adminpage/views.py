@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from urllib.parse import unquote
 
 from .models import HostedImage
 from .forms import HostedImageForm, AuthorForm
@@ -30,7 +31,7 @@ def get_local_host_from_settings() -> str:
 def dashboard(request):
     total_images = HostedImage.objects.count()
     total_authors = Author.objects.filter(is_active=True).count()
-    pending_users = User.objects.filter(is_active=False).count()
+    pending_users = Author.objects.filter(is_approved=False).count()
     return render(request, 'adminpage/dashboard.html', {
         'total_images': total_images,
         'total_authors': total_authors,
@@ -152,11 +153,13 @@ def pending_users(request):
 
 @require_POST
 def approve_user(request, user_id):
-    author = get_object_or_404(Author, displayName=user_id)
-
+    user_id = unquote(user_id).rstrip('/')  # decode and normalize trailing slash
+    author = (
+        Author.objects.filter(id__in=[user_id, user_id + '/']).first()
+        or get_object_or_404(Author, pk=user_id)
+    )
     author.is_approved = True
     author.save(update_fields=['is_approved'])
-
     return redirect('adminpage:pending-users')
 
 @require_POST
