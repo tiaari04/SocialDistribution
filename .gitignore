@@ -2,9 +2,13 @@
 __pycache__/
 *.py[cod]
 *.sqlite3
+*.sqlite3
 .venv/
 .env
-
+venv
+env/
+media/
+*.tar.gz
 # Django collectstatic
 /staticfiles/
 

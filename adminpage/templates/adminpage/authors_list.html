@@ -1,0 +1,96 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Authors{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* optional page tweaks */
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <!-- Heading -->
+  <li><h1 class="text-xl semibold text-primary p-4">Authors</h1></li>
+
+  <!-- Search -->
+  <li>
+    <form method="get">
+      <ul class="row p-4">
+        <li style="flex:1 1 auto; min-width:0;">
+          <input name="q" value="{{ q }}" placeholder="Search Display Name..." />
+        </li>
+        <li><button class="btn btn-primary">Search</button></li>
+        <li><a class="btn btn-outline" href="{% url 'adminpage:author-create' %}">Add Author</a></li>
+      </ul>
+    </form>
+  </li>
+
+  <!-- Header -->
+  <li>
+    <ul class="grid cols-6 gap-2 header-row p-3 text-sm">
+      <li class="cell">Author</li>
+      <li class="cell">User</li>
+      <li class="cell">Local</li>
+      <li class="cell">Admin</li>
+      <li class="cell">Active</li>
+      <li class="cell">Actions</li>
+    </ul>
+  </li>
+
+  <!-- Body -->
+  <li>
+    <ul class="border rounded shadow text-sm">
+      {% for a in authors %}
+      <li class="border-top">
+        <ul class="grid cols-6 gap-2 p-3">
+          <li>
+            <ul class="gap-2">
+              <li class="bold">{{ a.displayName }}</li>
+              <li class="text-sm text-muted mono" style="word-break:break-all;">{{ a.id }}</li>
+            </ul>
+          </li>
+          <li>
+            {% if a.user %}{{ a.user.username }}{% else %}<span class="text-muted">—</span>{% endif %}
+          </li>
+          <li>{{ a.is_local }}</li>
+          <li>
+            {% if a.is_admin %}
+              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem; color:var(--blue-700);">admin</span>
+            {% else %}
+              <span class="text-muted">no</span>
+            {% endif %}
+          </li>
+
+          <!-- Active -->
+          <li>
+            {% if a.is_active %}
+              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem;">active</span>
+            {% else %}
+              <span class="text-muted">inactive</span>
+            {% endif %}
+          </li>
+
+          <!-- Actions -->
+          <li>
+            <ul class="row">
+              <li>
+                <a href="{% url 'adminpage:author-update' a.pk %}" class="btn btn-outline" style="padding:.375rem .75rem; font-size:.75rem;">Edit</a>
+              </li>
+              <li>
+                <form action="{% url 'adminpage:author-delete' a.pk %}" method="post" onsubmit="return confirm('Delete this author?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger" style="padding:.375rem .75rem; font-size:.75rem;">Delete</button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      {% empty %}
+      <li class="p-6 text-center text-muted">No authors found.</li>
+      {% endfor %}
+    </ul>
+  </li>
+</ul>
+{% endblock %}

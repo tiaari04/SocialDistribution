@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile</title>
+
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom right, #ebf4ff, #e0e7ff);
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      max-width: 700px;
+      width: 90%;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: #1f2937;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem 1.5rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: #374151;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.5rem 0.1rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    button {
+      background-color: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #4b5563;
+    }
+
+    footer a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <h1>Edit Your Profile</h1>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <section class="full-width">
+        <label for="displayName">Display Name</label>
+        <input type="text" name="displayName" id="displayName" value="{{ author.displayName }}" required>
+      </section>
+
+      <section>
+        <label for="github">GitHub URL</label>
+        <input type="url" name="github" id="github" value="{{ author.github }}" placeholder="https://github.com/username">
+      </section>
+
+      <section>
+        <label for="web">Website</label>
+        <input type="url" name="web" id="web" value="{{ author.web }}" placeholder="https://example.com">
+      </section>
+
+      <section class="full-width">
+        <label for="profileImageFile">Upload Profile Image</label>
+        <input type="file" name="profileImageFile" id="profileImageFile" accept="image/*">
+      </section>
+
+      <section class="full-width">
+        <label for="description">Description</label>
+        <textarea name="description" id="description" rows="4" placeholder="Tell others about yourself...">{{ author.description }}</textarea>
+      </section>
+
+      <section class="full-width center">
+        <button type="submit">Save Changes</button>
+      </section>
+    </form>
+  </main>
+
+</body>
+</html>

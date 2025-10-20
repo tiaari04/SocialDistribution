@@ -1,15 +1,19 @@
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, JsonResponse
+from .models import Entry
+from authors.models import Author
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from .forms import EntryForm
 from django.utils import timezone
-from django.shortcuts import get_object_or_404
-from django.forms.models import model_to_dict
-from .models import Entry, Author
+import uuid
 
-import json
-
-def stream_home(request):
-    return JsonResponse({"message": "Stream home endpoint (not implemented yet)"})
-
+def stream_home(request, author_serial):
+    entries = []
+    entry_objs = Entry.objects.exclude(visibility='DELETED') 
+    # gets all the saved added entries from the database that AREN'T deleted
+    author = get_object_or_404(Author, serial=author_serial)
+    
+    return render(request, "stream_home.html", { "entries": entry_objs, "author" : author })
 
 def public_entries(request):
     """
@@ -22,62 +26,57 @@ def public_entries(request):
     return HttpResponseNotAllowed(["GET"])
 
 
-@csrf_exempt
-def entry_create(request):
-    """
-    Create a new entry (POST).
-    """
+def entry_create(request, author_serial):
+    author = get_object_or_404(Author, serial=author_serial)
+
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            author_id = data.get("author_id")
-            author = get_object_or_404(Author, id=author_id)
+        form = EntryForm(request.POST, request.FILES or None)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.author = author
 
-            entry = Entry.objects.create(
-                id=data.get("id"),
-                title=data.get("title"),
-                web=data.get("web"),
-                description=data.get("description"),
-                contentType=data.get("contentType"),
-                content=data.get("content"),
-                author=author,
-                published=timezone.now(),
-                visibility=data.get("visibility", Entry.Visibility.PUBLIC),
-            )
-            return JsonResponse(model_to_dict(entry), status=201)
+            # generate a short unique serial and full FQID (adjust host as needed)
+            entry.serial = uuid.uuid4().hex[:12]
+            # Use the author's host if available; fallback to example.com
+            host = author.host.rstrip("/") if getattr(author, "host", None) else "https://example.com"
+            entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
 
-        except Exception as e:
-            return HttpResponseBadRequest(f"Error creating entry: {e}")
-
-    return HttpResponseNotAllowed(["POST"])
-
-
-def entry_detail(request, entry_serial):
-    """
-    Retrieve a specific entry by ID (GET).
-    """
-    if request.method == "GET":
-        entry = get_object_or_404(Entry, id=entry_serial)
-        return JsonResponse(model_to_dict(entry))
-    return HttpResponseNotAllowed(["GET"])
-
-
-@csrf_exempt
-def entry_edit(request, entry_serial):
-    """
-    Edit an existing entry (PATCH/PUT).
-    """
-    entry = get_object_or_404(Entry, id=entry_serial)
-
-    if request.method in ["PUT", "PATCH"]:
-        try:
-            data = json.loads(request.body)
-            for field, value in data.items():
-                if hasattr(entry, field):
-                    setattr(entry, field, value)
+            entry.published = timezone.now()
             entry.save()
-            return JsonResponse(model_to_dict(entry))
-        except Exception as e:
-            return HttpResponseBadRequest(f"Error updating entry: {e}")
+            return redirect("entries:stream_home", author_serial=author.serial)
+    else:
+        form = EntryForm()
 
-    return HttpResponseNotAllowed(["PUT", "PATCH"])
+    return render(request, "entries/entry_form.html", {"form": form, "author": author})
+
+
+def entry_detail(request, author_serial, entry_serial):
+    author = get_object_or_404(Author, serial=author_serial)
+    entry = get_object_or_404(Entry, author=author, serial=entry_serial)
+    return render(request, "entries/entry_detail.html", {"entry": entry})
+
+def entry_edit(request, author_serial, entry_serial):
+    entry = get_object_or_404(Entry, serial=entry_serial)
+
+    # Check ownership
+    if request.user != entry.author.user:
+        return HttpResponse("You do not have permission to edit this post.", status=403)
+
+    if request.method == "POST":
+        form = EntryForm(request.POST, request.FILES, instance=entry)
+        if form.is_valid():
+            form.save()
+            # Redirect to stream_home with the author_serial of the post
+            return redirect("entries:stream_home", author_serial=entry.author.serial)
+    else:
+        form = EntryForm(instance=entry)
+
+    return render(request, "entries/entry_edit.html", {"form": form, "entry": entry})
+
+def entry_delete(request, author_serial, entry_serial):
+    entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
+    if request.method == "POST":
+        entry.delete()
+        return redirect("entries:stream_home", author_serial=author_serial)
+    
+    return redirect("entries:entry_edit", author_serial=author_serial, entry_serial=entry_serial)

@@ -1,0 +1,8 @@
+<h1>All Authors</h1>
+<ul>
+  {% for author in authors %}
+    {% if author.is_approved %}
+      <li>{{ author.displayName }} - <a href="{% url 'authors:detail' author.serial %}">View</a></li>
+    {% endif %}
+  {% endfor %}
+</ul>

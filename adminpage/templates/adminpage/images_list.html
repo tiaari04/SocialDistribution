@@ -1,0 +1,69 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Images{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+.thumb{ height:4rem; width:4rem; object-fit:cover; border-radius:.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li><h1 class="text-xl semibold text-primary p-4">Hosted Images</h1></li>
+
+  <!-- Search / Upload -->
+  <li>
+    <form method="get">
+      <ul class="row">
+        <li style="flex:1 1 auto; min-width:0;">
+          <input name="q" value="{{ q }}" placeholder="Search images..." />
+        </li>
+        <li><button class="btn btn-primary">Search</button></li>
+        <li><a href="{% url 'adminpage:image-upload' %}" class="btn btn-outline">Upload</a></li>
+      </ul>
+    </form>
+  </li>
+
+  <!-- Header -->
+  <li>
+    <ul class="grid cols-3 gap-2 header-row p-3 text-sm">
+      <li class="cell">Preview</li>
+      <li class="cell">URL</li>
+      <li class="cell">Actions</li>
+    </ul>
+  </li>
+
+  <!-- Body -->
+  <li>
+    <ul class="border rounded shadow text-sm">
+      {% for i in images %}
+      <li class="border-top">
+        <!-- ROW GRID -->
+        <ul class="grid cols-3 gap-2 p-3">
+          <!-- Preview -->
+          <li>
+            <ul><li><img class="thumb" src="{{ i.url }}" alt="image"></li></ul>
+          </li>
+
+          <!-- URL -->
+          <li class="text-muted mono" style="word-break:break-all;">
+            {{ i.url }}
+          </li>
+
+          <!-- Actions -->
+          <li>
+            <form action="{% url 'adminpage:image-delete' i.id %}" method="post" onsubmit="return confirm('Delete this image?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger" style="padding:.375rem .75rem; font-size:.75rem;">Delete</button>
+            </form>
+          </li>
+        </ul>
+      </li>
+      {% empty %}
+      <li class="p-6 text-center text-muted">No images yet.</li>
+      {% endfor %}
+    </ul>
+  </li>
+</ul>
+{% endblock %}

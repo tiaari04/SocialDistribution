@@ -1,0 +1,47 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Approvals{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* optional */
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li><h1 class="text-xl semibold text-primary p-4">Pending Users</h1></li>
+
+  <!-- Header -->
+  <li>
+    <ul class="grid cols-3 gap-2 header-row p-3 text-sm">
+      <li class="cell">Username</li>
+      <li class="cell">Joined</li>
+      <li class="cell">Actions</li>
+    </ul>
+  </li>
+
+  <!-- Body -->
+  <li>
+    <ul class="border rounded shadow text-sm">
+      {% for u in pending %}
+      <li class="border-top">
+        <!-- ROW GRID -->
+        <ul class="grid cols-3 gap-2 p-3">
+          <li class="truncate">{{ u.displayName }}</li>
+          <li class="text-muted">{{ u.created }}</li>
+          <li>
+            <form action="{% url 'adminpage:approve-user' u.id %}" method="post" onsubmit="return confirm('Approve {{ u.displayName }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success" style="padding:.375rem .75rem; font-size:.75rem;">Approve</button>
+            </form>
+          </li>
+        </ul>
+      </li>
+      {% empty %}
+      <li class="p-6 text-center text-muted">No pending users.</li>
+      {% endfor %}
+    </ul>
+  </li>
+</ul>
+{% endblock %}

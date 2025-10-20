@@ -8,16 +8,17 @@ See [the web page](https://uofa-cmput404.github.io/general/project.html) for a d
 
 Make a distributed social network!
 
+## Documentation
+* There is a `docs` folder which includes `api.md`, `endpoints.md`, and `user-stories.md`
+* There is a OpenAPI ("Swagger") specification hosted on [Github Pages](https://uofa-cmput404.github.io/f25-project-red/swagger.html)
+
 ## License
 
-* This project is licensed under the MIT License
+* This project is licensed under the MIT License.
 
 ## Copyright
 
 The authors claiming copyright, if they wish to be known, can list their names here...
-
-* 
-
 
 ## Team Members
 
@@ -27,5 +28,11 @@ The authors claiming copyright, if they wish to be known, can list their names h
 4. Evelyn Chiew, echiew
 5. Ervin Lanada, elanada
 6. Tiandra Wallace, tiandra
+
+
+
+## Heroku
+
+https://cmput404-project-red-9e98d52591b5.herokuapp.com/
 
 

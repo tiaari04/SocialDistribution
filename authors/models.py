@@ -1,30 +1,72 @@
 from django.db import models
+from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
-class Author(models.Model):
-    # The author’s globally unique URL (used across nodes)
-    id = models.URLField(primary_key=True)
+MAX_URL = 1024
 
-    # The host node this author belongs to (e.g., your server’s base URL)
-    host = models.URLField()
+serial_validator = RegexValidator(
+    regex=r"^(?!http)(?!.*:).+$",
+    message="Serial must not start with 'http' and must not contain ':'."
+)
 
-    # Display name for the author (e.g., “Koustav Sikder”)
-    displayName = models.CharField(max_length=100)
+class TimeStampedModel(models.Model):
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, db_index=True)
 
-    # A short bio or “about me” description
+    class Meta:
+        abstract = True
+
+
+class Author(TimeStampedModel):
+    """
+    API identity is the fully-qualified URL (FQID). This is the PK to avoid collisions.
+    """
+    id = models.URLField(max_length=MAX_URL, primary_key=True)  # FQID
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    host = models.URLField(max_length=MAX_URL, help_text="Full API base, e.g., https://node/api/")
+    displayName = models.CharField(max_length=200, db_index=True)
+    github = models.URLField(max_length=MAX_URL, blank=True)
+    profileImage = models.URLField(max_length=MAX_URL, blank=True)
+    web = models.URLField(max_length=MAX_URL, blank=True)
     description = models.TextField(blank=True)
+    is_approved = models.BooleanField(default=False, db_index=True)
+    # Convenience: whether this author account is hosted locally on this node
+    is_local = models.BooleanField(default=True, db_index=True)
+    is_admin = models.BooleanField(default=False, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
-    # Optional website or personal blog
-    web = models.URLField(blank=True, null=True)
+    # Optional: a locally convenient serial (NOT used for relations between nodes)
+    serial = models.CharField(
+        max_length=200, blank=True, null=True, validators=[serial_validator], db_index=True
+    )
 
-    # GitHub profile link (optional)
-    github = models.URLField(blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=["displayName"]),
+            models.Index(fields=["host"]),
+            models.Index(fields=["is_local"]),
+            models.Index(fields=["serial"]),
+        ]
 
-    # Profile image (as a link to an image, not a file upload)
-    profileImage = models.URLField(blank=True, null=True)
+    def __str__(self) -> str:
+        return f"{self.displayName} ({self.id})"
 
-    # Helper method to check if the author is local to this node
-    def is_local(self):
-        return "localhost" in self.host or "127.0.0.1" in self.host
+    def is_friend(self, other: "Author") -> bool:
+        """
+        Returns True if `self` and `other` have mutually accepted follow requests.
+        This relies on the `FollowRequest` model in the `inbox` app.
+        """
+        try:
+            from inbox.models import FollowRequest
+        except Exception:
+            return False
 
-    def __str__(self):
-        return self.displayName
+        if self.id == other.id:
+            return True
+
+        # accepted follow where self -> other and other -> self
+        accepted = FollowRequest.State.ACCEPTED
+        return (
+            FollowRequest.objects.filter(actor=self, author_followed=other, state=accepted).exists()
+            and FollowRequest.objects.filter(actor=other, author_followed=self, state=accepted).exists()
+        )

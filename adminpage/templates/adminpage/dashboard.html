@@ -1,0 +1,38 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+/* page-specific (optional) */
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li><h1 class="text-xl semibold text-primary p-4">Dashboard</h1></li>
+
+  <li>
+    <ul class="grid cols-3 gap-6">
+      <li class="card p-4">
+        <ul class="gap-2">
+          <li class="text-sm text-muted">Total Images</li>
+          <li class="text-xl semibold text-primary">{{ total_images }}</li>
+        </ul>
+      </li>
+      <li class="card p-4">
+        <ul class="gap-2">
+          <li class="text-sm text-muted">Total Authors</li>
+          <li class="text-xl semibold text-primary">{{ total_authors }}</li>
+        </ul>
+      </li>
+      <li class="card p-4">
+        <ul class="gap-2">
+          <li class="text-sm text-muted">Pending Users</li>
+          <li class="text-xl semibold text-primary">{{ pending_users }}</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+{% endblock %}
