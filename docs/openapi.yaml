@@ -124,8 +124,8 @@ paths:
             examples:
               create:
                 value:
-                  comment: Great article!
-                  contentType: text/markdown
+                  content: Great article!
+                  content_type: text/markdown
       responses:
         '201':
           description: created comment
@@ -393,6 +393,9 @@ components:
         host:
           type: string
           format: uri
+        web:
+          type: string
+          format: uri
         profileImage:
           type: string
           format: uri
@@ -425,6 +428,9 @@ components:
           $ref: '#/components/schemas/AuthorRef'
         content:
           type: string
+        web:
+          type: string
+          format: uri
         content_type:
           type: string
         published:
@@ -450,19 +456,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Comment'
-    LikeCreate:
-      type: object
-      properties:
-        author:
-          $ref: '#/components/schemas/AuthorRef'
-        object:
-          type: string
-          format: uri
-        id:
-          type: string
-          format: uri
       required:
-        - author
+        - count
+        - results
     Like:
       type: object
       properties:
@@ -544,7 +540,3 @@ tags:
     description: Author and follower management
   - name: admin
     description: Admin helper endpoints (images, approvals)
-  - name: authors
-    description: author/followers endpoints
-  - name: admin
-    description: admin helper endpoints (images, approvals)
