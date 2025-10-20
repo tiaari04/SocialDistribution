@@ -147,29 +147,16 @@ def author_delete(request, pk):
 # --------- Pending User Approvals ---------
 
 def pending_users(request):
-    qs = User.objects.filter(is_active=False).order_by('date_joined')
+    qs = Author.objects.filter(is_approved=False).order_by('created')
     return render(request, 'adminpage/pending_users.html', {'pending': qs})
 
 @require_POST
 def approve_user(request, user_id):
-    u = get_object_or_404(User, pk=user_id, is_active=False)
-    u.is_active = True
-    u.save(update_fields=['is_active'])
-    author, created = Author.objects.get_or_create(
-        user=u,
-        defaults={
-            'id': build_local_author_id(get_local_host_from_settings()),
-            'host': get_local_host_from_settings(),
-            'displayName': u.username,
-            'is_local': True,
-            'is_active': True,
-        }
-    )
-    if not created:
-        if not author.id and author.is_local:
-            author.id = build_local_author_id(author.host or get_local_host_from_settings())
-        author.is_active = True
-        author.save()
+    author = get_object_or_404(Author, displayName=user_id)
+
+    author.is_approved = True
+    author.save(update_fields=['is_approved'])
+
     return redirect('adminpage:pending-users')
 
 @require_POST

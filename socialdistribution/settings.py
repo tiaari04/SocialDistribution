@@ -4,10 +4,10 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-LOGIN_REDIRECT_URL = "/authors"
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/redirect/" 
-LOGIN_URL = "/login/"
+
+LOGIN_REDIRECT_URL = "/" 
+#LOGOUT_REDIRECT_URL = "/login"  
+LOGIN_URL = "/login/" 
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     
     
     'rest_framework',
-    "cloudinary",
-    "cloudinary_storage",
+    'cloudinary',
+    #'cloudinary_storage',
 ]
 
 SITE_ID = 1
