@@ -23,8 +23,10 @@ class AuthorViewsTest(TestCase):
         )
         self.client = Client()
 
+
     def test_author_list_view(self):
         #As a node admin, I can see multiple authors on my node.
+        self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -32,6 +34,7 @@ class AuthorViewsTest(TestCase):
 
     def test_author_detail_view(self):
         #As an author, I have a consistent public profile page.
+        self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:detail", args=[self.author.serial])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
