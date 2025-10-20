@@ -5,27 +5,20 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-LOGIN_REDIRECT_URL = "/"       # where to go after successful login
-#LOGOUT_REDIRECT_URL = "/login"      # where to go after logout
-LOGIN_URL = "/login/"          # used when @login_required redirects users
-# Where uploaded files are stored
-MEDIA_ROOT = BASE_DIR / "media"
-
-# Base URL to serve media files
-MEDIA_URL = "/media/"
+LOGIN_REDIRECT_URL = "/" 
+#LOGOUT_REDIRECT_URL = "/login"  
+LOGIN_URL = "/login/" 
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = 'django-insecure-du**gb#&9&=ouwz+5&wt4*h(n5fqxmk(i9ve2r(c#74+rhvda!'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-# ─────────────────────────────
-# Apps
-# ─────────────────────────────
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -51,9 +44,7 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
-# ─────────────────────────────
-# Middleware (remove duplicates)
-# ─────────────────────────────
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -150,12 +141,33 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 USE_CLOUDINARY_MEDIA = os.getenv("DJANGO_USE_CLOUDINARY_MEDIA") == "1"
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 
-if USE_CLOUDINARY_MEDIA:
-    # Cloudinary for MEDIA (Heroku)
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    MEDIA_URL = "/media/" 
+CLOUDINARY_SECURE = os.getenv("CLOUDINARY_SECURE", "true").lower() in ("1", "true", "yes")
+CLOUDINARY_STORAGE = {
+    "SECURE": CLOUDINARY_SECURE,
+    "PREFIX": os.getenv("CLOUDINARY_MEDIA_PREFIX", "socialdistribution/media"),
+}
+
+if USE_CLOUDINARY_MEDIA and CLOUDINARY_URL:
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    MEDIA_URL = "/media/"
 else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
