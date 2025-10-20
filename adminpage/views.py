@@ -152,13 +152,20 @@ def pending_users(request):
     return render(request, 'adminpage/pending_users.html', {'pending': qs})
 
 @require_POST
-def approve_user(request, user_id):
-    author_url = unquote(user_id).rstrip('/')
-    author = get_object_or_404(Author, url__in=[author_url, author_url + '/'])
+def approve_user(request, author_id):
+    # Decode %2F etc. and handle optional trailing slash
+    author_id = unquote(author_id).rstrip('/')
+
+    author = (Author.objects
+        .filter(id__in=[author_id, author_id + '/'])
+        .first()
+    )
+
+    if not author:
+        author = get_object_or_404(Author, pk=author_id)
 
     author.is_approved = True
     author.save(update_fields=['is_approved'])
-
     return redirect('adminpage:pending-users')
 
 @require_POST
