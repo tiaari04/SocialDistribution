@@ -9,8 +9,7 @@ def stream_home(request, author_serial):
     entry_objs = Entry.objects.exclude(visibility='DELETED') 
     # gets all the saved added entries from the database that AREN'T deleted
     author = get_object_or_404(Author, serial=author_serial)
-    print(entry_objs[1].content)
-    print(author.displayName)
+    
     return render(request, "stream_home.html", { "entries": entry_objs, "author" : author })
 
 def public_entries(request):

@@ -22,8 +22,8 @@ def author_detail(request, author_serial):
             actor=user_author, 
             author_followed=author
             ).exists()
-    entries = get_list_or_404(Entry, author_id=author.id)
-    return render(request, "authors/authorDetail.html", {"author": author, "is_following": is_following, "entries": entries})
+    entries = Entry.objects.filter(author_id=author.id)
+    return render(request, "authors/authorDetail.html", {"author": author, "is_following": is_following, "entries": entries | Entry.objects.none()})
 
 @login_required
 def author_edit(request, author_serial):
