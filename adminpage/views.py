@@ -31,7 +31,7 @@ def get_local_host_from_settings() -> str:
 def dashboard(request):
     total_images = HostedImage.objects.count()
     total_authors = Author.objects.filter(is_active=True).count()
-    pending_users = User.objects.filter(is_active=False).count()
+    pending_users = User.objects.filter(is_approved=False).count()
     return render(request, 'adminpage/dashboard.html', {
         'total_images': total_images,
         'total_authors': total_authors,
