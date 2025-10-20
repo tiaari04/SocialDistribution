@@ -2,43 +2,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+
+  <style>
+    /* -------- Page layout -------- */
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ebf2ff, #e0e7ff);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    main {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* -------- Headings -------- */
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1f2937;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    /* -------- Form -------- */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.3rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 93%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    /* -------- Button -------- */
+    button {
+      width: 100%;
+      background-color: #6366f1;
+      color: white;
+      border: none;
+      font-weight: 600;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.25s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* -------- Footer -------- */
+    footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    footer a {
+      color: #6366f1;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
 
-    <div class="bg-white shadow-xl rounded-2xl px-10 py-8 w-full max-w-md">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
-            Sign In <span class="text-4xl"></span>
-        </h1>
+<body>
+  <main>
+    <h1>Sign In</h1>
 
-        <form method="post" class="space-y-5">
-            {% csrf_token %}
+    <form method="post">
+      {% csrf_token %}
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
 
-            <div>
-                <label for="username" class="block text-gray-700 font-medium mb-1">Username</label>
-                <input type="text" id="username" name="username"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
-            </div>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
 
-            <div>
-                <label for="password" class="block text-gray-700 font-medium mb-1">Password</label>
-                <input type="password" id="password" name="password"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
-            </div>
+      <button type="submit">Log In</button>
+    </form>
 
-            <button type="submit"
-                class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 rounded-lg shadow transition">
-                Log In
-            </button>
-        </form>
-
-        <p class="text-center text-gray-600 mt-5">
-            Don’t have an account?
-            <a href="{% url 'login:signup' %}" class="text-indigo-500 hover:underline font-medium">Sign up</a>
-        </p>
-    </div>
+    <footer>
+      <p>
+        Don’t have an account?
+        <a href="{% url 'login:signup' %}">Sign up</a>
+      </p>
+    </footer>
+  </main>
 </body>
 </html>
