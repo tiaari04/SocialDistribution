@@ -21,12 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 LOGIN_REDIRECT_URL = "/authors"       # where to go after successful login
 #LOGOUT_REDIRECT_URL = "/login"      # where to go after logout
 LOGIN_URL = "/login/"          # used when @login_required redirects users
-# Where uploaded files are stored
-MEDIA_ROOT = BASE_DIR / "media"
-
-# Base URL to serve media files
-MEDIA_URL = "/media/"
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
