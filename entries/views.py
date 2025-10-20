@@ -3,6 +3,9 @@ from .models import Entry
 from authors.models import Author
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from .forms import EntryForm
+from django.utils import timezone
+import uuid
 
 def stream_home(request, author_serial):
     entries = []
@@ -15,11 +18,57 @@ def stream_home(request, author_serial):
 def public_entries(request):
 	return HttpResponse("public entries (not implemented)")
 
-def entry_create(request):
-	return HttpResponse("entry create (not implemented)")
+def entry_create(request, author_serial):
+    author = get_object_or_404(Author, serial=author_serial)
 
-def entry_detail(request, entry_serial):
-	return HttpResponse(f"entry detail {entry_serial} (not implemented)")
+    if request.method == "POST":
+        form = EntryForm(request.POST, request.FILES or None)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.author = author
 
-def entry_edit(request, entry_serial):
-	return HttpResponse(f"entry edit {entry_serial} (not implemented)")
+            # generate a short unique serial and full FQID (adjust host as needed)
+            entry.serial = uuid.uuid4().hex[:12]
+            # Use the author's host if available; fallback to example.com
+            host = author.host.rstrip("/") if getattr(author, "host", None) else "https://example.com"
+            entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
+
+            entry.published = timezone.now()
+            entry.save()
+            return redirect("entries:stream_home", author_serial=author.serial)
+    else:
+        form = EntryForm()
+
+    return render(request, "entries/entry_form.html", {"form": form, "author": author})
+
+
+def entry_detail(request, author_serial, entry_serial):
+    author = get_object_or_404(Author, serial=author_serial)
+    entry = get_object_or_404(Entry, author=author, serial=entry_serial)
+    return render(request, "entries/entry_detail.html", {"entry": entry})
+
+def entry_edit(request, author_serial, entry_serial):
+    entry = get_object_or_404(Entry, serial=entry_serial)
+
+    # Check ownership
+    if request.user != entry.author.user:
+        return HttpResponse("You do not have permission to edit this post.", status=403)
+
+    if request.method == "POST":
+        form = EntryForm(request.POST, request.FILES, instance=entry)
+        if form.is_valid():
+            form.save()
+            # Redirect to stream_home with the author_serial of the post
+            return redirect("entries:stream_home", author_serial=entry.author.serial)
+    else:
+        form = EntryForm(instance=entry)
+
+    return render(request, "entries/entry_edit.html", {"form": form, "entry": entry})
+
+def entry_delete(request, author_serial, entry_serial):
+    entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
+    if request.method == "POST":
+        entry.delete()
+        return redirect("entries:stream_home", author_serial=author_serial)
+    
+    return redirect("entries:entry_edit", author_serial=author_serial, entry_serial=entry_serial)

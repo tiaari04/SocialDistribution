@@ -544,13 +544,20 @@
                                 <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
                                     Comment
                                 </button>
+
+                                {% if entry.author.id == author.id %}
+                                    <!-- Show only for your own posts -->
+                                    <button>
+                                        <a href="{% url 'entries:edit' entry.author.serial entry.serial %}">Edit</a>
+                                    </button>
+                                {% endif %}
                             </div>
                         </section>
                     </li>
                 {% endfor %}
             </ul>
 
-            <button id="createPost"><a href="">New Post</a></button>
+            <button id="createPost"><a href="{% url 'entries:create' author.serial %}" id="createPost" class="button">New Post</a></button>
 
             <!-- Comments panel -->
             <section id="commentsPanel">
