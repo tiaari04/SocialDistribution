@@ -9,6 +9,35 @@ from django.utils.crypto import get_random_string
 from django.contrib.sites.models import Site
 import os
 from django.utils.text import slugify
+from django.urls import reverse
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.urls import reverse
+from authors.models import Author
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            try:
+                author = Author.objects.get(user=user)
+                if author.is_approved:
+                    return redirect(reverse("entries:stream_home", kwargs={"author_serial": author.serial}))
+                else:
+                    return render(request, "login/login.html", {"error": "Your account is pending approval."})
+            except Author.DoesNotExist:
+                return render(request, "login/login.html", {"error": "Author not found"})
+        else:
+            return render(request, "login/login.html", {"error": "Invalid username or password"})
+
+    return render(request, "login/login.html")
+
 
 def signup_view(request):
     if request.method == "POST":
@@ -18,24 +47,24 @@ def signup_view(request):
 
             # Get current site domain
             current_site = Site.objects.get_current()
-            domain = f"https://{current_site.domain}"  # full domain
 
+            domain = f"https://{current_site.domain}" 
+
+            profile_url = ""
             # Handle profile image upload
             uploaded_file = form.cleaned_data.get("profileImageFile")
             if "profileImageFile" in request.FILES:
                 uploaded_file = request.FILES["profileImageFile"]
-                # Save file in MEDIA_ROOT/profile_images/
                 path = default_storage.save(f"profile_images/{uploaded_file.name}", uploaded_file)
-                # Generate full URL
                 profile_url = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
             else:
-                # 2️⃣ Fallback: use URL field if provided
+      
                 url_input = request.POST.get("profileImage", "").strip()
                 if url_input:
                     profile_url = url_input
 
             # Create Author instance with full URL
-            Author.objects.create(
+            author = Author.objects.create(
                 id=f"{domain}/authors/{user.username}",
                 user=user,
                 host=f"{domain}/api/",
@@ -49,7 +78,8 @@ def signup_view(request):
             )
 
             login(request, user)
-            return redirect('/authors/')
+            return redirect(reverse("entries:stream_home", kwargs={"author_serial": author.serial}))
+
     else:
         form = CustomSignupForm()
 

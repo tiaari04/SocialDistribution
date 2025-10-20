@@ -1,0 +1,47 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6 text-blue-800">Pending Users</h1>
+
+<!-- Header row -->
+<ul role="list" class="w-full text-sm bg-gray-100 text-gray-700 rounded-t-xl border border-gray-200">
+  <li role="listitem" class="grid grid-cols-3 gap-2 py-2 px-3">
+    <span class="text-left font-medium">Username</span>
+    <span class="text-left font-medium">Joined</span>
+    <span class="text-left font-medium">Actions</span>
+  </li>
+</ul>
+
+<!-- Body rows -->
+<ul role="list" class="w-full text-sm border border-t-0 border-gray-200 rounded-b-xl shadow-sm">
+  {% for u in pending %}
+  <li role="listitem" class="grid grid-cols-3 gap-2 items-center border-t first:border-t-0 py-2 px-3">
+    <span class="truncate">{{ u.username }}</span>
+    <span class="text-gray-600">{{ u.date_joined }}</span>
+    <span class="flex items-center gap-2 justify-start">
+      <form action="{% url 'adminpage:approve-user' u.id %}" method="post">
+        {% csrf_token %}
+        <button
+          class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
+          type="submit"
+          aria-label="Approve {{ u.username }}">
+          Approve
+        </button>
+      </form>
+
+      <form action="{% url 'adminpage:reject-user' u.id %}" method="post" onsubmit="return confirm('Reject & delete this pending user?');">
+        {% csrf_token %}
+        <button
+          class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500"
+          type="submit"
+          aria-label="Reject {{ u.username }}">
+          Reject
+        </button>
+      </form>
+    </span>
+  </li>
+  {% empty %}
+  <li role="listitem" class="py-6 text-center text-gray-400">No pending users.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
