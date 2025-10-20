@@ -9,23 +9,27 @@
 <body class="bg-gray-50 text-gray-800">
   <!-- Navbar -->
   <header class="border-b bg-white shadow-sm">
-    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-6">
-      <a href="{% url 'adminpage:dashboard' %}" class="text-lg font-semibold text-blue-700">Admin</a>
-      <nav class="flex gap-5 text-sm text-gray-600">
-        <a class="hover:text-blue-700" href="{% url 'adminpage:dashboard' %}">Dashboard</a>
-        <a class="hover:text-blue-700" href="{% url 'adminpage:images' %}">Images</a>
-        <a class="hover:text-blue-700" href="{% url 'adminpage:authors' %}">Authors</a>
-        <a class="hover:text-blue-700" href="{% url 'adminpage:pending-users' %}">Approvals</a>
-        <a class="hover:text-blue-700" href="/">Site</a>
-      </nav>
-      <div class="ml-auto">
+    <ul role="list" class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-6">
+      <li role="listitem">
+        <a href="{% url 'adminpage:dashboard' %}" class="text-lg font-semibold text-blue-700">Admin</a>
+      </li>
+      <li role="listitem" class="flex gap-5 text-sm text-gray-600">
+        <nav class="flex gap-5">
+          <a class="hover:text-blue-700" href="{% url 'adminpage:dashboard' %}">Dashboard</a>
+          <a class="hover:text-blue-700" href="{% url 'adminpage:images' %}">Images</a>
+          <a class="hover:text-blue-700" href="{% url 'adminpage:authors' %}">Authors</a>
+          <a class="hover:text-blue-700" href="{% url 'adminpage:pending-users' %}">Approvals</a>
+          <a class="hover:text-blue-700" href="/">Site</a>
+        </nav>
+      </li>
+      <li role="listitem" class="ml-auto">
         {% if request.user.is_authenticated %}
           <span class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700 border border-blue-200">
             {{ request.user.username }}
           </span>
         {% endif %}
-      </div>
-    </div>
+      </li>
+    </ul>
   </header>
 
   <main class="mx-auto max-w-6xl px-4 py-8">

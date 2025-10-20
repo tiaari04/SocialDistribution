@@ -3,17 +3,31 @@
 {% block content %}
 <h1 class="text-2xl font-semibold mb-6 text-blue-800">{{ mode }} Author</h1>
 
-<div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-2xl">
-  <form method="post" class="space-y-4">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="flex gap-2">
-      <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500" type="submit">{{ mode }}</button>
-      <a class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-100" href="{% url 'adminpage:authors' %}">Cancel</a>
-    </div>
-  </form>
-  <p class="text-gray-500 mt-3 text-sm">
+<ul role="list" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-2xl">
+  <li role="listitem">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <ul role="list" class="space-y-3">
+        {{ form.as_ul }}
+        <li role="listitem" class="flex gap-2">
+          <button
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+            type="submit"
+          >
+            {{ mode }}
+          </button>
+          <a
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-100"
+            href="{% url 'adminpage:authors' %}"
+          >
+            Cancel
+          </a>
+        </li>
+      </ul>
+    </form>
+  </li>
+  <li role="listitem" class="text-gray-500 mt-3 text-sm">
     For local authors, leave “id” blank to auto-generate an FQID if your view supports it.
-  </p>
-</div>
+  </li>
+</ul>
 {% endblock %}
