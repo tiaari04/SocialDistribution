@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.core.files.storage import default_storage
 from django.conf import settings
-from django.contrib.auth.models import User
 from .forms import CustomSignupForm
 from authors.models import Author
 from django.utils.crypto import get_random_string
@@ -14,6 +13,11 @@ from django.contrib.auth import authenticate, login
 from django.urls import reverse
 from authors.models import Author
 
+
+from django.shortcuts import redirect, render
+from django.contrib.auth import authenticate, login
+from django.urls import reverse
+from authors.models import Author
 
 def login_view(request):
     if request.method == "POST":
@@ -30,14 +34,17 @@ def login_view(request):
                     return redirect(reverse("adminpage:dashboard"))
                 if author.is_approved and author.is_active:
                     return redirect(reverse("entries:stream_home", kwargs={"author_serial": author.serial}))
-                else:
-                    return render(request, "login/login.html", {"error": "Your account is pending approval."})
+                # Account not approved yet 
+                return redirect("login:await_approval")
             except Author.DoesNotExist:
-                return render(request, "login/login.html", {"error": "Author not found"})
+                # Author record missing
+                return redirect("login:login")
         else:
-            return render(request, "login/login.html", {"error": "Invalid username or password"})
+            # Invalid credentials
+            return redirect("login:login")
 
     return render(request, "login/login.html")
+
 
 
 def signup_view(request):
@@ -46,13 +53,11 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
 
-            # Get current site domain
             current_site = Site.objects.get_current()
 
             domain = f"https://{current_site.domain}" 
 
             profile_url = ""
-            # Handle profile image upload
             uploaded_file = form.cleaned_data.get("profileImageFile")
             if "profileImageFile" in request.FILES:
                 uploaded_file = request.FILES["profileImageFile"]
@@ -64,7 +69,7 @@ def signup_view(request):
                 if url_input:
                     profile_url = url_input
 
-            # Create Author instance with full URL
+            # Create Author instance
             author = Author.objects.create(
                 id=f"{domain}/authors/{user.username}",
                 user=user,
@@ -80,9 +85,12 @@ def signup_view(request):
 
             # do not log in until validated
             #login(request, user)
-            return render(request, "login/login.html", {"message": "Signup successful! Please wait for account approval before logging in."})
+            return render(request, "login/awaitApproval.html")
 
     else:
         form = CustomSignupForm()
 
     return render(request, "login/signup.html", {"form": form})
+
+def await_approval_view(request):
+    return render(request, "login/awaitApproval.html")
