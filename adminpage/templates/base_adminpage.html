@@ -8,22 +8,49 @@
   <link rel="stylesheet" href="{% static 'theme.css' %}">
 </head>
 <body>
-  <ul class="container">
-    <li>
-      <ul class="nav border">
-        <li class="semibold text-primary">
-          <a href="{% url 'adminpage:dashboard' %}">Admin</a>
-        </li>
-        <li><a href="{% url 'adminpage:dashboard' %}">Dashboard</a></li>
-        {# <li><a href="{% url 'adminpage:reports' %}">Reports</a></li> #}
-        {# <li><a href="{% url 'adminpage:settings' %}">Settings</a></li> #}
-      </ul>
-    </li>
 
-    <li class="p-4">
-      {% block content %}{% endblock %}
-    </li>
-  </ul>
+<ul class="container">
+  <!-- Top nav -->
+  <li>
+    {% with current=request.resolver_match.url_name %}
+    <ul class="nav border">
+      <li class="semibold">
+        <a href="{% url 'adminpage:dashboard' %}">Admin</a>
+      </li>
+
+      <li class="{% if current == 'dashboard' %}active{% endif %}">
+        <a href="{% url 'adminpage:dashboard' %}">Dashboard</a>
+      </li>
+
+      <!-- Authors -->
+      <li class="{% if current == 'author-list' %}active{% endif %}">
+        <a href="{% url 'adminpage:author-list' %}">Authors</a>
+      </li>
+
+      <!-- Pending / Approvals -->
+      <li class="{% if current == 'pending-users' or current == 'approvals' %}active{% endif %}">
+        {# Use the one that exists in your urls.py #}
+        <a href="{% url 'adminpage:pending-users' %}">Pending</a>
+        {# If your name is 'approvals' instead, swap the line above for: #}
+        {# <a href="{% url 'adminpage:approvals' %}">Pending</a> #}
+      </li>
+
+      <!-- Images -->
+      <li class="{% if current == 'images-list' or current == 'image-list' %}active{% endif %}">
+        {# Use the one that exists in your urls.py #}
+        <a href="{% url 'adminpage:images-list' %}">Images</a>
+        {# If your name is 'image-list' instead, swap the line above for: #}
+        {# <a href="{% url 'adminpage:image-list' %}">Images</a> #}
+      </li>
+    </ul>
+    {% endwith %}
+  </li>
+
+  <!-- Page content -->
+  <li class="p-4">
+    {% block content %}{% endblock %}
+  </li>
+</ul>
 
 </body>
 </html>
