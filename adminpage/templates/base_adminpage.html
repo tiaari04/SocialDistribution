@@ -1,39 +1,29 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>{% block title %}Admin{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'theme.css' %}">
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <!-- Navbar -->
-  <header class="border-b bg-white shadow-sm">
-    <ul role="list" class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-6">
-      <li role="listitem">
-        <a href="{% url 'adminpage:dashboard' %}" class="text-lg font-semibold text-blue-700">Admin</a>
-      </li>
-      <li role="listitem" class="flex gap-5 text-sm text-gray-600">
-        <nav class="flex gap-5">
-          <a class="hover:text-blue-700" href="{% url 'adminpage:dashboard' %}">Dashboard</a>
-          <a class="hover:text-blue-700" href="{% url 'adminpage:images' %}">Images</a>
-          <a class="hover:text-blue-700" href="{% url 'adminpage:authors' %}">Authors</a>
-          <a class="hover:text-blue-700" href="{% url 'adminpage:pending-users' %}">Approvals</a>
-          <a class="hover:text-blue-700" href="/">Site</a>
-        </nav>
-      </li>
-      <li role="listitem" class="ml-auto">
-        {% if request.user.is_authenticated %}
-          <span class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700 border border-blue-200">
-            {{ request.user.username }}
-          </span>
-        {% endif %}
-      </li>
-    </ul>
-  </header>
+<body>
+  <ul class="container">
+    <li>
+      <ul class="nav border">
+        <li class="semibold text-primary">
+          <a href="{% url 'adminpage:dashboard' %}">Admin</a>
+        </li>
+        <li><a href="{% url 'adminpage:dashboard' %}">Dashboard</a></li>
+        {# <li><a href="{% url 'adminpage:reports' %}">Reports</a></li> #}
+        {# <li><a href="{% url 'adminpage:settings' %}">Settings</a></li> #}
+      </ul>
+    </li>
 
-  <main class="mx-auto max-w-6xl px-4 py-8">
-    {% block content %}{% endblock %}
-  </main>
+    <li class="p-4">
+      {% block content %}{% endblock %}
+    </li>
+  </ul>
+
 </body>
 </html>
