@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ author.displayName }}'s Profile</title>
-
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <style>
     /* ----------- Base Layout ----------- */
     body {
@@ -42,9 +42,7 @@
       }
     }
 
-    figure {
-      margin: 0;
-    }
+    figure { margin: 0; }
 
     figure img {
       width: 160px;
@@ -55,9 +53,7 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    section.profile-info {
-      flex: 1;
-    }
+    section.profile-info { flex: 1; }
 
     h1 {
       font-size: 1.875rem;
@@ -79,9 +75,7 @@
       margin-bottom: 0.25rem;
     }
 
-    a.link:hover {
-      text-decoration: underline;
-    }
+    a.link:hover { text-decoration: underline; }
 
     p.bio {
       color: #374151;
@@ -105,12 +99,13 @@
       transition: background-color 0.25s ease, transform 0.1s ease;
     }
 
-    .button:hover {
-      background-color: #4f46e5;
-    }
+    .button:hover { background-color: #4f46e5; }
+    .button:active { transform: scale(0.98); }
 
-    .button:active {
-      transform: scale(0.98);
+    /* pending style */
+    .button.pending {
+      background-color: #9ca3af !important;
+      cursor: pointer;
     }
 
     hr {
@@ -120,9 +115,7 @@
     }
 
     /* ----------- Entries Section ----------- */
-    article.entries {
-      text-align: left;
-    }
+    article.entries { text-align: left; }
 
     article.entries h2 {
       font-size: 1.5rem;
@@ -131,69 +124,20 @@
       margin-bottom: 0.75rem;
     }
 
-    article.entries p {
-      color: #6b7280;
-      font-style: italic;
-    }
+    article.entries p { color: #6b7280; font-style: italic; }
   </style>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const button = document.getElementById('follow-btn');
-      if (!button) return;
-
-      button.addEventListener('click', async () => {
-        if (button.textContent.trim() === "Follow") {
-          const payload = {
-            type: "follow",
-            summary: "{{ request.user.username }} wants to follow {{ author.displayName }}",
-            actor: {
-              type: "author",
-              id: "{{ request.user.author.id }}",
-              host: "{{ request.user.author.host }}",
-              displayName: "{{ request.user.username }}",
-              github: "{{ request.user.author.github }}",
-              profileImage: "{{ request.user.author.profileImage }}",
-              web: "{{ request.user.author.web }}"
-            },
-            object: {
-              type: "author",
-              id: "{{ author.id }}",
-              host: "{{ author.host }}",
-              displayName: "{{ author.displayName }}",
-              github: "{{ author.github }}",
-              profileImage: "{{ author.profileImage }}",
-              web: "{{ author.web }}"
-            }
-          };
-          const response = await fetch("{% url 'api:author-inbox' author.serial %}", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          button.textContent =
-            button.textContent.trim() === "Follow" ? "Unfollow" : "Follow";
-        }
-      });
-    });
-  </script>
 </head>
 
 <body>
   <main>
     <header>
       <figure>
-        <img src="{{ author.profileImage|default:'https://via.placeholder.com/150' }}"
-             alt="{{ author.displayName }}">
+        <img src="{{ author.profileImage|default:'https://via.placeholder.com/150' }}" alt="{{ author.displayName }}">
       </figure>
 
       <section class="profile-info">
         <h1>{{ author.displayName }}</h1>
-        <span class="followers">{{ author.follower_count|default:0 }} Followers</span>
+        <span class="followers">{{ follower_count }} Followers</span>
 
         {% if author.github %}
           <a href="{{ author.github }}" target="_blank" class="link">GitHub: {{ author.github }}</a>
@@ -203,17 +147,43 @@
           <a href="{{ author.web }}" target="_blank" class="link">Website: {{ author.web }}</a>
         {% endif %}
 
-        <p class="bio">
-          {{ author.description|default:"This author hasn’t added a bio yet." }}
-        </p>
+        <p class="bio">{{ author.description|default:"This author hasn’t added a bio yet." }}</p>
+
+        {% comment %}
+          Show edit buttons if viewing own profile.
+          If authenticated and not owner: show follow button with data attributes.
+          If anonymous: show login link.
+        {% endcomment %}
 
         {% if request.user.is_authenticated and request.user == author.user %}
           <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
           <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests</a>
-        {% else %}
-          <button type="button" id="follow-btn" class="button">
-            {% if is_following %}Unfollow{% else %}Follow{% endif %}
+
+        {% elif request.user.is_authenticated %}
+          {# The button uses data attributes for safe JS consumption. follow_status is set in the view. #}
+          <button
+            id="follow-btn"
+            class="button {% if follow_status == 'Pending' %}pending{% endif %}"
+            data-endpoint="{% url 'api:author-inbox' author.serial %}"
+            data-initial-state="{{ follow_status|escapejs }}"
+            data-actor-id="{{ request.user.author.id|escapejs }}"
+            data-actor-host="{{ request.user.author.host|escapejs }}"
+            data-actor-username="{{ request.user.username|escapejs }}"
+            data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
+            data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
+            data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
+            data-object-id="{{ author.id|escapejs }}"
+            data-object-host="{{ author.host|escapejs }}"
+            data-object-displayname="{{ author.displayName|escapejs }}"
+            data-object-github="{{ author.github|default:''|escapejs }}"
+            data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
+            data-object-web="{{ author.web|default:''|escapejs }}"
+          >
+            {{ follow_status }}
           </button>
+
+        {% else %}
+          <a href="{% url 'login:login' %}" class="button">Log in to follow</a>
         {% endif %}
       </section>
     </header>
@@ -222,9 +192,110 @@
 
     <article class="entries">
       <h2>Public Entries</h2>
-      <p>No entries yet — this section will display posts or GitHub activity.</p>
-      <!-- TODO: create and reuse stream component in homestream and authordetail? -->
+      {% if entries %}
+        {% for entry in entries %}
+          <div>
+            <h3>{{ entry.title }}</h3>
+            <p>{{ entry.content|truncatewords:30 }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No entries yet — this section will display posts or GitHub activity.</p>
+      {% endif %}
     </article>
   </main>
+
+  <script>
+    (function () {
+      const btn = document.getElementById('follow-btn');
+      if (!btn) return;
+
+      // read initial state and endpoint
+      let state = (btn.dataset.initialState || "Request To Follow").trim();
+      const endpoint = btn.dataset.endpoint;
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      // actor and object built from safe data-attributes
+      const actor = {
+        type: "author",
+        id: btn.dataset.actorId || "",
+        host: btn.dataset.actorHost || "",
+        displayName: btn.dataset.actorUsername || "",
+        github: btn.dataset.actorGithub || "",
+        profileImage: btn.dataset.actorProfileimage || "",
+        web: btn.dataset.actorWeb || ""
+      };
+
+      const objectAuthor = {
+        type: "author",
+        id: btn.dataset.objectId || "",
+        host: btn.dataset.objectHost || "",
+        displayName: btn.dataset.objectDisplayname || "",
+        github: btn.dataset.objectGithub || "",
+        profileImage: btn.dataset.objectProfileimage || "",
+        web: btn.dataset.objectWeb || ""
+      };
+
+      function applyVisual(newState) {
+        state = newState;
+        btn.textContent = newState;
+        if (newState === "Pending") {
+          btn.classList.add('pending');
+        } else {
+          btn.classList.remove('pending');
+        }
+      }
+
+      // initialize visual
+      applyVisual(state);
+
+      btn.addEventListener('click', async function () {
+        // State machine:
+        // Request To Follow -> POST -> Pending (if ok)
+        // Pending -> Cancel (optional DELETE) -> Request To Follow
+        // Unfollow -> Unfollow (optional DELETE) -> Request To Follow
+
+        if (state === "Request To Follow") {
+          const payload = {
+            type: "follow",
+            summary: actor.displayName + " wants to follow " + objectAuthor.displayName,
+            actor: actor,
+            object: objectAuthor
+          };
+
+          try {
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+              applyVisual("Pending");
+            } else {
+              const text = await res.text();
+              console.error('Follow request failed', res.status, text);
+              alert("Failed to send follow request.");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Network error while sending follow request.");
+          }
+
+        } else if (state === "Pending") {
+          // Cancel pending locally; ideally call a DELETE API to actually remove FollowRequest
+          // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
+          applyVisual("Request To Follow");
+
+        } else if (state === "Unfollow") {
+          // Unfollow locally; ideally call a DELETE API to remove accepted follow
+          applyVisual("Request To Follow");
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
