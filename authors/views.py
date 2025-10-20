@@ -14,8 +14,16 @@ def author_list(request):
 
 def author_detail(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
+    is_following = False
+
+    if request.user.is_authenticated:
+        user_author = request.user.author
+        is_following = FollowRequest.objects.filter(
+            actor=user_author, 
+            author_followed=author
+            ).exists()
     entries = get_list_or_404(Entry, author_id=author.id)
-    return render(request, "authors/authorDetail.html", {"author": author, "entries": entries})
+    return render(request, "authors/authorDetail.html", {"author": author, "is_following": is_following, "entries": entries})
 
 @login_required
 def author_edit(request, author_serial):
