@@ -47,6 +47,7 @@ def signup_view(request):
 
             # Get current site domain
             current_site = Site.objects.get_current()
+
             domain = f"https://{current_site.domain}" 
 
             profile_url = ""

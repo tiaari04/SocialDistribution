@@ -32,6 +32,8 @@ class Author(TimeStampedModel):
     is_approved = models.BooleanField(default=False, db_index=True)
     # Convenience: whether this author account is hosted locally on this node
     is_local = models.BooleanField(default=True, db_index=True)
+    is_admin = models.BooleanField(default=False, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
     # Optional: a locally convenient serial (NOT used for relations between nodes)
     serial = models.CharField(

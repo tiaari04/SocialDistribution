@@ -7,6 +7,7 @@ __pycache__/
 venv
 env/
 media/
+*.tar.gz
 # Django collectstatic
 /staticfiles/
 
