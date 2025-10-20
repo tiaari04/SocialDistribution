@@ -20,9 +20,6 @@ Make a distributed social network!
 
 The authors claiming copyright, if they wish to be known, can list their names here...
 
-* 
-
-
 ## Team Members
 
 1. Danielle Guloien, dguloien
