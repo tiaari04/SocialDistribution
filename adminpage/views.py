@@ -5,8 +5,8 @@ from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from urllib.parse import unquote
 from django.contrib.auth import get_user_model
+from urllib.parse import unquote
 
 from .models import HostedImage
 from .forms import HostedImageForm, AuthorForm
@@ -152,18 +152,12 @@ def pending_users(request):
     return render(request, 'adminpage/pending_users.html', {'pending': qs})
 
 @require_POST
-def approve_user(request, author_id):
-    # Decode %2F etc. and handle optional trailing slash
-    author_id = unquote(author_id).rstrip('/')
-
-    author = (Author.objects
-        .filter(id__in=[author_id, author_id + '/'])
-        .first()
+def approve_user(request, user_id):
+    user_id = unquote(user_id).rstrip('/')  # decode and normalize trailing slash
+    author = (
+        Author.objects.filter(id__in=[user_id, user_id + '/']).first()
+        or get_object_or_404(Author, pk=user_id)
     )
-
-    if not author:
-        author = get_object_or_404(Author, pk=author_id)
-
     author.is_approved = True
     author.save(update_fields=['is_approved'])
     return redirect('adminpage:pending-users')
