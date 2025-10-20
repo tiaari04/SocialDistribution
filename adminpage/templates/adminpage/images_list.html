@@ -1,59 +1,96 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Images{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold mb-6 text-blue-800">Hosted Images</h1>
 
-<form method="get" class="mb-6 flex gap-2">
-  <input
-    name="q"
-    value="{{ q }}"
-    placeholder="Search images..."
-    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-  <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">
-    Search
-  </button>
-  <a
-    href="{% url 'adminpage:image-upload' %}"
-    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-100"
-  >
-    Upload
-  </a>
-</form>
+<ul class="container gap-6">
+  <!-- Page heading -->
+  <li>
+    <h1 class="text-xl semibold text-primary p-4">Hosted Images</h1>
+  </li>
 
-<ul role="list" class="w-full text-sm bg-gray-100 text-gray-700 rounded-t-xl border border-gray-200">
-  <li role="listitem" class="grid grid-cols-3 gap-2 py-2 px-3">
-    <span class="text-left font-medium">Preview</span>
-    <span class="text-left font-medium">URL</span>
-    <span class="text-left font-medium">Actions</span>
+  <!-- Search / Upload -->
+  <li>
+    <form method="get">
+      <ul class="row gap-3">
+        <li style="flex:1 1 auto; min-width:0;">
+          <input
+            name="q"
+            value="{{ q }}"
+            placeholder="Search images..."
+            class="border rounded px-3 py-2 text-sm bg-white"
+            style="width:100%;"
+          />
+        </li>
+        <li>
+          <button class="bg-primary rounded px-4 py-2 text-sm bold text-white">
+            Search
+          </button>
+        </li>
+        <li>
+          <a href="{% url 'adminpage:image-upload' %}" class="border rounded px-4 py-2 text-sm bg-white">
+            Upload
+          </a>
+        </li>
+      </ul>
+    </form>
+  </li>
+
+  <!-- Header row -->
+  <li>
+    <ul class="grid cols-3 gap-2 border bg-neutral-100 text-strong rounded p-3 text-sm semibold">
+      <li>Preview</li>
+      <li>URL</li>
+      <li>Actions</li>
+    </ul>
+  </li>
+
+  <!-- Body rows -->
+  <li>
+    <ul class="grid gap-0 border rounded shadow text-sm">
+      {% for i in images %}
+      <li class="grid cols-3 gap-2 p-3" style="border-top:1px solid var(--neutral-200);">
+        <!-- Preview -->
+        <ul>
+          <li>
+            <img
+              src="{{ i.url }}"
+              alt="image"
+              style="height:4rem;width:4rem;object-fit:cover;border-radius:0.5rem;"
+            />
+          </li>
+        </ul>
+
+        <!-- URL -->
+        <li class="text-muted" style="word-break:break-all;">
+          <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+            {{ i.url }}
+          </span>
+        </li>
+
+        <!-- Actions -->
+        <li>
+          <form
+            action="{% url 'adminpage:image-delete' i.id %}"
+            method="post"
+            onsubmit="return confirm('Delete this image?');"
+          >
+            {% csrf_token %}
+            <button
+              type="submit"
+              aria-label="Delete image {{ i.id }}"
+              class="rounded px-3 py-1 text-xs text-white"
+              style="background:#e11d48;"
+            >
+              Delete
+            </button>
+          </form>
+        </li>
+      </li>
+      {% empty %}
+      <li class="p-6 text-center text-muted">No images yet.</li>
+      {% endfor %}
+    </ul>
   </li>
 </ul>
 
-<ul role="list" class="w-full text-sm border border-t-0 border-gray-200 rounded-b-xl shadow-sm overflow-x-auto">
-  {% for i in images %}
-  <li role="listitem" class="grid grid-cols-3 gap-2 items-center border-t first:border-t-0 py-2 px-3">
-    <span class="h-16 w-16">
-      <img src="{{ i.url }}" alt="image" class="h-16 w-16 rounded-md object-cover" />
-    </span>
-
-
-    <span class="text-gray-600 break-all font-mono">{{ i.url }}</span>
-
-    <span class="flex items-center gap-2 justify-start">
-      <form action="{% url 'adminpage:image-delete' i.id %}" method="post" onsubmit="return confirm('Delete this image?');">
-        {% csrf_token %}
-        <button
-          class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500"
-          type="submit"
-          aria-label="Delete image {{ i.id }}"
-        >
-          Delete
-        </button>
-      </form>
-    </span>
-  </li>
-  {% empty %}
-  <li role="listitem" class="py-6 text-center text-gray-400">No images yet.</li>
-  {% endfor %}
-</ul>
 {% endblock %}
