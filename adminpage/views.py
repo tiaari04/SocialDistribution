@@ -16,9 +16,6 @@ User = get_user_model()
 # --------- Helpers ---------
 
 def build_local_author_id(host_base: str, author_uuid: str | None = None) -> str:
-    """
-    Build the Author FQID for local authors, e.g., https://node/api/authors/<uuid>
-    """
     if not host_base.endswith('/'):
         host_base += '/'
     if author_uuid is None:
@@ -26,9 +23,6 @@ def build_local_author_id(host_base: str, author_uuid: str | None = None) -> str
     return urljoin(host_base, f"authors/{author_uuid}")
 
 def get_local_host_from_settings() -> str:
-    """
-    Retrieve the local node API base from settings or use a fallback for local dev.
-    """
     return getattr(settings, "NODE_API_BASE", "http://localhost:8000/api/")
 
 # --------- Dashboard ---------

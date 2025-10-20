@@ -8,7 +8,6 @@
     <thead class="bg-gray-100 text-gray-700">
       <tr>
         <th class="py-2 px-3 text-left">Username</th>
-        <th class="py-2 px-3 text-left">Email</th>
         <th class="py-2 px-3 text-left">Joined</th>
         <th class="py-2 px-3 text-left">Actions</th>
       </tr>
@@ -17,21 +16,24 @@
       {% for u in pending %}
       <tr class="border-t">
         <td class="py-2 px-3">{{ u.username }}</td>
-        <td class="py-2 px-3">{{ u.email|default:"" }}</td>
         <td class="py-2 px-3">{{ u.date_joined }}</td>
         <td class="py-2 px-3 whitespace-nowrap">
           <form action="{% url 'adminpage:approve-user' u.id %}" method="post" class="inline">
             {% csrf_token %}
-            <button class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500" type="submit">Approve</button>
+            <button class="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500" type="submit">
+              Approve
+            </button>
           </form>
           <form action="{% url 'adminpage:reject-user' u.id %}" method="post" class="inline" onsubmit="return confirm('Reject & delete this pending user?');">
             {% csrf_token %}
-            <button class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500" type="submit">Reject</button>
+            <button class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500" type="submit">
+              Reject
+            </button>
           </form>
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="4" class="py-6 text-center text-gray-400">No pending users.</td></tr>
+      <tr><td colspan="3" class="py-6 text-center text-gray-400">No pending users.</td></tr>
       {% endfor %}
     </tbody>
   </table>
