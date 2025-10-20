@@ -4,6 +4,7 @@ from authors.models import Author
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.conf import settings
+from inbox.models import FollowRequest
 
 def author_list(request):
     authors = Author.objects.all()
