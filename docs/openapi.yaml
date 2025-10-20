@@ -1,0 +1,524 @@
+openapi: 3.0.3
+info:
+  title: f25-project-red API (partial)
+  version: 0.1.0
+  description: "Partial OpenAPI specification for the implemented API endpoints: inbox, comments, likes and comment-likes. This is hand-authored and covers the primary request/response shapes used in the project."
+servers:
+  - url: https://local/node
+    description: Local testing host (replace with your deployment base URL)
+paths:
+  /api/authors/{author_serial}/inbox/:
+    post:
+      summary: Deliver an activity to an author's inbox (comment/like/follow)
+      operationId: deliverInbox
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboxActivity'
+            examples:
+              commentDelivery:
+                summary: Comment delivery example
+                value:
+                  type: comment
+                  id: https://remote.node/api/comments/c123
+                  author:
+                    id: https://remote.node/api/authors/bob
+                    displayName: Bob
+                  comment: Nice post!
+                  contentType: text/plain
+                  entry: http://local/node/entries/entry1
+                  published: '2025-10-20T12:00:00Z'
+      responses:
+        '201':
+          description: created or exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                  status:
+                    type: string
+        '200':
+          description: ignored or accepted but no action
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+        '400':
+          description: invalid payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                  error:
+                    type: string
+  /api/authors/{author_serial}/entries/{entry_serial}/comments/:
+    get:
+      summary: List comments for an entry (paginated)
+      operationId: listComments
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entry_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: paginated comments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentsPage'
+    post:
+      summary: Create a comment on an entry
+      operationId: createComment
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entry_serial
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+            examples:
+              create:
+                value:
+                  comment: Great article!
+                  contentType: text/markdown
+      responses:
+        '201':
+          description: created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '403':
+          description: Forbidden (entry visibility)
+  /api/authors/{author_serial}/entries/{entry_serial}/likes/:
+    get:
+      summary: List likes on an entry (manual pagination)
+      operationId: listLikes
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entry_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: likes list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikesList'
+    post:
+      summary: Create a like on an entry (idempotent for local actors)
+      operationId: createLike
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entry_serial
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeCreate'
+            examples:
+              create:
+                value:
+                  author:
+                    id: https://remote.node/api/authors/bob
+      responses:
+        '201':
+          description: created like
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Like'
+        '200':
+          description: like existed (idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Like'
+  /api/entries/{entry_fqid}/comments/:
+    $ref: '#/paths/~1api~1authors~1{author_serial}~1entries~1{entry_serial}~1comments~1'
+  /api/entries/{entry_fqid}/likes/:
+    $ref: '#/paths/~1api~1authors~1{author_serial}~1entries~1{entry_serial}~1likes~1'
+  /api/entries/{entry_fqid}/comments/{comment_fqid}/likes/:
+    get:
+      summary: List likes on a comment (FQID path)
+      operationId: listCommentLikesByFqid
+      parameters:
+        - name: entry_fqid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_fqid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: likes list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikesList'
+    post:
+      summary: Create a like on a comment (FQID path)
+      operationId: createCommentLikeByFqid
+      parameters:
+        - name: entry_fqid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comment_fqid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeCreate'
+      responses:
+        '201':
+          description: created like
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Like'
+  /api/authors/{author_serial}/followers/{foreign_encoded}/:
+    get:
+      summary: Check whether a foreign actor is a follower
+      operationId: getFollowerDetail
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: foreign_encoded
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: follower found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_follower:
+                    type: boolean
+        '404':
+          description: not a follower
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_follower:
+                    type: boolean
+    put:
+      summary: Add a follower (owner only)
+      operationId: addFollower
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: foreign_encoded
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowerAction'
+      responses:
+        '201':
+          description: follower added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+        '403':
+          description: forbidden
+    delete:
+      summary: Remove a follower (owner only)
+      operationId: removeFollower
+      parameters:
+        - name: author_serial
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: foreign_encoded
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: follower removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+  /adminpage/public_images_json:
+    get:
+      summary: Public JSON of hosted images
+      operationId: listPublicImages
+      responses:
+        '200':
+          description: images list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicImages'
+components:
+  schemas:
+    AuthorRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uri
+        displayName:
+          type: string
+        host:
+          type: string
+          format: uri
+        profileImage:
+          type: string
+          format: uri
+      required:
+        - id
+    CommentCreate:
+      type: object
+      properties:
+        comment:
+          type: string
+        contentType:
+          type: string
+        id:
+          type: string
+          format: uri
+        published:
+          type: string
+          format: date-time
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+      required:
+        - comment
+    Comment:
+      type: object
+      properties:
+        fqid:
+          type: string
+          format: uri
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+        content:
+          type: string
+        content_type:
+          type: string
+        published:
+          type: string
+          format: date-time
+        entry:
+          type: string
+          format: uri
+        likes_count:
+          type: integer
+    CommentsPage:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    LikeCreate:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+        object:
+          type: string
+          format: uri
+        id:
+          type: string
+          format: uri
+      required:
+        - author
+    Like:
+      type: object
+      properties:
+        fqid:
+          type: string
+          format: uri
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+        object_fqid:
+          type: string
+          format: uri
+        published:
+          type: string
+          format: date-time
+    LikesList:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
+        src:
+          type: array
+          items:
+            $ref: '#/components/schemas/Like'
+    InboxActivity:
+      type: object
+      description: "ActivityStreams-like payload used when remote nodes deliver items to an inbox (type: comment|like|follow)"
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+          format: uri
+        author:
+          $ref: '#/components/schemas/AuthorRef'
+        actor:
+          $ref: '#/components/schemas/AuthorRef'
+        object:
+          type: string
+          format: uri
+        comment:
+          type: string
+        contentType:
+          type: string
+        published:
+          type: string
+          format: date-time
+      required: []
+    FollowerAction:
+      type: object
+      properties:
+        actor:
+          $ref: '#/components/schemas/AuthorRef'
+      required:
+        - actor
+    PublicImages:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              url:
+                type: string
+                format: uri
+              created_at:
+                type: string
+                format: date-time
+tags:
+  - name: inbox
+    description: Inbox delivery endpoints
+  - name: entries
+    description: Comments and likes on entries
+  - name: authors
+    description: author/followers endpoints
+  - name: admin
+    description: admin helper endpoints (images, approvals)

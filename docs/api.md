@@ -172,6 +172,54 @@ Example response:
 { "is_follower": true }
 ```
 
+Per-field docs (follower detail)
+
+- Request (PUT to add follower):
+
+```json
+{ "actor": { "id": "https://remote.node/api/authors/bob", "displayName": "Bob" } }
+```
+
+- Response (201 Created):
+
+```json
+{ "detail": "Follower added" }
+```
+
+- Response (DELETE success 200):
+
+```json
+{ "detail": "Follower removed" }
+```
+
+- Error example (403 Forbidden when not owner):
+
+```json
+{ "detail": "Forbidden" }
+```
+
+Implemented in: `api.views.api_author_follower_detail` (uses `inbox.services` helpers)
+
+---
+
+## Admin / Public Images API
+
+`GET /adminpage/public_images_json` (note: function exists in `adminpage.views` but is not registered by default in `adminpage/urls.py`)
+
+Purpose: list hosted images (id, url, created_at). Useful for clients that need to fetch image metadata for entries.
+
+Example response (200 OK):
+
+```json
+{
+  "images": [
+    { "id": "1", "url": "http://cdn.example.com/images/example1.png", "created_at": "2025-10-01T12:00:00Z" }
+  ]
+}
+```
+
+Implemented in: `adminpage.views.public_images_json` (returns `JsonResponse({ 'images': [...] })`)
+
 ---
 
 ## Inbox endpoint — `POST /api/authors/{author_serial}/inbox/`
