@@ -18,7 +18,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-LOGIN_REDIRECT_URL = "/authors"       # where to go after successful login
+LOGIN_REDIRECT_URL = "/redirect/"       # where to go after successful login
 #LOGOUT_REDIRECT_URL = "/login"      # where to go after logout
 LOGIN_URL = "/login/"          # used when @login_required redirects users
 # Where uploaded files are stored
