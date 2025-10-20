@@ -9,6 +9,8 @@ servers:
 paths:
   /api/authors/{author_serial}/inbox/:
     post:
+      tags:
+        - inbox
       summary: Deliver an activity to an author's inbox (comment/like/follow)
       operationId: deliverInbox
       parameters:
@@ -70,6 +72,8 @@ paths:
                     type: string
   /api/authors/{author_serial}/entries/{entry_serial}/comments/:
     get:
+      tags:
+        - entries
       summary: List comments for an entry (paginated)
       operationId: listComments
       parameters:
@@ -96,6 +100,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommentsPage'
     post:
+      tags:
+        - entries
       summary: Create a comment on an entry
       operationId: createComment
       parameters:
@@ -131,6 +137,8 @@ paths:
           description: Forbidden (entry visibility)
   /api/authors/{author_serial}/entries/{entry_serial}/likes/:
     get:
+      tags:
+        - entries
       summary: List likes on an entry (manual pagination)
       operationId: listLikes
       parameters:
@@ -162,6 +170,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LikesList'
     post:
+      tags:
+        - entries
       summary: Create a like on an entry (idempotent for local actors)
       operationId: createLike
       parameters:
@@ -205,6 +215,8 @@ paths:
     $ref: '#/paths/~1api~1authors~1{author_serial}~1entries~1{entry_serial}~1likes~1'
   /api/entries/{entry_fqid}/comments/{comment_fqid}/likes/:
     get:
+      tags:
+        - entries
       summary: List likes on a comment (FQID path)
       operationId: listCommentLikesByFqid
       parameters:
@@ -231,6 +243,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LikesList'
     post:
+      tags:
+        - entries
       summary: Create a like on a comment (FQID path)
       operationId: createCommentLikeByFqid
       parameters:
@@ -259,6 +273,8 @@ paths:
                 $ref: '#/components/schemas/Like'
   /api/authors/{author_serial}/followers/{foreign_encoded}/:
     get:
+      tags:
+        - authors
       summary: Check whether a foreign actor is a follower
       operationId: getFollowerDetail
       parameters:
@@ -292,6 +308,8 @@ paths:
                   is_follower:
                     type: boolean
     put:
+      tags:
+        - authors
       summary: Add a follower (owner only)
       operationId: addFollower
       parameters:
@@ -324,6 +342,8 @@ paths:
         '403':
           description: forbidden
     delete:
+      tags:
+        - authors
       summary: Remove a follower (owner only)
       operationId: removeFollower
       parameters:
@@ -349,6 +369,8 @@ paths:
                     type: string
   /adminpage/public_images_json:
     get:
+      tags:
+        - admin
       summary: Public JSON of hosted images
       operationId: listPublicImages
       responses:
@@ -518,6 +540,10 @@ tags:
     description: Inbox delivery endpoints
   - name: entries
     description: Comments and likes on entries
+  - name: authors
+    description: Author and follower management
+  - name: admin
+    description: Admin helper endpoints (images, approvals)
   - name: authors
     description: author/followers endpoints
   - name: admin
