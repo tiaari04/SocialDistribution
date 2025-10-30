@@ -24,6 +24,11 @@ def author_detail(request, author_serial):
         state=FollowRequest.State.ACCEPTED
     ).count()
 
+    follow_request_count = FollowRequest.objects.filter(
+        author_followed=author,
+        state=FollowRequest.State.REQUESTING
+    ).count
+
     # Default button state
     follow_status = "Request To Follow"
 
@@ -50,6 +55,7 @@ def author_detail(request, author_serial):
             "author": author,
             "entries": entries | Entry.objects.none(),
             "follower_count": follower_count,
+            "request_count": follow_request_count,
             "follow_status": follow_status
         }
     )
