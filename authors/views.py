@@ -98,4 +98,4 @@ def follow_requests_page(request, author_serial):
 
 	context = {"author": author, "requests": requests}
 
-	return render(request, "follow_requests.html", context)
+	return render(request, "followPages/follow_requests.html", context)
