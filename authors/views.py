@@ -34,7 +34,7 @@ def author_detail(request, author_serial):
                 actor=user_author,
                 author_followed=author
             )
-            if follow_request.state == FollowRequest.State.ACCEPTED:
+            if follow_request.state == FollowRequest.State.ACCEPTED or follow_request.state == FollowRequest.State.REJECTED:
                 follow_status = "Unfollow"
             elif follow_request.state == FollowRequest.State.REQUESTING:
                 follow_status = "Pending"
@@ -88,7 +88,17 @@ def author_entries_page(request, author_serial):
 
 @login_required
 def author_followers_page(request, author_serial):
-	return HttpResponse(f"author followers {author_serial} (not implemented)")
+    author = get_object_or_404(Author, serial=author_serial)
+
+    requests = FollowRequest.objects.filter(author_followed=author, state=FollowRequest.State.ACCEPTED).select_related('actor')
+
+    friends_list = [req for req in requests if author.is_friend(req.actor)]
+    print(friends_list)
+    followers_list = [req for req in requests if not author.is_friend(req.actor)]
+
+    context = {"author": author, "friends": friends_list, "followers": followers_list}
+
+    return render(request, "followPages/followers.html", context)
 
 @login_required
 def follow_requests_page(request, author_serial):

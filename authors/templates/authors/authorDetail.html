@@ -157,6 +157,7 @@
 
         {% if request.user.is_authenticated and request.user == author.user %}
           <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
+          <a href="{% url 'authors:followers' author.serial %}" class="button">Followers</a>
           <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests</a>
 
         {% elif request.user.is_authenticated %}
