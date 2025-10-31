@@ -66,7 +66,7 @@ def api_author_inbox(request, author_serial):
 		return JsonResponse({'detail': 'Invalid JSON'}, status=400)
 
 	result = entries_services.process_inbox_for(author_serial, payload)
-	if result.get('status') in ('created', 'exists', 'updated'):
+	if result.get('status') in ('created', 'exists'):
 		return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
 	if result.get('status') == 'ignored':
 		return JsonResponse({'detail': 'ignored'}, status=200)

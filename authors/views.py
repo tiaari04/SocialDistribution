@@ -39,7 +39,7 @@ def author_detail(request, author_serial):
                 actor=user_author,
                 author_followed=author
             )
-            if follow_request.state == FollowRequest.State.ACCEPTED or follow_request.state == FollowRequest.State.REJECTED:
+            if follow_request.state == FollowRequest.State.ACCEPTED:
                 follow_status = "Unfollow"
             elif follow_request.state == FollowRequest.State.REQUESTING:
                 follow_status = "Pending"
