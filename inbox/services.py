@@ -14,22 +14,29 @@ def get_follower(author, actor):
     return None
 
 def add_follower(author, actor):
-    follow_request = get_object_or_404(FollowRequest,
+    follow_request = FollowRequest.objects.filter(
         actor=actor,
         author_followed=author,
-        state=FollowRequest.State.REQUESTING
-    )
-    follow_request.state = FollowRequest.State.ACCEPTED
+    ).first()
+
+    if follow_request and not follow_request.state == FollowRequest.State.ACCEPTED:
+        follow_request.state = FollowRequest.State.ACCEPTED
+    else:
+        follow_request = FollowRequest.objects.create(
+            actor=actor,
+            author_followed = author_followed,
+            state=FollowRequest.State.ACCEPTED
+        )
     follow_request.save()
     
     return follow_request
 
 def remove_follower(author, actor):
-    follow_request = get_object_or_404(FollowRequest,
+    follow_request = FollowRequest.objects.filter(
         actor=actor,
         author_followed=author,
-    )
-    follow_request.state = FollowRequest.State.REJECTED
-    follow_request.save()
-    
+    ).first()
+    if follow_request:
+        follow_request.state = FollowRequest.State.REJECTED
+        follow_request.save()
     return follow_request

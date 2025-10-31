@@ -47,8 +47,11 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 		return JsonResponse({"detail": "Follower added"}, status=201)
 
 	elif request.method == "DELETE":
-		success = followers_services.remove_follower(author, actor)
-		return JsonResponse({"detail": "Follower removed"}, status=200)
+		response = followers_services.remove_follower(author, actor)
+		if response:
+			return JsonResponse({"detail": "Follower removed"}, status=200)
+		else:
+			return JsonResponse({"detail": "Follower didn't exist"}, status=204)
 
 	return JsonResponse({"detail": "Method not allowed"}, status=405)
 
