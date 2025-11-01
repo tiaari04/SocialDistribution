@@ -13,7 +13,6 @@ class FollowRequest(TimeStampedModel):
     class State(models.TextChoices):
         REQUESTING = "requesting", "requesting"
         ACCEPTED = "accepted", "accepted"
-        REJECTED = "rejected", "rejected"
 
     state = models.CharField(max_length=20, choices=State.choices, default=State.REQUESTING, db_index=True)
     published = models.DateTimeField(default=timezone.now, db_index=True)  # ordering and API visibility
