@@ -6,6 +6,7 @@ from django.urls import reverse
 from .forms import EntryForm
 from django.utils import timezone
 import uuid
+from django.contrib.auth.decorators import login_required
 
 def stream_home(request, author_serial):
     entries = []
@@ -25,7 +26,7 @@ def public_entries(request):
         return JsonResponse(data, safe=False)
     return HttpResponseNotAllowed(["GET"])
 
-
+@login_required
 def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
 
@@ -38,7 +39,7 @@ def entry_create(request, author_serial):
             # generate a short unique serial and full FQID (adjust host as needed)
             entry.serial = uuid.uuid4().hex[:12]
             # Use the author's host if available; fallback to example.com
-            host = author.host.rstrip("/") if getattr(author, "host", None) else "https://example.com"
+            host = author.host.rstrip("/") if getattr(author, "host", None) else "http://127.0.0.1:8000"
             entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
 
             entry.published = timezone.now()
@@ -53,8 +54,8 @@ def entry_create(request, author_serial):
 def entry_detail(request, author_serial, entry_serial):
     author = get_object_or_404(Author, serial=author_serial)
     entry = get_object_or_404(Entry, author=author, serial=entry_serial)
-    return render(request, "entries/entry_detail.html", {"entry": entry})
-
+    return render(request, "stream_home.html", {"entries": [entry], "author": author})
+        
 def entry_edit(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial)
 
