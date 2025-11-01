@@ -38,8 +38,12 @@ def entry_create(request, author_serial):
 
             # generate a short unique serial and full FQID (adjust host as needed)
             entry.serial = uuid.uuid4().hex[:12]
-            # Use the author's host if available; fallback to example.com
-            host = author.host.rstrip("/") if getattr(author, "host", None) else "http://127.0.0.1:8000"
+            
+            # build entry url based on current link 
+            domain = request.get_host()
+            scheme = 'https' if request.is_secure() else 'http'
+            full_url = f"{scheme}://{domain}"
+            host = full_url
             entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
 
             entry.published = timezone.now()
