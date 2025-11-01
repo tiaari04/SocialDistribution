@@ -95,13 +95,12 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         author_followed = _ensure_author(object_payload)
 
         existing_request = FollowRequest.objects.filter(actor=actor, author_followed=author_followed).first()
-
         if existing_request:
             return {'status': 'exists', 'object': existing_request}
 
         follow_request = FollowRequest.objects.create(
             actor=actor,
-            author_followed = author_followed,
+            author_followed = author_followed
         )
         return {'status': 'created', 'object': follow_request}
 

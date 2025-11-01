@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from entries import services as entries_services
 from inbox import services as followers_services
+from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 
 def _not_implemented(endpoint_name):
@@ -18,7 +19,10 @@ def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
 
 def api_author_followers(request, author_serial):
-	return _not_implemented("api_author_followers")
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	resp, status_code = followers_serializers.serialize_followers_view(author)
+	return JsonResponse(resp, status=status_code)
 
 def api_author_follower_detail(request, author_serial, foreign_encoded):
 	from authors.models import Author
@@ -43,8 +47,11 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 		return JsonResponse({"detail": "Follower added"}, status=201)
 
 	elif request.method == "DELETE":
-		success = followers_services.remove_follower(author, actor)
-		return JsonResponse({"detail": "Follower removed"}, status=200)
+		response = followers_services.remove_follower(author, actor)
+		if response:
+			return JsonResponse({"detail": "Follower removed"}, status=200)
+		else:
+			return JsonResponse({"detail": "Follower didn't exist"}, status=204)
 
 	return JsonResponse({"detail": "Method not allowed"}, status=405)
 
