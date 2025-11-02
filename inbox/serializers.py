@@ -5,9 +5,6 @@ from inbox.models import FollowRequest
 def serialize_followers_view(author):
     followers = FollowRequest.objects.filter(author_followed=author, state=FollowRequest.State.ACCEPTED).select_related('actor')
 
-    if not followers:
-        return {'type':'followers', 'followers':[]}, 204
-
     data = []
     for follow_request in followers:
         actor_data = follow_request.actor
