@@ -1,6 +1,8 @@
 # Project API Reference
 
-This document is the canonical API reference for the project. It documents implemented endpoints (comments, likes, inbox), the intended behavior for stubbed endpoints, and provides examples and per-field documentation required by the assignment.
+This document is the canonical API reference for the project. It documents implemented endpoints (comments, likes,
+inbox), the intended behavior for stubbed endpoints, and provides examples and per-field documentation required by the
+assignment.
 
 What this doc contains
 
@@ -17,7 +19,8 @@ Conventions
 - Two path styles are supported:
   - Serial-based: `/api/authors/{author_serial}/entries/{entry_serial}/...` (local integer/slug IDs)
   - FQID-based: `/api/entries/{entry_fqid}/...` (arbitrary fully-qualified identifiers)
-- Actor resolution: `entries.utils.resolve_author_from_request(request)` checks, in order: `request.user`, `X-Author-Id` header, `author_id` query parameter, then `author` field in JSON body.
+- Actor resolution: `entries.utils.resolve_author_from_request(request)` checks, in order: `request.user`, `X-Author-Id`
+  header, `author_id` query parameter, then `author` field in JSON body.
 
 Authentication / actor identity
 
@@ -28,7 +31,8 @@ Priority for resolving an actor (used by write endpoints):
 3. Query parameter `author_id`.
 4. JSON body `author.id` or `author_id`.
 
-Endpoints that change author-scoped resources (e.g. follower `PUT`/`DELETE`) require `request.user.is_authenticated` and that `request.user.author.serial` matches the path `author_serial`.
+Endpoints that change author-scoped resources (e.g. follower `PUT`/`DELETE`) require `request.user.is_authenticated` and
+that `request.user.author.serial` matches the path `author_serial`.
 
 Common JSON shapes (request & response field docs)
 
@@ -38,7 +42,12 @@ AuthorRef
 - Example:
 
 ```json
-{ "id": "https://remote.node/api/authors/bob", "displayName": "Bob", "host": "https://remote.node/", "profileImage": "https://cdn.example/bob.png" }
+{
+  "id": "https://remote.node/api/authors/bob",
+  "displayName": "Bob",
+  "host": "https://remote.node/",
+  "profileImage": "https://cdn.example/bob.png"
+}
 ```
 
 - Fields:
@@ -63,9 +72,12 @@ Comment (request)
 - Fields (request):
   - `comment` / `content` (string) — Example: `"Nice post!"`. The comment body. Required when creating a comment.
   - `contentType` / `content_type` (string) — Example: `"text/markdown"`. Optional, indicates MIME type.
-  - `id` (string / FQID) — Example: `"https://remote.node/api/comments/c1"`. Optional external FQID for inbox deliveries.
-  - `published` (string / ISO-8601) — Example: `"2025-10-20T12:00:00Z"`. Optional timestamp; server assigns now when omitted.
-  - `author` (AuthorRef) — Optional (useful for inbox deliveries or remote authors). If omitted for local users, the server may map `request.user`.
+  - `id` (string / FQID) — Example: `"https://remote.node/api/comments/c1"`. Optional external FQID for inbox
+    deliveries.
+  - `published` (string / ISO-8601) — Example: `"2025-10-20T12:00:00Z"`. Optional timestamp; server assigns now when
+    omitted.
+  - `author` (AuthorRef) — Optional (useful for inbox deliveries or remote authors). If omitted for local users, the
+    server may map `request.user`.
 
 Comment (response)
 
@@ -99,12 +111,17 @@ Like (request)
 - Example:
 
 ```json
-{ "author": { "id": "https://remote.node/api/authors/bob" }, "object": "http://local/node/entries/entry1" }
+{
+  "author": { "id": "https://remote.node/api/authors/bob" },
+  "object": "http://local/node/entries/entry1"
+}
 ```
 
 - Fields (request):
-  - `author` (AuthorRef) — The actor who liked the object. If omitted and your deployment maps `request.user` to an `Author`, the server may derive the author.
-  - `object` / `object_fqid` (string / FQID) — The FQID/URL of the object being liked (entry or comment). For entry-scoped endpoints this can be omitted as the endpoint implies the object.
+  - `author` (AuthorRef) — The actor who liked the object. If omitted and your deployment maps `request.user` to an
+    `Author`, the server may derive the author.
+  - `object` / `object_fqid` (string / FQID) — The FQID/URL of the object being liked (entry or comment). For entry-
+    scoped endpoints this can be omitted as the endpoint implies the object.
   - `id` (string / FQID) — Optional external FQID for the like.
 
 Like (response)
@@ -113,7 +130,12 @@ Like (response)
 - Example:
 
 ```json
-{ "fqid": "https://local/node/likes/like1", "author": { "id": "https://remote.node/api/authors/bob" }, "object_fqid": "http://local/node/entries/entry1", "published": "2025-10-20T12:01:00Z" }
+{
+  "fqid": "https://local/node/likes/like1",
+  "author": { "id": "https://remote.node/api/authors/bob" },
+  "object_fqid": "http://local/node/entries/entry1",
+  "published": "2025-10-20T12:01:00Z"
+}
 ```
 
 - Fields (response):
@@ -134,8 +156,10 @@ Errors & status codes (summary)
 
 Pagination
 
-- Comments: DRF PageNumberPagination with page_size = 5. Use `?page=` to iterate pages. Example: `/api/authors/alice_serial/entries/entry1/comments/?page=2`.
-- Likes: manual pagination via `?page=` and `?size=` (defaults: page=1, size=50). Example: `/api/authors/alice_serial/entries/entry1/likes/?page=2&size=25`.
+- Comments: DRF PageNumberPagination with page_size = 5. Use `?page=` to iterate pages. Example:
+  `/api/authors/alice_serial/entries/entry1/comments/?page=2`.
+- Likes: manual pagination via `?page=` and `?size=` (defaults: page=1, size=50). Example:
+  `/api/authors/alice_serial/entries/entry1/likes/?page=2&size=25`.
 
 ---
 
@@ -204,7 +228,8 @@ Implemented in: `api.views.api_author_follower_detail` (uses `inbox.services` he
 
 ## Admin / Public Images API
 
-`GET /adminpage/public_images_json` (note: function exists in `adminpage.views` but is not registered by default in `adminpage/urls.py`)
+`GET /adminpage/public_images_json` (note: function exists in `adminpage.views` but is not registered by default in
+`adminpage/urls.py`)
 
 Purpose: list hosted images (id, url, created_at). Useful for clients that need to fetch image metadata for entries.
 
@@ -222,6 +247,91 @@ Implemented in: `adminpage.views.public_images_json` (returns `JsonResponse({ 'i
 
 ---
 
+Profile image handling (signup)
+
+- When a user uploads a profile image during signup (the signup form's `profileImageFile`), the application now saves
+  that upload as a `HostedImage` record (`adminpage.models.HostedImage`).
+- The new `Author` record's `profileImage` field is populated with the hosted file's absolute URL (the
+  `HostedImage.file.url` value built into an absolute URL by the server). This makes profile images uploaded at signup
+  behave the same as images uploaded via the admin image UI.
+- Tests: there is a unit test covering this behavior (example:
+  `login.tests.AuthViewTests.test_signup_with_image_creates_hostedimage_and_sets_author_profile`).
+
+Examples — admin image upload & signup with image
+
+Admin image upload (curl)
+
+```bash
+curl -X POST \
+  -F "file=@/path/to/avatar.png" \
+  -F "description=Avatar upload" \
+  -b "sessionid=<your_session_cookie>" \
+  http://127.0.0.1:8000/adminpage/images/upload/
+```
+
+Notes: the admin image upload requires an authenticated session (or CSRF token if using the admin forms). On local dev
+you can obtain the `sessionid` cookie by logging in to the site in your browser and copying the cookie value.
+
+Admin image upload (JS — FormData)
+
+```javascript
+const form = new FormData();
+form.append('file', fileInput.files[0]);
+form.append('description', 'Avatar upload');
+
+fetch('http://127.0.0.1:8000/adminpage/images/upload/', {
+  method: 'POST',
+  credentials: 'include', // include cookies for session auth
+  body: form
+}).then(r => r.json()).then(console.log).catch(console.error);
+```
+
+Signup with profile image (curl multipart)
+
+```bash
+curl -X POST \
+  -F "username=alice" \
+  -F "password1=hunter2" \
+  -F "password2=hunter2" \
+  -F "profileImageFile=@/path/to/avatar.png" \
+  http://127.0.0.1:8000/signup/
+```
+
+Signup with profile image (JS — FormData)
+
+```javascript
+const form = new FormData();
+form.append('username', 'alice');
+form.append('password1', 'hunter2');
+form.append('password2', 'hunter2');
+form.append('profileImageFile', fileInput.files[0]);
+
+fetch('http://127.0.0.1:8000/signup/', {
+  method: 'POST',
+  body: form
+}).then(r => r.json()).then(data => {
+  // server will create a HostedImage for the file and return an Author payload
+  console.log(data);
+});
+```
+
+How to verify locally (Django shell)
+
+- Open the Django shell after a successful signup with an uploaded image:
+
+```bash
+python manage.py shell
+```
+
+- Inspect the latest HostedImage and the created Author.profileImage:
+
+```python
+from adminpage.models import HostedImage
+from authors.models import Author
+print(HostedImage.objects.last().file.url)
+print(Author.objects.get(user__username='alice').profileImage)
+```
+
 ## Inbox endpoint — `POST /api/authors/{author_serial}/inbox/`
 
 When to use
@@ -235,7 +345,8 @@ How to use
 
 Why / notes
 
-- Accepts remote payloads in ActivityStreams-like form. Used for federation/inbox workflows. The server attempts to create local Comment/Like/FollowRequest records when appropriate.
+- Accepts remote payloads in ActivityStreams-like form. Used for federation/inbox workflows. The server attempts to
+  create local Comment/Like/FollowRequest records when appropriate.
 
 Request example (comment delivery):
 
@@ -271,37 +382,37 @@ Additional inbox delivery examples
 PowerShell cURL example (deliver like):
 
 ```powershell
-curl -X POST -H "Content-Type: application/json" -d '{"type":"like","author":{"id":"https://remote.node/api/authors/bob"},"object":"http://local/node/entries/entry1","id":"https://remote.node/api/likes/l456"}' https://local/node/api/authors/alice_serial/inbox/
+curl -X POST -H "Content-Type: application/json" -d '{"type":"like","author":{"id":"https://remote.node/api/authors/bob"
+},"object":"http://local/node/entries/entry1","id":"https://remote.node/api/likes/l456"}'
+https://local/node/api/authors/alice_serial/inbox/
 ```
 
 JS fetch example (deliver like):
 
 ```javascript
-fetch('https://local/node/api/authors/alice_serial/inbox/', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ type: 'like', author: { id: 'https://remote.node/api/authors/bob' }, object: 'http://local/node/entries/entry1', id: 'https://remote.node/api/likes/l456' })
-}).then(r => r.json()).then(console.log)
+fetch('https://local/node/api/authors/alice_serial/inbox/', { method: 'POST', headers: { 'Content-Type':
+'application/json' }, body: JSON.stringify({ type: 'like', author: { id: 'https://remote.node/api/authors/bob' },
+object: 'http://local/node/entries/entry1', id: 'https://remote.node/api/likes/l456' }) }).then(r =>
+r.json()).then(console.log)
 ```
 
 PowerShell cURL example (deliver follow request):
 
 ```powershell
-curl -X POST -H "Content-Type: application/json" -d '{"type":"follow","actor":{"id":"https://remote.node/api/authors/bob"},"object":"https://local/node/api/authors/alice"}' https://local/node/api/authors/alice_serial/inbox/
+curl -X POST -H "Content-Type: application/json" -d
+'{"type":"follow","actor":{"id":"https://remote.node/api/authors/bob"},"object":"https://local/node/api/authors/alice"}'
+https://local/node/api/authors/alice_serial/inbox/
 ```
 
 JS fetch example (deliver follow request):
 
 ```javascript
-fetch('https://local/node/api/authors/alice_serial/inbox/', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ type: 'follow', actor: { id: 'https://remote.node/api/authors/bob' }, object: 'https://local/node/api/authors/alice' })
-}).then(r => r.json()).then(console.log)
+fetch('https://local/node/api/authors/alice_serial/inbox/', { method: 'POST', headers: { 'Content-Type':
+'application/json' }, body: JSON.stringify({ type: 'follow', actor: { id: 'https://remote.node/api/authors/bob' },
+object: 'https://local/node/api/authors/alice' }) }).then(r => r.json()).then(console.log)
 ```
 
 Implemented in: `api.views.api_author_inbox` (delegates to `entries.services.process_inbox_for`)
-```
 
 Responses (examples)
 
@@ -310,13 +421,18 @@ Responses (examples)
 - 200 OK — { "detail": "ignored" } (type not handled)
 - 400 Bad Request — { "detail": "error", "error": "..." }
 
-Field-level notes: for inbox deliveries, include `author` (AuthorRef) to ensure remote actor details are persisted; include `entry` (FQID) for comment/like deliveries.
+Field-level notes:
+
+- For inbox deliveries include `author` (AuthorRef) so remote actor details are persisted.
+- Include `entry` (FQID) for comment/like deliveries so the server can link the item to the correct entry.
 
 ---
 
 ## Entries — comments & likes
 
-All the implemented endpoints for comments and likes are described below. Both serial and FQID-based routes are supported; examples show the serial-based route, and the FQID route is functionally identical but accepts a fully-qualified path in the URL.
+All the implemented endpoints for comments and likes are described below. Both serial and FQID-based
+routes are supported. Examples show the serial-based route.
+The FQID route is functionally identical but accepts a fully-qualified path in the URL.
 
 ### `GET/POST /api/authors/{author_serial}/entries/{entry_serial}/comments/`
 
@@ -324,7 +440,8 @@ When to use: list comments or post a new comment on an entry.
 
 How to use (create): send JSON with `comment` (or `content`) and optional `contentType`, `id`, `published`, and `author`.
 
-Why/notes: the endpoint enforces entry visibility via `can_access_entry`. Comments created locally get an assigned `fqid` and `published` if omitted.
+Why/notes: the endpoint enforces entry visibility via `can_access_entry`.
+Comments created locally get an assigned `fqid` and a `published` timestamp if omitted.
 
 Request example (create):
 
@@ -335,7 +452,8 @@ Request example (create):
 PowerShell cURL example:
 
 ```powershell
-curl -X POST -H "Content-Type: application/json" -d '{"comment":"Great article!","contentType":"text/markdown"}' https://local/node/api/authors/alice_serial/entries/entry1/comments/
+curl -X POST -H "Content-Type: application/json" -d '{"comment":"Great article!","contentType":"text/markdown"}'
+https://local/node/api/authors/alice_serial/entries/entry1/comments/
 ```
 
 JS fetch example:
@@ -345,7 +463,9 @@ fetch('https://local/node/api/authors/alice_serial/entries/entry1/comments/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ comment: 'Great article!', contentType: 'text/markdown' })
-}).then(r => r.json()).then(console.log)
+})
+  .then(r => r.json())
+  .then(console.log)
 ```
 
 Response (201 created) — example and field explanations are located in the Comment (response) section above.
@@ -383,7 +503,8 @@ When to use: list likes on an entry or create a like.
 
 How to use (create): POST JSON with `author` (AuthorRef) or rely on server to derive author from `request.user`/X-Author-Id.
 
-Idempotency: creating a like for the same local actor on the same object is idempotent — the server returns 200 with the existing Like if it already exists, otherwise creates and returns 201.
+Idempotency: creating a like for the same local actor on the same object is idempotent.
+If the like already exists the server returns 200 with the existing Like; otherwise it creates one and returns 201.
 
 Request example (create):
 
@@ -394,7 +515,8 @@ Request example (create):
 PowerShell cURL example:
 
 ```powershell
-curl -X POST -H "Content-Type: application/json" -d '{"author":{"id":"https://remote.node/api/authors/bob"}}' https://local/node/api/authors/alice_serial/entries/entry1/likes/
+curl -X POST -H "Content-Type: application/json" -d '{"author":{"id":"https://remote.node/api/authors/bob"}}'
+https://local/node/api/authors/alice_serial/entries/entry1/likes/
 ```
 
 JS fetch example:
@@ -404,13 +526,20 @@ fetch('https://local/node/api/authors/alice_serial/entries/entry1/likes/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ author: { id: 'https://remote.node/api/authors/bob' } })
-}).then(r => r.json()).then(console.log)
+})
+  .then(r => r.json())
+  .then(console.log)
 ```
 
 List response example (likes):
 
 ```json
-{ "type": "likes", "count": 2, "src": [ { "fqid": "https://local/node/likes/l1", "author": { "id": "https://a/" } } ] }
+{ "type": "likes", "count": 2, "src": [
+    {
+      "fqid": "https://local/node/likes/l1",
+      "author": { "id": "https://a/" }
+    }
+] }
 ```
 
 Pagination: manual `?page=` and `?size=` params (defaults: page=1, size=50).
@@ -420,13 +549,9 @@ Implemented in: `entries.api_views.EntryLikesViewSet` (manual pagination via `pa
 Sample paginated GET response (likes, page=2,size=25):
 
 ```json
-{
-  "type": "likes",
-  "count": 125,
-  "src": [
+{ "type": "likes", "count": 125, "src": [
     { "fqid": "https://local/node/likes/l45", "author": { "id": "https://remote.node/api/authors/bob" }, "object_fqid": "http://local/node/entries/entry1", "published": "2025-10-20T12:01:00Z" }
-  ]
-}
+] }
 ```
 
 ---
@@ -464,32 +589,3 @@ Implemented in: `entries.api_views.CommentLikesViewSet`
 Admin helper
 
 - `adminpage.views.public_images_json(request)` returns a JSON list of hosted images (not registered by default).
-
----
-
-## Assessment vs. assignment documentation requirements
-
-Covered well already:
-
-- Endpoint list and where they are mounted (doc + `docs/endpoints.md`).
-- When/How/Why for the main implemented endpoints (comments, likes, inbox).
-- Multiple JSON examples for most endpoints and at least one cURL + JS example for comments and likes.
-- Per-field doc for core shapes (AuthorRef, Comment request/response, Like request/response).
-- Pagination behavior described with examples.
-
-Gaps / recommended improvements to reach "Excellent" per the rubric:
-
-1. Every API endpoint documented with full per-field request/response details: some stub and helper endpoints are only briefly noted. Action: expand per-endpoint field-level docs for follower endpoints, stream endpoints, and image endpoints if they will be graded.
-2. Multiple examples per endpoint: inbox has JSON examples but lacks cURL/JS examples for every delivered type (like/follow). Action: add PowerShell curl + JS fetch examples for like and follow inbox deliveries.
-3. Explicit request/response examples for GET listing endpoints including pagination metadata (e.g., DRF page structure or list wrappers). Action: add a sample paginated response for comments and likes showing page metadata (count, next, previous, results). This helps graders check pagination usage.
-4. Automated docs augmentation: produce a small `docs/openapi.yaml` describing implemented endpoints (optional but recommended to satisfy "augment automated docs").
-5. Link to source code: add file references (view names / functions) inline per endpoint so the TA can quickly find handlers (e.g., `entries.api_views.EntryCommentsViewSet`). Many endpoints already include these notes in `docs/endpoints.md` — consider adding a one-line "implemented in" note to `docs/api.md` for the key endpoints.
-
-If you want I can implement the top-priority fixes now (quick wins):
-
-1. Add cURL + JS examples for inbox `like` and `follow` payloads and a paginated response example for comments and likes (I can patch `docs/api.md`).
-2. Add a short "implemented in" line under each major endpoint linking to the view function/class and the module path (e.g., `entries.api_views.EntryCommentsViewSet`).
-3. Optionally produce `docs/openapi.yaml` for the implemented endpoints (comments, likes, inbox).
-
-Please tell me which of the above you want me to do next (I recommend starting with item 1 and 2). I will then update the todo list and apply the edits.
-
