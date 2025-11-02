@@ -74,12 +74,12 @@ def author_edit(request, author_serial):
 
         if "profileImageFile" in request.FILES:
             uploaded_file = request.FILES["profileImageFile"]
-            path = default_storage.save(f"profile_images/{uploaded_file.name}", uploaded_file)
-            author.profileImage = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
+            # Save the uploaded profile image as a HostedImage 
+            hosted = HostedImage(file=uploaded_file, uploaded_by=user)
+            hosted.save()
+            profile_url = request.build_absolute_uri(hosted.file.url)
         else:
-            url_input = request.POST.get("profileImage", "").strip()
-            if url_input:
-                author.profileImage = url_input
+            profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
         # Save changes
         author.save()

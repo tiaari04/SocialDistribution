@@ -67,10 +67,7 @@ def signup_view(request):
                 hosted.save()
                 profile_url = request.build_absolute_uri(hosted.file.url)
             else:
-      
-                url_input = request.POST.get("profileImage", "").strip()
-                if url_input:
-                    profile_url = url_input
+                profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
             # Create Author instance
             author = Author.objects.create(
