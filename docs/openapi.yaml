@@ -4,8 +4,8 @@ info:
   version: 0.1.0
   description: "Partial OpenAPI specification for the implemented API endpoints: inbox, comments, likes and comment-likes. This is hand-authored and covers the primary request/response shapes used in the project."
 servers:
-  - url: https://local/node
-    description: Local testing host (replace with your deployment base URL)
+  - url: https://cmput404-project-red-9e98d52591b5.herokuapp.com/
+    description: Heroku deployment base URL
 paths:
   /api/authors/{author_serial}/inbox/:
     post:
@@ -30,13 +30,13 @@ paths:
                 summary: Comment delivery example
                 value:
                   type: comment
-                  id: https://remote.node/api/comments/c123
+                  id: https://cmput404-project-red-9e98d52591b5.herokuapp.com/api/comments/c123
                   author:
-                    id: https://remote.node/api/authors/bob
+                    id: https://cmput404-project-red-9e98d52591b5.herokuapp.com/api/authors/bob
                     displayName: Bob
                   comment: Nice post!
                   contentType: text/plain
-                  entry: http://local/node/entries/entry1
+                  entry: https://cmput404-project-red-9e98d52591b5.herokuapp.com/entries/entry1
                   published: '2025-10-20T12:00:00Z'
       responses:
         '201':
@@ -195,7 +195,7 @@ paths:
               create:
                 value:
                   author:
-                    id: https://remote.node/api/authors/bob
+                    id: https://cmput404-project-red-9e98d52591b5.herokuapp.com/api/authors/bob
       responses:
         '201':
           description: created like
