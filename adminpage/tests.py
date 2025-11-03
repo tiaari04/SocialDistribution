@@ -81,10 +81,12 @@ class AdminPageSmokeTests(TestCase):
         )
 
     def test_dashboard_loads(self):
+        print("Adminpage test: dashboard_loads — GET dashboard as admin")
         res = self.client.get(reverse("adminpage:dashboard"))
         self.assertEqual(res.status_code, 200)
 
     def test_pending_users_loads(self):
+        print("Adminpage test: pending_users_loads — GET pending users page")
         res = self.client.get(reverse("adminpage:pending-users"))
         self.assertEqual(res.status_code, 200)
 
@@ -94,6 +96,7 @@ class AdminPageSmokeTests(TestCase):
         Approve uses <path:user_id> where user_id is the Author.pk (URL string),
         not the Django User integer id. Post with the Author.id.
         """
+        print("Adminpage test: approve_user_basic — POST to approve a pending author")
         url = reverse("adminpage:approve-user", args=[self.pending_author.id])
         res = self.client.post(url, follow=True)  # view is @require_POST
         self.assertEqual(res.status_code, 200)
@@ -103,14 +106,17 @@ class AdminPageSmokeTests(TestCase):
         self.assertTrue(self.pending_author.is_approved)
 
     def test_authors_list_loads(self):
+        print("Adminpage test: authors_list_loads — GET authors list")
         res = self.client.get(reverse("adminpage:authors"))
         self.assertEqual(res.status_code, 200)
 
     def test_images_list_loads(self):
+        print("Adminpage test: images_list_loads — GET images list")
         res = self.client.get(reverse("adminpage:images"))
         self.assertEqual(res.status_code, 200)
 
     def test_image_delete_basic(self):
+        print("Adminpage test: image_delete_basic — POST to delete a HostedImage")
         res = self.client.post(reverse("adminpage:image-delete", args=[self.img.id]), follow=True)
         self.assertEqual(res.status_code, 200)
         self.assertFalse(HostedImage.objects.filter(id=self.img.id).exists())
@@ -121,6 +127,7 @@ class AdminPageSmokeTests(TestCase):
         except NoReverseMatch:
             self.skipTest("Route 'adminpage:public-images-json' not defined")
             return
+        print("Adminpage test: public_images_json_ok — GET public-images-json if route exists")
         res = self.client.get(url)
         self.assertEqual(res.status_code, 200)
         self.assertIn("images", res.json())

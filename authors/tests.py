@@ -28,6 +28,7 @@ class AuthorViewsTest(TestCase):
 
     def test_author_list_view(self):
         #As a node admin, I can see multiple authors on my node.
+        print("Author test: author_list_view — As a node admin, I can see multiple authors on my node.")
         self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:list")
         response = self.client.get(url)
@@ -36,6 +37,7 @@ class AuthorViewsTest(TestCase):
 
     def test_author_detail_view(self):
         #As an author, I have a consistent public profile page.
+        print("Author test: author_detail_view — Author detail page should contain the display name.")
         self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:detail", args=[self.author.serial])
         response = self.client.get(url)
@@ -44,12 +46,14 @@ class AuthorViewsTest(TestCase):
 
     def test_author_edit_requires_login(self):
         #As an author, I must log in to edit my profile.
+        print("Author test: author_edit_requires_login — Editing an author profile requires login.")
         url = reverse("authors:edit", args=[self.author.serial])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)  # redirected to login
 
     def test_author_edit_post_updates_profile(self):
         #As an author, I can update my display name and description.
+        print("Author test: author_edit_post_updates_profile — POST updates the author's profile fields.")
         self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:edit", args=[self.author.serial])
         data = {
@@ -66,6 +70,7 @@ class AuthorViewsTest(TestCase):
 
     def test_author_edit_upload_profile_image(self):
         # Uploading a profile image should create a HostedImage and set Author.profileImage
+        print("Author test: author_edit_upload_profile_image — Uploading a profile image updates Author.profileImage.")
         self.client.login(username="TestUser", password="testpass123")
         url = reverse("authors:edit", args=[self.author.serial])
 
