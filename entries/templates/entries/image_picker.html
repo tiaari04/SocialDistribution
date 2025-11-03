@@ -91,18 +91,15 @@
     {% if page_obj.object_list %}
       <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
         {% for img in page_obj.object_list %}
-          {% with rel_url=img.url %}
-            {% with abs_url=request.build_absolute_uri rel_url %}
-              <button
-                type="button"
-                class="thumb"
-                data-id="{{ img.id }}"
-                data-url="{{ abs_url }}"
-                title="Click to select. Double-click to use.">
-                <img src="{{ abs_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-              </button>
-            {% endwith %}
-          {% endwith %}
+          <!-- Use the storage URL directly; Cloudinary gives absolute URLs -->
+          <button
+            type="button"
+            class="thumb"
+            data-id="{{ img.id }}"
+            data-url="{{ img.url }}"
+            title="Click to select. Double-click to use.">
+            <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+          </button>
         {% endfor %}
       </div>
 
