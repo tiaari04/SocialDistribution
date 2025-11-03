@@ -247,7 +247,7 @@
                 flex-direction: column;
                 justify-content: space-between;
                 transition: right 0.3s ease;
-                z-index: 20000;
+                z-index: 200;
             }
 
             #commentsPanel.visible {
@@ -306,12 +306,6 @@
                     if (contentType === "text/markdown") {
                         const html = marked.parse(post.dataset.content);
                         post.innerHTML = html;
-                    }
-                    else if (contentType === "image/png;base64") {
-
-                    }
-                    else if (contentType === "image/jpeg;base64") {
-                        
                     }
                 })
             })
@@ -619,35 +613,33 @@
             </ul>
             
             <button id="createPost"><a href="{% url 'entries:create' author.serial %}" id="createPost" class="button">New Post</a></button>
-
-            <!-- Comments panel -->
-            <section id="commentsPanel">
-                <header>
-                    <h3>Comments</h3>
-                    <button id="closePanel">&times;</button>
-                </header>
-
-                <!-- dynamically insert comments -->
-                <section id="comments"></section>   
-
-                <footer>
-                    <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
-                    <button id="sendComment">Send</button>
-                </footer>
-            </section>
-
-            <!-- Comment template -->
-            <template id="commentTemplate" class="comment">
-                <section class="comment">
-                    <strong class="commentAuthor"></strong>
-                    <p class="commentText"></p>
-                    <section class="reactions">
-                        <p class="commentLikes"></p>
-                        <button class="likeButton">Like</button>
-                    </section>
-                </section>
-            </template>
-
         </main>
+        <!-- Comments panel -->
+        <section id="commentsPanel">
+            <header>
+                <h3>Comments</h3>
+                <button id="closePanel">&times;</button>
+            </header>
+
+            <!-- dynamically insert comments -->
+            <section id="comments"></section>   
+
+            <footer>
+                <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+                <button id="sendComment">Send</button>
+            </footer>
+        </section>
+
+        <!-- Comment template -->
+        <template id="commentTemplate" class="comment">
+            <section class="comment">
+                <strong class="commentAuthor"></strong>
+                <p class="commentText"></p>
+                <section class="reactions">
+                    <p class="commentLikes"></p>
+                    <button class="likeButton">Like</button>
+                </section>
+            </section>
+        </template>
     </body>
 </html>
