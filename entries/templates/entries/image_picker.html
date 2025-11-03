@@ -6,7 +6,6 @@
   <title>Choose from Admin Images</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Layout */
     :root {
       --ink: #0f172a;
       --muted: #6b7280;
@@ -17,44 +16,37 @@
       --panel: #ffffff;
     }
     * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; margin:0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      margin: 0; background: var(--bg); color: var(--ink);
+    }
     .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px 88px; }
     h1 { font-size: 20px; margin: 0 0 12px; }
 
-    /* Grid */
     .thumb-grid {
-      display: grid;
-      gap: 10px;
+      display: grid; gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     .thumb {
-      appearance: none;
-      display: block;
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--panel);
-      cursor: pointer;
-      padding: 0;
+      appearance: none; display: block; width: 100%;
+      border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; background: var(--panel);
+      cursor: pointer; padding: 0;
     }
-    .thumb:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
     .thumb img { width: 100%; height: 140px; object-fit: cover; display: block; }
     .thumb.selected { box-shadow: 0 0 0 3px var(--ring-strong); border-color: #3b82f6; }
 
-    /* Pager */
     .pager { display:flex; gap:.5rem; justify-content:center; margin:16px 0; flex-wrap: wrap; }
     .pager a, .pager span {
-      padding:.35rem .6rem; border:1px solid var(--border); border-radius:.5rem;
-      text-decoration:none; color: #111827; background:#fff;
+      padding:.35rem .6rem; border:1px solid var(--border);
+      border-radius:.5rem; text-decoration:none;
+      color: #111827; background:#fff;
     }
     .pager .current { box-shadow: 0 0 0 2px #e0e7ff inset; border-color:#c7d2fe; }
     .muted { color: var(--muted); font-size: 12px; }
 
-    /* Sticky action bar */
     .bar {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
+      position: fixed; left: 0; right: 0; bottom: 0;
       background: rgba(255,255,255,.9);
       border-top: 1px solid var(--border);
       backdrop-filter: blur(6px);
@@ -67,16 +59,10 @@
       border: 1px solid var(--border);
       background: #111827; color: #fff;
       border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 10px 14px; font-weight: 600; cursor: pointer;
     }
     .btn[disabled] { opacity:.5; cursor: not-allowed; }
     .btn.secondary { background:#fff; color:#111827; }
-    .ellipsis {
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw;
-      display: inline-block; vertical-align: bottom;
-    }
   </style>
 </head>
 <body>
@@ -84,14 +70,14 @@
     <h1>Choose from Admin Images</h1>
 
     <p class="muted">
-      Total: {{ page_obj.paginator.count }} &middot; On this page: {{ page_obj.object_list|length }}
-      {% if not next %}&middot; (Tip: pass <code>?next=...</code> to return to a form){% endif %}
+      Total: {{ page_obj.paginator.count }} &middot;
+      On this page: {{ page_obj.object_list|length }}
+      {% if not next %}&middot; (Tip: add <code>?next=...</code> to return to your form){% endif %}
     </p>
 
     {% if page_obj.object_list %}
       <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
         {% for img in page_obj.object_list %}
-          <!-- Use the storage URL directly; Cloudinary gives absolute URLs -->
           <button
             type="button"
             class="thumb"
@@ -118,10 +104,7 @@
   </div>
 
   <div class="bar" id="bar">
-    <div class="grow" id="status">
-      Pick an image.
-      {% if next %}<span class="muted">(Will return to <span class="ellipsis">{{ next }}</span>)</span>{% endif %}
-    </div>
+    <div class="grow" id="status">Pick an image.</div>
     <button class="btn secondary" type="button" id="cancelBtn" onclick="history.back()">Cancel</button>
     <button class="btn" type="button" id="useBtn" disabled>Use selected</button>
   </div>
@@ -134,7 +117,6 @@
       const next = grid.dataset.next || '';
       const status = document.getElementById('status');
       const useBtn = document.getElementById('useBtn');
-
       let selected = null;
 
       function appendParam(url, key, value) {
@@ -166,21 +148,17 @@
         updateBar();
       }
 
-      grid.addEventListener('click', (e) => {
+      grid.addEventListener('click', e => {
         const el = e.target.closest('.thumb');
         if (!el) return;
         selectThumb(el);
       });
 
-      // Double-click instantly returns (if next is present)
-      grid.addEventListener('dblclick', (e) => {
+      grid.addEventListener('dblclick', e => {
         const el = e.target.closest('.thumb');
         if (!el) return;
         selectThumb(el);
-        const id = el.dataset.id;
-        const url = el.dataset.url;
-        const returnUrl = buildReturnUrl(id, url);
-        if (returnUrl) window.location.assign(returnUrl);
+        useBtn.click(); // same action as Use button
       });
 
       useBtn.addEventListener('click', () => {
@@ -188,18 +166,19 @@
         const id = selected.dataset.id;
         const url = selected.dataset.url;
         const returnUrl = buildReturnUrl(id, url);
+
         if (returnUrl) {
           window.location.assign(returnUrl);
         } else {
-          // No ?next provided: copy markdown to clipboard as a convenience
+          // Copy markdown and then go back
           const md = `![image](${url})`;
-          status.textContent = 'No ?next provided. Copied markdown to clipboard.';
+          status.textContent = 'Copied markdown to clipboard. Returning...';
           navigator.clipboard?.writeText(md).catch(()=>{});
+          setTimeout(() => history.back(), 1000);
         }
       });
 
-      // Keyboard: Enter uses selection
-      document.addEventListener('keydown', (e) => {
+      document.addEventListener('keydown', e => {
         if (e.key === 'Enter' && selected && !useBtn.disabled) {
           useBtn.click();
         }
