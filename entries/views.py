@@ -14,9 +14,7 @@ from django.core.paginator import Paginator
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-import logging
 
-logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_POST
@@ -25,7 +23,6 @@ def github_webhook(request):
     try:
         payload = json.loads(request.body.decode('utf-8'))
     except json.JSONDecodeError:
-        logger.error("GitHub webhook: invalid JSON")
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     event = request.headers.get('X-GitHub-Event', '')
@@ -38,17 +35,14 @@ def github_webhook(request):
         for commit in commits:
             github_username = commit.get("author", {}).get("username") or payload.get("pusher", {}).get("name")
             if not github_username:
-                logger.warning("Skipping commit with no author info: %s", commit)
                 continue
 
             github_url = f"https://github.com/{github_username}".lower()
             try:
                 author = Author.objects.get(github__iexact=github_url)
             except Author.DoesNotExist:
-                logger.warning("No author found for GitHub URL: %s", github_url)
                 continue
             except Author.MultipleObjectsReturned:
-                logger.error("Multiple authors found for GitHub URL: %s", github_url)
                 continue
 
             message = commit.get('message', '(no message)')
@@ -56,15 +50,13 @@ def github_webhook(request):
             author_name = commit.get('author', {}).get('name', github_username)
 
             content = (
-                f"[{author_name}]({github_url}) pushed to "
-                f"[{repo}]({repo_html_url}):\n\n"
-                f"**{message}**\n\n[View commit]({url})"
+                f"{author_name} pushed to "
+                f"{repo}:\n\n"
+                f"**{message}**\n\n{url}"
             )
 
             serial = uuid.uuid4().hex[:12]
             fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
-
-            logger.info("Creating Entry: author=%s, serial=%s, title=%s", author, serial, f"GitHub Activity - {repo}")
 
             entry = Entry.objects.create(
                 author=author,
@@ -81,14 +73,12 @@ def github_webhook(request):
         pr = payload.get('pull_request', {})
         github_username = pr.get("user", {}).get("login")
         if not github_username:
-            logger.warning("PR event missing user info")
             return JsonResponse({'status': 'ignored', 'reason': 'PR user missing'}, status=400)
 
         github_url = f"https://github.com/{github_username}".lower()
         try:
             author = Author.objects.get(github__iexact=github_url)
         except Author.DoesNotExist:
-            logger.warning("No author found for PR GitHub URL: %s", github_url)
             return JsonResponse({'status': 'ignored', 'reason': f'No author with GitHub link {github_url}'}, status=404)
 
         action = payload.get('action')
@@ -96,20 +86,17 @@ def github_webhook(request):
         url = pr.get('html_url')
 
         content = (
-            f"[{github_username}]({github_url}) "
-            f"{action} a pull request in [{repo}]({repo_html_url}):\n\n"
-            f"**{title}**\n\n[View PR]({url})"
+            f"{author_name} {action} a pull request in {repo}:\n\n"
+            f"**{title}**\n\n{url}"
         )
 
         serial = uuid.uuid4().hex[:12]
         fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
 
-        logger.info("Creating PR Entry: author=%s, serial=%s, title=%s", author, serial, f"PR {action} - {repo}")
-
         entry = Entry.objects.create(
             author=author,
             serial=serial,
-            title=f"PR {action} - {repo}",
+            title=f"GitHub Activity - {repo}",
             content=content,
             visibility=Entry.Visibility.PUBLIC,
             published=timezone.now(),
@@ -117,7 +104,6 @@ def github_webhook(request):
         )
         entries_created.append(entry.serial)
     else:
-        logger.info("Ignoring GitHub event type: %s", event)
         return JsonResponse({'status': 'ignored', 'event': event})
 
     return JsonResponse({'status': 'ok', 'entries_created': entries_created})
