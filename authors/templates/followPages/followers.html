@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ author.displayName }}'s Followers</title>
+        <link rel="stylesheet" href="{% static 'css/followersPageStyles.css' %}">
+    </head>
+    <body>
+        <h3>{{ author.displayName }}'s friends</h3>
+            {% if friends %}
+                <ul>
+                {% for friend in friends %}
+                    <li>
+                        {{ friend.actor.displayName }} <a href="{% url 'authors:detail' friend.actor.serial %}" class="button">View</a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No friends yet!</p>
+            {% endif %}
+        <h3>{{ author.displayName }}'s followers</h3>
+        {% if followers %}
+                <ul>
+                {% for follower in followers %}
+                    <li>
+                        {{ follower.actor.displayName }} <a href="{% url 'authors:detail' follower.actor.serial %}" class="button">View</a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No followers yet!</p>
+            {% endif %}
+        <script>
+            // When user returns to the page via back button, reload it
+            window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+            });
+        </script>
+    </body>
+</html>

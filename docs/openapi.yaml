@@ -2,10 +2,12 @@ openapi: 3.0.3
 info:
   title: f25-project-red API (partial)
   version: 0.1.0
-  description: "Partial OpenAPI specification for the implemented API endpoints: inbox, comments, likes and comment-likes. This is hand-authored and covers the primary request/response shapes used in the project."
+  description: "Partial OpenAPI specification for the implemented API endpoints: inbox, comments, likes and comment-likes. Covers the primary request/response shapes used in the project."
 servers:
-  - url: https://local/node
-    description: Local testing host (replace with your deployment base URL)
+  - url: http://127.0.0.1:8000/
+    description: Local development server
+  - url: https://local/node/
+    description: Example base URL
 paths:
   /api/authors/{author_serial}/inbox/:
     post:
@@ -30,13 +32,13 @@ paths:
                 summary: Comment delivery example
                 value:
                   type: comment
-                  id: https://remote.node/api/comments/c123
+                  id: https://local/node/api/comments/c123
                   author:
-                    id: https://remote.node/api/authors/bob
+                    id: https://local/node/api/authors/bob
                     displayName: Bob
                   comment: Nice post!
                   contentType: text/plain
-                  entry: http://local/node/entries/entry1
+                  entry: https://local/node/entries/entry1
                   published: '2025-10-20T12:00:00Z'
       responses:
         '201':
@@ -195,7 +197,7 @@ paths:
               create:
                 value:
                   author:
-                    id: https://remote.node/api/authors/bob
+                    id: https://local/node/api/authors/bob
       responses:
         '201':
           description: created like
@@ -380,6 +382,104 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicImages'
+
+  /adminpage/images/upload/:
+    post:
+      tags:
+        - admin
+      summary: Upload a hosted image (admin UI / form)
+      operationId: uploadHostedImage
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+              required:
+                - file
+            examples:
+              upload:
+                value:
+                  file: <binary image file>
+      responses:
+        '201':
+          description: HostedImage created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostedImage'
+        '400':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+  /signup/:
+    post:
+      tags:
+        - authors
+      summary: Signup (form) — accepts optional profile image upload
+      operationId: signupForm
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password1:
+                  type: string
+                password2:
+                  type: string
+                displayName:
+                  type: string
+                profileImageFile:
+                  type: string
+                  format: binary
+                profileImage:
+                  type: string
+                  format: uri
+              required:
+                - username
+                - password1
+                - password2
+            examples:
+              signup-with-image:
+                value:
+                  username: alice
+                  password1: hunter2
+                  password2: hunter2
+                  profileImageFile: <binary image file>
+      responses:
+        '201':
+          description: author created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorRef'
+        '400':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
 components:
   schemas:
     AuthorRef:
@@ -519,7 +619,7 @@ components:
         published:
           type: string
           format: date-time
-      required: []
+      # No mandatory fields — payloads vary by activity type (comment/like/follow)
     FollowerAction:
       type: object
       properties:
@@ -533,16 +633,33 @@ components:
         images:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-              url:
-                type: string
-                format: uri
-              created_at:
-                type: string
-                format: date-time
+            $ref: '#/components/schemas/HostedImage'
+
+    HostedImage:
+      type: object
+      properties:
+        id:
+          type: string
+        file:
+          type: string
+          format: uri
+        uploaded_by:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: "1"
+        file: "http://127.0.0.1:8000/media/hosted/2025/11/avatar.png"
+        uploaded_by: "http://127.0.0.1:8000/authors/alice"
+        created_at: "2025-11-01T12:00:00Z"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
 tags:
   - name: inbox
     description: Inbox delivery endpoints

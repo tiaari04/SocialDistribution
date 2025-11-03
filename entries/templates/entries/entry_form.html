@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create New Post</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(to right, #f8faff, #eef2ff);
+            color: #222;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            color: #4f46e5;
+            margin-top: 2rem;
+        }
+        form {
+            margin: 2rem auto;
+            padding: 1.5rem;
+            max-width: 500px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            text-align: left;
+            margin-top: 1rem;
+            color: #374151;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 95%;
+            padding: 0.6rem;
+            margin-top: 0.4rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        textarea {
+            min-height: 120px;
+        }
+        input[type="submit"] {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 1.2rem;
+            font-size: 1rem;
+        }
+        input[type="submit"]:hover {
+            background-color: #4338ca;
+        }
+        a {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Create a New Post</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Publish Post">
+    </form>
+
+    <a href="{% url 'entries:stream_home' author.serial %}">← Back to Stream</a>
+
+</body>
+</html>
