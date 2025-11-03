@@ -43,10 +43,11 @@ def dashboard(request):
 
 def images_list(request):
     """
-    List all hosted images (always public). Optional ?q= filters by file name.
+    List hosted images that are flagged as admin-uploaded.
+    Optional ?q= filters by file name.
     """
     q = request.GET.get('q', '')
-    qs = HostedImage.objects.all().order_by('-created_at')
+    qs = HostedImage.objects.filter(admin_uploaded=True).order_by('-created_at')
     if q:
         # 'file' holds the relative storage name (e.g., uploads/images/<uuid>.png)
         qs = qs.filter(file__icontains=q)
@@ -54,13 +55,15 @@ def images_list(request):
 
 def image_upload(request):
     """
-    Upload a single image (always public). Backend relies on storage (Cloudinary in prod).
+    Upload a single image. Storage backend (e.g., Cloudinary) provides the public URL.
+    Always flags uploaded images as admin_uploaded=True since only admins can access this view.
     """
     if request.method == 'POST':
         form = HostedImageForm(request.POST, request.FILES)
         if form.is_valid():
             img = form.save(commit=False)
-            img.uploaded_by = request.user
+            img.uploaded_by = request.user if request.user.is_authenticated else None
+            img.admin_uploaded = True  # always mark as admin upload
             img.save()
             return redirect('adminpage:images')
     else:
@@ -173,14 +176,7 @@ def reject_user(request, user_id):
 
 
 def author_detail(request, pk, tab=None):
-    """
-    Admin page: show an author's entries with a tabbed nav by visibility.
-    /authors/<pk>/<tab>/ where tab in [PUBLIC, FRIENDS, UNLISTED, DELETED]
-    If tab is absent, default to PUBLIC.
-    """
-    from entries.models import Entry  # local import to avoid circulars
-
-    # Normalize FQID and fetch author (tolerate trailing slash)
+    from entries.models import Entry
     pk = unquote(pk).rstrip('/')
     author = (
         Author.objects.filter(id__in=[pk, pk + '/']).first()
