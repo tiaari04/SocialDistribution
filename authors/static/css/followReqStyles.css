@@ -23,9 +23,10 @@ button {
 }
 
 .btn-div {
-    display: inline-block;
     margin-left: 10px;
     box-sizing: border-box;
+    display: flex;
+    flex-wrap: nowrap;
 }
 
 .text-div {

@@ -99,12 +99,20 @@ def author_followers_page(request, author_serial):
     requests = FollowRequest.objects.filter(author_followed=author, state=FollowRequest.State.ACCEPTED).select_related('actor')
 
     friends_list = [req for req in requests if author.is_friend(req.actor)]
-    print(friends_list)
     followers_list = [req for req in requests if not author.is_friend(req.actor)]
 
     context = {"author": author, "friends": friends_list, "followers": followers_list}
 
     return render(request, "followPages/followers.html", context)
+
+@login_required
+def author_following_page(request, author_serial):
+    author = get_object_or_404(Author, serial=author_serial)
+
+    following_list = FollowRequest.objects.filter(actor=author, state=FollowRequest.State.ACCEPTED).select_related('author_followed')
+    context = {"author": author, "following_list": following_list}
+
+    return render(request, "followPages/following.html", context)
 
 @login_required
 def follow_requests_page(request, author_serial):
@@ -114,4 +122,4 @@ def follow_requests_page(request, author_serial):
 
 	context = {"author": author, "requests": requests}
 
-	return render(request, "followPages/follow_requests.html", context)
+	return render(request, "followPages/followRequests.html", context)

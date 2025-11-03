@@ -137,7 +137,7 @@
 
       <section class="profile-info">
         <h1>{{ author.displayName }}</h1>
-        <span class="followers">{{ follower_count }} Followers</span>
+        <span class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
 
         {% if author.github %}
           <a href="{{ author.github }}" target="_blank" class="link">GitHub: {{ author.github }}</a>
@@ -157,7 +157,7 @@
 
         {% if request.user.is_authenticated and request.user == author.user %}
           <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
-          <a href="{% url 'authors:followers' author.serial %}" class="button">Followers</a>
+          <a href="{% url 'authors:following' author.serial %}" class="button">Following</a>
           <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests ({{request_count}})</a>
 
         {% elif request.user.is_authenticated %}
@@ -176,6 +176,7 @@
             data-object-id="{{ author.id|escapejs }}"
             data-object-host="{{ author.host|escapejs }}"
             data-object-displayname="{{ author.displayName|escapejs }}"
+            data-object-serial="{{ author.serial|default:''|escapejs }}"
             data-object-github="{{ author.github|default:''|escapejs }}"
             data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
             data-object-web="{{ author.web|default:''|escapejs }}"
@@ -286,14 +287,57 @@
             alert("Network error while sending follow request.");
           }
 
-        } else if (state === "Pending") {
-          // Cancel pending locally; ideally call a DELETE API to actually remove FollowRequest
+        } else if (state === "Pending" || state === "Unfollow") {
+          // Call delete API to remove pending or accepted follow requests
           // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
-          applyVisual("Request To Follow");
-
+            const authorSerial = btn.dataset.objectSerial;
+            const followerId = this.dataset.actorId;
+            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
+            try{
+              const res = await fetch(deleteEndpoint, {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken
+                }
+              });
+              if (res.ok) {
+                applyVisual("Request To Follow");
+              } else {
+                const text = await res.text();
+                console.error('Request to remove pending request failed', res.status, text);
+                alert("Failed to remove follow request.");
+              }
+            }
+            catch (err) {
+              console.error(err);
+              alert("Network error while removing follow request.");
+            }
         } else if (state === "Unfollow") {
           // Unfollow locally; ideally call a DELETE API to remove accepted follow
-          applyVisual("Request To Follow");
+          const authorSerial = btn.dataset.objectSerial;
+            const followerId = this.dataset.actorId;
+            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
+            try{
+              const res = await fetch(deleteEndpoint, {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken
+                }
+              });
+              if (res.ok) {
+                applyVisual("Request To Follow");
+              } else {
+                const text = await res.text();
+                console.error('Request to unfollow author failed', res.status, text);
+                alert("Failed to unfollow author");
+              }
+            }
+            catch (err) {
+              console.error(err);
+              alert("Network error while unfollowing author.");
+            }
         }
       });
     })();
