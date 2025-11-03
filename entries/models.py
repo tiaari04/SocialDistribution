@@ -22,14 +22,12 @@ class Entry(TimeStampedModel):
     web = models.URLField(max_length=MAX_URL, blank=True)
     description = models.TextField(blank=True)
     content = models.TextField(blank=True)
+    image_url = models.URLField(max_length=2000, blank=True, null=True)
 
 
     class ContentType(models.TextChoices):
         MARKDOWN = "text/markdown", "text/markdown"
         PLAIN = "text/plain", "text/plain"
-        BASE64 = "application/base64", "application/base64"
-        PNG = "image/png;base64", "image/png;base64"
-        JPEG = "image/jpeg;base64", "image/jpeg;base64"
 
     content_type = models.CharField(max_length=50, choices=ContentType.choices, default=ContentType.PLAIN)
 
