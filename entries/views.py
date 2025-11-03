@@ -17,7 +17,15 @@ from django.views.decorators.http import require_POST
 
 @csrf_exempt
 @require_POST
+@csrf_exempt
+@require_POST
 def github_webhook(request):
+    import json, uuid
+    from django.utils import timezone
+    from django.http import JsonResponse
+    from authors.models import Author
+    from .models import Entry
+
     # Parse JSON payload
     try:
         payload = json.loads(request.body.decode('utf-8'))
@@ -26,34 +34,37 @@ def github_webhook(request):
 
     # Determine event type
     event = request.headers.get('X-GitHub-Event', '')
-    # Get repository and author info
     repo = payload.get('repository', {}).get('full_name')
-    github_username = commit.get("author", {}).get("username")
-
-    if not github_username:
-        return JsonResponse({'error': 'Missing GitHub username'}, status=400)
-
-    # Construct full GitHub profile link -> as it is viwewed in Author.github_link
-    github_url = f"https://github.com/{github_username}".lower()
-
-    # Find author with matching GitHub link 
-    try:
-        author = Author.objects.get(github_link__iexact=github_url)
-    except Author.DoesNotExist:
-        return JsonResponse({'error': f'No author with GitHub link {github_url}'}, status=404)
+    repo_html_url = payload.get('repository', {}).get('html_url')
 
     entries_created = []
 
     if event == "push":
         commits = payload.get('commits', [])
         for commit in commits:
+            github_username = commit.get("author", {}).get("username")
+            if not github_username:
+                # fallback to commit author name if username not provided
+                github_username = commit.get("author", {}).get("name")
+
+            if not github_username:
+                # skip commits with no identifiable author
+                continue
+
+            # Find the author in our DB
+            github_url = f"https://github.com/{github_username}".lower()
+            try:
+                author = Author.objects.get(github_link__iexact=github_url)
+            except Author.DoesNotExist:
+                continue  # skip if no matching author
+
             message = commit.get('message', '(no message)')
             url = commit.get('url', '')
             author_name = commit.get('author', {}).get('name', github_username)
 
             content = (
                 f"[{author_name}](https://github.com/{github_username}) pushed to "
-                f"[{repo}]({payload.get('repository', {}).get('html_url')}):\n\n"
+                f"[{repo}]({repo_html_url}):\n\n"
                 f"**{message}**\n\n[View commit]({url})"
             )
 
@@ -72,14 +83,24 @@ def github_webhook(request):
             entries_created.append(entry.serial)
 
     elif event == "pull_request":
-        action = payload.get('action')
         pr = payload.get('pull_request', {})
+        github_username = pr.get("user", {}).get("login")
+        if not github_username:
+            return JsonResponse({'status': 'ignored', 'reason': 'PR user missing'}, status=400)
+
+        github_url = f"https://github.com/{github_username}".lower()
+        try:
+            author = Author.objects.get(github_link__iexact=github_url)
+        except Author.DoesNotExist:
+            return JsonResponse({'status': 'ignored', 'reason': f'No author with GitHub link {github_url}'}, status=404)
+
+        action = payload.get('action')
         title = pr.get('title')
         url = pr.get('html_url')
 
         content = (
             f"[{github_username}](https://github.com/{github_username}) "
-            f"{action} a pull request in [{repo}]({payload.get('repository', {}).get('html_url')}):\n\n"
+            f"{action} a pull request in [{repo}]({repo_html_url}):\n\n"
             f"**{title}**\n\n[View PR]({url})"
         )
 
@@ -99,7 +120,7 @@ def github_webhook(request):
 
     else:
         return JsonResponse({'status': 'ignored', 'event': event})
-    
+
     return JsonResponse({'status': 'ok', 'entries_created': entries_created})
 
 def stream_home(request, author_serial):
