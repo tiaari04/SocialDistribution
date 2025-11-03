@@ -7,6 +7,7 @@ from authors.models import Author
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EntryForm
 from django.utils import timezone
+from urllib.parse import urlparse
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -92,7 +93,7 @@ def admin_image_picker(request, author_serial):
         "next": next_url,
     }
     # Your template lives at project-level as "image_picker.html"
-    return render(request, "image_picker.html", ctx)
+    return render(request, "entries/image_picker.html", ctx)
 
 @login_required
 def entry_create(request, author_serial):
