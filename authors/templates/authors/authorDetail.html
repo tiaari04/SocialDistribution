@@ -137,7 +137,7 @@
 
       <section class="profile-info">
         <h1>{{ author.displayName }}</h1>
-        <span class="followers">{{ follower_count }} Followers</span>
+        <span class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
 
         {% if author.github %}
           <a href="{{ author.github }}" target="_blank" class="link">GitHub: {{ author.github }}</a>
@@ -157,7 +157,7 @@
 
         {% if request.user.is_authenticated and request.user == author.user %}
           <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
-          <a href="{% url 'authors:followers' author.serial %}" class="button">Followers</a>
+          <a href="{% url 'authors:following' author.serial %}" class="button">Following</a>
           <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests ({{request_count}})</a>
 
         {% elif request.user.is_authenticated %}
