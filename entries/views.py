@@ -65,35 +65,24 @@ def public_entries(request):
 
 @login_required
 def admin_image_picker(request, author_serial):
-    """
-    Paginated gallery of admin-uploaded images.
-    When a thumbnail is clicked we bounce back to ?next=... with hosted_id=<id>.
-    """
-    # Ensure the author exists (and optionally gate access)
+    # Verify author exists. No redirect; we remain in entries.
     get_object_or_404(Author, serial=author_serial)
 
-    # Only show admin-uploaded images, newest first
     qs = HostedImage.objects.filter(admin_uploaded=True).order_by("-created_at")
+    paginator = Paginator(qs, 24)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
 
-    # Simple pagination
-    paginator = Paginator(qs, 24)  # 24 thumbs per page; tweak as you like
-    page_number = request.GET.get("page") or 1
-    page_obj = paginator.get_page(page_number)
-
-    # Optional: sanitize "next" so we only redirect within this site
+    # Optional next URL (relative or same-origin only)
     next_url = request.GET.get("next", "")
     if next_url:
-        parsed = urlparse(next_url)
-        # allow relative paths, or absolute back to this host only
-        if (parsed.scheme or parsed.netloc) and (parsed.netloc != request.get_host()):
+        p = urlparse(next_url)
+        if (p.scheme or p.netloc) and p.netloc != request.get_host():
             next_url = ""
 
-    ctx = {
+    return render(request, "entries/image_picker.html", {
         "page_obj": page_obj,
         "next": next_url,
-    }
-    # Your template lives at project-level as "image_picker.html"
-    return render(request, "entries/image_picker.html", ctx)
+    })
 
 @login_required
 def entry_create(request, author_serial):
