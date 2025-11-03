@@ -1,22 +1,30 @@
 # User stories → API / feature coverage
 
-This file maps the project user stories to the code and documentation in this repository and gives a concise status for each story: Implemented, Partial, or Not implemented. It also points to the endpoint(s) and view function(s) that implement (or partially implement) the story and lists concrete next steps to reach full coverage and per-field API documentation.
+This file maps the project user stories to the code and documentation in this repository and gives a concise status for
+each story: Implemented, Partial, or Not implemented. It also points to the endpoint(s) and view function(s) that
+implement (or partially implement) the story and lists concrete next steps to reach full coverage and per-field API
+documentation.
 
 Legend
+
 - Implemented: The feature is implemented end-to-end (UI and/or API) for common use.
-- Partial: Core pieces exist (models, views, or API endpoints), but parts are missing (examples, errors, edge-cases, or wiring).
+- Partial: Core pieces exist (models, views, or API endpoints), but parts are missing (examples, errors, edge-cases, or
+  wiring).
 - Not implemented: No usable implementation in this sprint.
 
 Notes about scope
-- Where functionality is delivered by web views (templates), I link the view and template where appropriate.
+
+- Where functionality is delivered by web views (templates), the document links the view and template where appropriate.
 - API endpoints are under `/api/` and are linked to `api` and `entries.api_views` handlers.
-- Many "node-to-node" (federation) features are marked Part 3-5; they are out of scope for the current sprint and mostly Not implemented.
+- Many "node-to-node" (federation) features are marked Part 3-5; they are out of scope for the current sprint and mostly
+  Not implemented.
 
 ---
 
 ## Identity
 
-1. As an author, I want a consistent identity per node, so that URLs to me/my entries are predictable and don't stop working.
+1. As an author, I want a consistent identity per node, so that URLs to me/my entries are predictable and don't stop
+   working.
    - Status: Implemented (core)
    - Why: Authors have an `id` which is a full FQID (URL), and `Author` model supports `host`, `id`, and `serial`.
    - Implemented in:
@@ -26,7 +34,8 @@ Notes about scope
    - Docs:
      - `docs/api.md` (AuthorRef section)
      - `docs/endpoints.md` (authors web pages and admin helpers)
-   - Next steps: add per-field examples (Author create payload and response) to `docs/api.md` and `docs/openapi.yaml` for authors endpoints.
+   - Next steps: add per-field examples (Author create payload and response) to `docs/api.md` and `docs/openapi.yaml`
+     for authors endpoints.
 
 2. As a node admin, I want to host multiple authors on my node, so I can have a friendly online community.
    - Status: Implemented (web/admin)
@@ -38,7 +47,8 @@ Notes about scope
    - Status: Implemented (web)
    - Implemented in: `authors.views.author_detail` (renders `authors/authorDetail.html`)
    - Docs: `docs/endpoints.md` (authors web views)
-   - Next steps: add an API author-detail endpoint docs mapping (API detail is a stub in `api.views.api_author_detail` — mark 501).
+   - Next steps: add an API author-detail endpoint docs mapping (API detail is a stub in `api.views.api_author_detail` —
+     mark 501).
 
 4. As an author, I want my (new, public) GitHub activity to be automatically turned into public entries.
    - Status: Not implemented (out of scope / Part 3-5)
@@ -46,15 +56,22 @@ Notes about scope
 
 5. As an author, I want my profile page to show my public entries (most recent first).
    - Status: Partial
-   - Implemented in: `authors.views.author_detail` (renders a template) and `entries.views.stream_home` (renders a list of entries for an author)
-   - Notes: templates exist; the data is pulled from `Entry` objects. If grader needs an API endpoint that lists an author's entries, `api.views.api_author_entries` is a stub (501).
+   - Implemented in: `authors.views.author_detail` (renders a template) and `entries.views.stream_home` (renders a list
+     of entries for an author)
+   - Notes: templates exist; the data is pulled from `Entry` objects. If grader needs an API endpoint that lists an
+     author's entries, `api.views.api_author_entries` is a stub (501).
    - Next steps: add explicit endpoint documentation or implement `api_author_entries` if needed.
 
 6. As an author, I want to be able to edit my profile: name, description, picture, and GitHub.
    - Status: Implemented (web)
    - Implemented in: `authors.views.author_edit` (form handling + file upload support)
    - Docs: `docs/endpoints.md` references the web views; API author edit is currently 501 (api_author_detail).
-   - Next steps: add example form parameters and a short API mapping if you want an API-based profile edit documented.
+     - Next steps: add example form parameters and a short API mapping if you want an API-based profile edit documented.
+         - Note: Signup/profile image handling was improved.
+             When users upload a profile image at signup the server creates a `HostedImage` and sets
+             `Author.profileImage` to the hosted file's absolute URL. This makes signup-uploaded images
+             behave the same as admin-hosted images.
+             A unit test was added to cover this: `login.tests.AuthViewTests.test_signup_with_image_creates_hostedimage_and_sets_author_profile`.
 
 7. As an author, I want to be able to use my web browser to manage my profile.
    - Status: Implemented (web)
@@ -67,7 +84,8 @@ Notes about scope
 8. As an author, I want to make entries, so I can share my thoughts and pictures with other local authors.
    - Status: Not implemented (web entry creation is stubbed)
    - Why: `entries.views.entry_create` returns "not implemented".
-   - Next steps: implement web form + API for entry create; document API fields (content, content_type, title, images, visibility). Add examples in `docs/api.md` and `openapi.yaml`.
+   - Next steps: implement web form + API for entry create; document API fields (content, content_type, title, images,
+     visibility). Add examples in `docs/api.md` and `openapi.yaml`.
 
 9. As an author, I want my node to send my entries to my remote followers and friends.
    - Status: Not implemented / Part 3-5
@@ -90,9 +108,11 @@ Notes about scope
     - Implemented in: `entries.models.Entry` and serializers
 
 14. As an author, entries I create can be images.
-    - Status: Partial
-    - Implemented in: Admin `image_upload` & `HostedImage` model; template and admin UI exist. Entry image endpoints are stubbed in `api.views` (501).
-    - Next steps: add API image upload documentation and link to `adminpage.views.image_upload` if the grader expects an API.
+        - Status: Partial
+        - Implemented in: Admin `image_upload` and the `HostedImage` model. Template and admin UI exist.
+            Entry image endpoints are stubbed in `api.views` (501).
+        - Next steps: add API image upload documentation and link to `adminpage.views.image_upload` if the
+            grader expects an API.
 
 15. As an author, entries I create that are in CommonMark can link to images.
     - Status: Partial — possible via `content` referencing hosted images; models permit web/image URLs.
@@ -109,7 +129,8 @@ Notes about scope
 
 19. As an author, other authors cannot modify my entries.
     - Status: Partially implemented (ownership enforced in views/permissions)
-    - Implemented in: permission checks in `entries.api_views` (e.g. `can_access_entry`) and elsewhere; enforcement for writes depends on `resolve_author_from_request`.
+        - Implemented in: permission checks in `entries.api_views` (e.g. `can_access_entry`) and
+            elsewhere. Enforcement for writes depends on `resolve_author_from_request`.
 
 ---
 
@@ -117,14 +138,17 @@ Notes about scope
 
 20. As an author, I want a "stream" which shows all the entries I should know about.
     - Status: Partial
-    - Implemented in: `entries.views.stream_home` renders `stream_home.html` and excludes `DELETED` entries; shows entries list.
+        - Implemented in: `entries.views.stream_home` which renders `stream_home.html` and
+            excludes `DELETED` entries. The view shows the entries list.
     - Notes: API-level stream endpoint `api.views.api_stream` is a 501 stub.
     - Next steps: add API stream docs or implement `api_stream` if required.
 
 21. Stream sub-requirements (sorting, visibility, edited handling)
     - Status: Partial
-    - Implemented pieces: `Entry` model has `published`, `updated`, `visibility`, and ordering. `entries.views.stream_home` uses published.
-    - Next steps: test/review that edited entries update ordering; add explicit doc examples for stream page and API if required.
+        - Implemented pieces: `Entry` model has `published`, `updated`, `visibility`, and ordering.
+            `entries.views.stream_home` uses the `published` field for ordering.
+        - Next steps: test/review that edited entries update ordering; add explicit doc examples for the
+            stream page and API if required.
 
 ---
 
@@ -132,9 +156,13 @@ Notes about scope
 
 22–30. Visibility stories (public/unlisted/friends-only controls)
     - Status: Partial
-    - Implemented in: `entries.models.Entry` (Visibility enum) and `can_access_entry` permission logic referenced by API views.
-    - Missing: comprehensive API endpoints that change visibility or a full test harness demonstrating access rules. Some access enforcement is present in `entries.api_views` (they call `can_access_entry`), so reader-facing behaviors are partially enforced.
-    - Next steps: document `visibility` field in `docs/api.md` and add example scenarios (403 vs 200) for comments/likes on different visibility types.
+        - Implemented in: `entries.models.Entry` (Visibility enum) and `can_access_entry` permission
+            logic referenced by API views.
+        - Missing: comprehensive API endpoints that change visibility or a full test harness
+            demonstrating access rules. Some access enforcement is present in `entries.api_views` (they
+            call `can_access_entry`), so reader-facing behaviors are partially enforced.
+        - Next steps: document `visibility` field in `docs/api.md` and add example scenarios
+            (403 vs 200) for comments/likes on different visibility types.
 
 ---
 
@@ -149,7 +177,8 @@ Notes about scope
 
 33. As an author, I should be able to browse the public entries of everyone.
     - Status: Partial
-    - Implemented in: `entries.views.public_entries` (returns placeholder) — web listing not fully implemented; API public entries `api.views.api_public_entries` is a 501.
+        - Implemented in: `entries.views.public_entries` (returns a placeholder). The web listing is not
+            fully implemented. The API public entries endpoint `api.views.api_public_entries` is a 501 stub.
     - Next steps: implement and document public listing endpoints.
 
 ---
@@ -157,28 +186,79 @@ Notes about scope
 ## Following / Friends
 
 34. As an author, I want to follow local authors.
-    - Status: Partial
-    - Implemented in: `authors` views (follow_requests_page template), `adminpage` has follower management helpers via `inbox.services` (internal). The API endpoint `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is implemented (not a stub).
-    - Relevant code: `api.views.api_author_follower_detail` (GET/PUT/DELETE), `inbox.services` (follower helpers).
-    - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md` documents it.
-    - Next steps: add per-field request/response examples for `PUT` follower add and `DELETE` remove in `docs/api.md` + OpenAPI.
+    - Status: Implemented
+        - Implemented in (UI): `authors` views (followRequests template). `adminpage` exposes 
+            follower management helpers via `inbox.services` (internal).
+        - Implemented in (API): `api.views.api_author_inbox` supports POST and is implemented. 
+            Helper function in `entries.services`
+        - Docs: `docs/api.md` notes the inbox endpoint behavior; `docs/endpoints.md` documents it.
+        - Next steps: add per-field request/response examples for `PUT` follower add and `DELETE` 
+            remove in `docs/api.md` and the OpenAPI document.
 
 35. As an author, I want to follow remote authors (Part 3-5)
-    - Status: Not implemented (federation)
+    - Status: Implemented
 
 36. As an author, I want to be able to approve or deny other authors following me.
-    - Status: Partial — follow requests page UI exists and `api_author_follower_detail` supports PUT/DELETE requiring owner authentication.
-    - Implemented in: `authors.views.follow_requests_page`, `api.views.api_author_follower_detail`
-    - Next steps: add example PUT payloads for follower add (what remote actor payload looks like) to `docs/api.md` and OpenAPI.
+    - Status: Implemented
+        - Implemented in (UI): `authors.views.follow_requests_page` has accept and deny buttons that 
+            fetch the API
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper functions `add_follower` and `remove_follower` are implemented 
+            in `inbox.services`
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+        - Next steps: add example PUT payloads for follower add (what remote actor payload looks like) to `docs/api.md` and OpenAPI.
 
 37. As an author, I want to know if I have "follow requests".
-    - Status: Partial — UI exists (`follow_requests_page`), but there is no dedicated API endpoint returning pending follow requests (could be added).
+    - Status: Implemented
+        - Implemented in (UI): `authors.views.author_detail` fetches a count of follow requests from the
+            databse and shows the number on the follow request button.
+        - Implemented in (API): no dedicated API endpoint returning pending follow requests but they are 
+        retrieved in `authors.views.author_detail`.
 
 38. As an author, I want to unfollow authors I am following.
-    - Status: Partial — follower removal via `api_author_follower_detail` (DELETE) exists.
+    - Status: Implemented
+        - Implemented in (UI): Unfollow button shown on `authors.templates.authors.authorDetails` if that
+            author is being followed. It fetches the API endpoint from there.
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper function `remove_follower` are implemented 
+            in `inbox.services`.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
 
-39–43. Friend/following relationship semantics
-    - Status: Partial — models and follower helpers exist; some parts are UI only. Clarify behaviour and document API responses.
+39. As an author, if I am following another author, and they are following me I want us to be considered friends.
+    - Status: Implemented
+        - Implemented in (UI): Friends list is shown on `authors.templates.followPages.followers` and is rendered
+            by `authors.views.author_followers_page`.
+        - Implemented in (API): no dedicated API endpoint returning a list of friends but all followers are 
+            retrieved in `authors.views.author_followers_page`. `is_friend` function is implemented in 
+            authors.models to check if 2 authors are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+
+40. As an author, I want to unfriend other authors by unfollowing them.
+    - Status: Implemented
+        - Implemented in (UI): Unfollow button shown on `authors.templates.authors.authorDetails` if that
+            author is being followed. Clicking it unfollows the author by fetching the API endpoint. 
+            Unfriending someone is observed on follower page where that author will move from the followers 
+            list to the friends list.
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper function `remove_follower` are implemented 
+            in `inbox.services`. `is_friend` function is implemented in authors.models to check if 2 authors 
+            are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+
+41. As an author, my node will know about my followers, who I am following, and my friends.
+    - Status: Implemented
+        - Implemented in (UI): Friends and followers list is shown on `authors.templates.followPages.followers` 
+            and is rendered by `authors.views.author_followers_page`. Following list is shown on `authors.templates.followPages.following`and is rendered by `authors.views.author_following_page`. Both pages can be accessed
+            from `authors/authorDetail.html`.
+        - Implemented in (API): no dedicated API endpoint returning a list of friends but all followers are 
+            retrieved in `authors.views.author_followers_page`. `is_friend` function is implemented in 
+            authors.models to check if 2 authors are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
 
 ---
 
@@ -186,9 +266,13 @@ Notes about scope
 
 44. As an author, I want to comment on entries that I can access.
     - Status: Implemented (API)
-    - Implemented in: `entries.api_views.EntryCommentsViewSet` (list/create), routes in `entries/api_urls.py` and delegation in `api.views`.
-    - Docs: `docs/api.md` has Comment request/response and examples; `docs/openapi.yaml` contains Comment paths and schemas.
-    - Next steps: add an explicit error example (403 Forbidden) to `docs/api.md`, and produce per-field docs in `openapi.yaml` for all comment fields (done) and add example responses for list pages (already added).
+        - Implemented in: `entries.api_views.EntryCommentsViewSet` (list/create). Routes are present in
+            `entries/api_urls.py` and requests are delegated via `api.views`.
+        - Docs: `docs/api.md` has Comment request/response and examples; `docs/openapi.yaml` contains
+            Comment paths and schemas.
+        - Next steps: add an explicit error example (403 Forbidden) to `docs/api.md`, and produce
+            per-field docs in `openapi.yaml` for all comment fields (done). Also add example responses for
+            list pages (already added).
 
 45. As an author, I want to like entries that I can access.
     - Status: Implemented (API)
@@ -214,7 +298,9 @@ Notes about scope
 
 49. Admin image hosting
     - Status: Implemented (admin pages + image upload)
-    - Implemented in: `adminpage.views.images_list`, `adminpage.views.image_upload`, and `adminpage.views.public_images_json` (but note public JSON view isn't registered by default in urls).
+        - Implemented in: `adminpage.views.images_list`, `adminpage.views.image_upload`, and
+            `adminpage.views.public_images_json` (note: the public JSON view is not registered by default in
+            `adminpage/urls.py`).
     - Docs: Mentioned in `docs/endpoints.md`.
 
 50. Admin author management and approvals
@@ -223,16 +309,3 @@ Notes about scope
     - Next steps: add API-level docs if required.
 
 51–end: many node-admin stories (Part 3-5) are out of scope and not implemented.
-
----
-
-Summary & recommended immediate actions
-- You have implemented most of the comment/like/inbox functionality the sprint targeted. The primary gaps are around entry creation/edit/delete, public entries listing API, and many federation-oriented features (Part 3-5) which are intentionally out of scope.
-
-Immediate next steps I can do for you (pick any):
-- Add per-endpoint, per-field documentation into `docs/api.md` for *every* API endpoint (I will prioritize implemented ones: comments/likes/comment-likes/inbox/follower-detail). This will include example success and common error responses (403/400).
-- Finish the markdown-lint pass for `docs/api.md` and `docs/endpoints.md`.
-- Finalize and expand `docs/openapi.yaml` to include all implemented endpoints and examples and create `docs/swagger.html` so graders can view interactive docs locally or via GitHub Pages.
-- Generate a compact `docs/user-stories-summary.md` table that maps each user story to status (Implemented/Partial/Not implemented) for easy grading.
-
-Which of the immediate actions do you want me to perform now? If you want the full per-endpoint per-field coverage and interactive Swagger UI, say: "Do per-field docs for implemented endpoints + finish linting + create swagger.html" and I will start.

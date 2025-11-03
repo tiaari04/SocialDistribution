@@ -24,6 +24,11 @@ def author_detail(request, author_serial):
         state=FollowRequest.State.ACCEPTED
     ).count()
 
+    follow_request_count = FollowRequest.objects.filter(
+        author_followed=author,
+        state=FollowRequest.State.REQUESTING
+    ).count
+
     # Default button state
     follow_status = "Request To Follow"
 
@@ -50,6 +55,7 @@ def author_detail(request, author_serial):
             "author": author,
             "entries": entries | Entry.objects.none(),
             "follower_count": follower_count,
+            "request_count": follow_request_count,
             "follow_status": follow_status
         }
     )
@@ -68,12 +74,12 @@ def author_edit(request, author_serial):
 
         if "profileImageFile" in request.FILES:
             uploaded_file = request.FILES["profileImageFile"]
-            path = default_storage.save(f"profile_images/{uploaded_file.name}", uploaded_file)
-            author.profileImage = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
+            # Save the uploaded profile image as a HostedImage 
+            hosted = HostedImage(file=uploaded_file, uploaded_by=user)
+            hosted.save()
+            profile_url = request.build_absolute_uri(hosted.file.url)
         else:
-            url_input = request.POST.get("profileImage", "").strip()
-            if url_input:
-                author.profileImage = url_input
+            profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
         # Save changes
         author.save()
@@ -88,7 +94,25 @@ def author_entries_page(request, author_serial):
 
 @login_required
 def author_followers_page(request, author_serial):
-	return HttpResponse(f"author followers {author_serial} (not implemented)")
+    author = get_object_or_404(Author, serial=author_serial)
+
+    requests = FollowRequest.objects.filter(author_followed=author, state=FollowRequest.State.ACCEPTED).select_related('actor')
+
+    friends_list = [req for req in requests if author.is_friend(req.actor)]
+    followers_list = [req for req in requests if not author.is_friend(req.actor)]
+
+    context = {"author": author, "friends": friends_list, "followers": followers_list}
+
+    return render(request, "followPages/followers.html", context)
+
+@login_required
+def author_following_page(request, author_serial):
+    author = get_object_or_404(Author, serial=author_serial)
+
+    following_list = FollowRequest.objects.filter(actor=author, state=FollowRequest.State.ACCEPTED).select_related('author_followed')
+    context = {"author": author, "following_list": following_list}
+
+    return render(request, "followPages/following.html", context)
 
 @login_required
 def follow_requests_page(request, author_serial):
@@ -98,4 +122,4 @@ def follow_requests_page(request, author_serial):
 
 	context = {"author": author, "requests": requests}
 
-	return render(request, "follow_requests.html", context)
+	return render(request, "followPages/followRequests.html", context)

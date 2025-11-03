@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EntryForm
 from django.utils import timezone
 import uuid
+from django.contrib.auth.decorators import login_required
 
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
@@ -59,7 +60,7 @@ def public_entries(request):
         return JsonResponse(data, safe=False)
     return HttpResponseNotAllowed(["GET"])
 
-
+@login_required
 def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
 
@@ -71,7 +72,11 @@ def entry_create(request, author_serial):
 
             entry.serial = uuid.uuid4().hex[:12]
             
-            host = author.host.rstrip("/") if getattr(author, "host", None) else "https://example.com"
+            # build entry url based on current link 
+            domain = request.get_host()
+            scheme = 'https' if request.is_secure() else 'http'
+            full_url = f"{scheme}://{domain}"
+            host = full_url
             entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
 
             entry.published = timezone.now()
@@ -86,8 +91,8 @@ def entry_create(request, author_serial):
 def entry_detail(request, author_serial, entry_serial):
     author = get_object_or_404(Author, serial=author_serial)
     entry = get_object_or_404(Entry, author=author, serial=entry_serial)
-    return render(request, "entries/entry_detail.html", {"entry": entry})
-
+    return render(request, "stream_home.html", {"entries": [entry], "author": author})
+        
 def entry_edit(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial)
 
