@@ -43,10 +43,11 @@ def dashboard(request):
 
 def images_list(request):
     """
-    List all hosted images (always public). Optional ?q= filters by file name.
+    List hosted images that are flagged as admin-uploaded.
+    Optional ?q= filters by file name.
     """
     q = request.GET.get('q', '')
-    qs = HostedImage.objects.all().order_by('-created_at')
+    qs = HostedImage.objects.filter(admin_uploaded=True).order_by('-created_at')
     if q:
         # 'file' holds the relative storage name (e.g., uploads/images/<uuid>.png)
         qs = qs.filter(file__icontains=q)
@@ -54,13 +55,18 @@ def images_list(request):
 
 def image_upload(request):
     """
-    Upload a single image (always public). Backend relies on storage (Cloudinary in prod).
+    Upload a single image. Storage backend (e.g., Cloudinary) provides the public URL.
+    Automatically flags images uploaded by staff/superusers as admin_uploaded.
     """
     if request.method == 'POST':
         form = HostedImageForm(request.POST, request.FILES)
         if form.is_valid():
             img = form.save(commit=False)
-            img.uploaded_by = request.user
+            img.uploaded_by = request.user if request.user.is_authenticated else None
+            # Auto-flag if uploader has admin privileges
+            img.admin_uploaded = bool(
+                getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False)
+            )
             img.save()
             return redirect('adminpage:images')
     else:
