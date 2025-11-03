@@ -129,7 +129,7 @@
             </div>
         </form>
 
-        <!-- Delete Form (separate) -->
+        <!-- Delete Form -->
         <form method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}">
             {% csrf_token %}
             <div class="button-group" style="margin-top: 10px;">
