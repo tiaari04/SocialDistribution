@@ -28,7 +28,7 @@ def github_webhook(request):
     event = request.headers.get('X-GitHub-Event', '')
     # Get repository and author info
     repo = payload.get('repository', {}).get('full_name')
-    github_username = payload.get('repository', {}).get('owner', {}).get('login')
+    github_username = commit.get("author", {}).get("username")
 
     if not github_username:
         return JsonResponse({'error': 'Missing GitHub username'}, status=400)
