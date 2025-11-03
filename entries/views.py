@@ -171,33 +171,50 @@ def entry_detail(request, author_serial, entry_serial):
         
 @login_required
 def entry_edit(request, author_serial, entry_serial):
-    entry = get_object_or_404(Entry, serial=entry_serial)
+    entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
 
     if request.user != entry.author.user:
         return HttpResponse("You do not have permission to edit this post.", status=403)
+
+    # If we arrived from the picker, show what was chosen (template already has the hidden input)
+    preselected_hosted = None
+    hosted_id_from_get = request.GET.get("hosted_id")
+    if hosted_id_from_get:
+        preselected_hosted = get_object_or_404(HostedImage, pk=hosted_id_from_get, admin_uploaded=True)
 
     if request.method == "POST":
         form = EntryForm(request.POST, request.FILES, instance=entry)
         if form.is_valid():
             entry = form.save(commit=False)
 
-            # Handle new image upload
-            if 'image_file' in request.FILES:
-                uploaded_file = request.FILES['image_file']
-                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user)
-                hosted.save()
-                entry.image_url = request.build_absolute_uri(hosted.file.url)
-
-            # Handle image removal
-            elif 'remove_image' in request.POST:
+            # 1) Remove image if requested
+            if request.POST.get("remove_image"):
                 entry.image_url = None
+
+            else:
+                # 2) If a hosted admin image was selected, prefer that
+                hosted_id = request.POST.get("hosted_id")
+                if hosted_id:
+                    hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
+                    entry.image_url = request.build_absolute_uri(hosted.file.url)
+
+                # 3) Otherwise, if a new file was uploaded, use it
+                elif 'image_file' in request.FILES:
+                    uploaded_file = request.FILES['image_file']
+                    hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
+                    hosted.save()
+                    entry.image_url = request.build_absolute_uri(hosted.file.url)
 
             entry.save()
             return redirect("entries:stream_home", author_serial=entry.author.serial)
     else:
         form = EntryForm(instance=entry)
 
-    return render(request, "entries/entry_edit.html", {"form": form, "entry": entry})
+    return render(
+        request,
+        "entries/entry_edit.html",
+        {"form": form, "entry": entry, "preselected_hosted": preselected_hosted},
+    )
 
 @login_required
 def entry_delete(request, author_serial, entry_serial):
