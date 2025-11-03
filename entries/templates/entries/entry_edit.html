@@ -1,177 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Entry</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Entry</title>
+  <style>
+    :root{
+      --bg:#f3f4f6; --panel:#fff; --ink:#1f2937;
+      --muted:#6b7280; --b:#e5e7eb; --blue:#2563eb; --blueh:#1d4ed8; --red:#dc3545; --redh:#a71d2a;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; padding:20px;
+      display:flex; align-items:center; justify-content:center; min-height:100vh;
+      background:var(--bg); color:var(--ink);
+      font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    .form-container{
+      width:100%; max-width:720px;
+      background:var(--panel); border:1px solid var(--b);
+      border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.06);
+      padding:24px;
+    }
+    h1{ margin:0 0 16px; font-size:22px; }
+    label{ display:block; margin:12px 0 6px; font-weight:600; color:var(--ink); }
 
-        .form-container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-        }
+    input[type="text"],
+    input[type="url"],
+    input[type="file"],
+    textarea,
+    select{
+      width:100%; padding:10px 12px; border:1px solid var(--b); border-radius:8px; font-size:15px;
+      background:#fff; color:var(--ink);
+    }
+    input:focus, textarea:focus, select:focus{
+      outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.15);
+    }
 
-        h1 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
-        }
+    .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .button-group{ display:flex; gap:12px; }
+    button{ cursor:pointer; border:none; border-radius:8px; padding:10px 16px; font-weight:700; font-size:15px; }
+    .save-btn{ background:var(--blue); color:#fff; }
+    .save-btn:hover{ background:var(--blueh); }
+    .delete-btn{ background:var(--red); color:#fff; }
+    .delete-btn:hover{ background:var(--redh); }
+    .btn-outline{
+      display:inline-block; text-decoration:none; border:1px solid var(--b); padding:9px 14px; border-radius:8px;
+      color:var(--ink); background:#fff; font-weight:600; font-size:14px;
+    }
+    .btn-outline:hover{ background:#f9fafb; }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
+    .back-link{ display:inline-block; margin-top:16px; text-decoration:none; color:var(--muted); }
+    .back-link:hover{ text-decoration:underline; }
 
-        input[type="text"],
-        input[type="url"],
-        input[type="file"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
+    .section{ margin:18px 0 8px; font-weight:700; }
+    .muted{ color:var(--muted); font-size:14px; }
 
-        input[type="text"]:focus,
-        input[type="url"]:focus,
-        input[type="file"]:focus,
-        textarea:focus,
-        select:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 5px rgba(0,123,255,0.5);
-        }
+    .current-image{ margin:10px 0 14px; }
+    .current-image img{ max-width:100%; border-radius:8px; display:block; margin-top:6px; }
 
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
+    .form-check{ display:flex; align-items:center; gap:8px; margin-top:8px; }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            flex: 1;
-        }
-
-        .save-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .save-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .delete-btn:hover {
-            background-color: #a71d2a;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #555;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .current-image {
-            margin-bottom: 15px;
-        }
-
-        .current-image img {
-            max-width: 100%;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 5px;
-        }
-    </style>
+    /* keep long URLs from spilling outside */
+    .break-anywhere{ overflow-wrap:anywhere; word-break:break-word; }
+  </style>
 </head>
 <body>
 
-    <div class="form-container">
-        <h1>Edit Entry</h1>
+  <div class="form-container">
+    <h1>Edit Entry</h1>
 
-        <!-- Edit Form -->
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
+    <!-- Edit Form -->
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
 
-            {% for field in form %}
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                    <p class="help-text">{{ field.help_text }}</p>
-                {% endif %}
-                {% if field.errors %}
-                    <p class="error">{{ field.errors }}</p>
-                {% endif %}
-            {% endfor %}
+      <!-- If a gallery image was selected (from picker), carry its id forward -->
+      {# Prefer server-provided preselected_hosted; fallback to request.GET.hosted_id if request is in context #}
+      {% if preselected_hosted %}
+        <input type="hidden" name="hosted_id" value="{{ preselected_hosted.id }}">
+      {% elif request.GET.hosted_id %}
+        <input type="hidden" name="hosted_id" value="{{ request.GET.hosted_id }}">
+      {% endif %}
 
-            {% if entry.image_url %}
-                <div class="current-image">
-                    <p>Current Image:</p>
-                    <img src="{{ entry.image_url }}" alt="Current Image">
-                    <div class="form-check">
-                        <input type="checkbox" name="remove_image" id="remove_image">
-                        <label for="remove_image">Remove current image</label>
-                    </div>
-                </div>
-            {% endif %}
+      <!-- Title -->
+      <label for="{{ form.title.id_for_label }}">Title</label>
+      {{ form.title }}
 
-            <div class="button-group">
-                <button type="submit" class="save-btn">Save Changes</button>
-            </div>
-        </form>
+      <!-- Description -->
+      <label for="{{ form.description.id_for_label }}">Description</label>
+      {{ form.description }}
 
-        <!-- Delete Form -->
-        <form method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}">
-            {% csrf_token %}
-            <div class="button-group" style="margin-top: 10px;">
-                <button type="submit" class="delete-btn">Delete Entry</button>
-            </div>
-        </form>
+      <!-- Content -->
+      <label for="{{ form.content.id_for_label }}">Content</label>
+      {{ form.content }}
 
-        <a href="{% url 'entries:stream_home' author_serial=entry.author.serial %}" class="back-link">&larr; Back to Entries</a>
-    </div>
+      <!-- Content type -->
+      <label for="{{ form.content_type.id_for_label }}">Content Type</label>
+      {{ form.content_type }}
+
+      <!-- Visibility -->
+      <label for="{{ form.visibility.id_for_label }}">Visibility</label>
+      {{ form.visibility }}
+
+      <!-- Image controls -->
+      <div class="section">Image</div>
+
+      {% if preselected_hosted %}
+        <div class="muted" style="margin:4px 0 8px;">Using gallery image:</div>
+        <img src="{{ preselected_hosted.url }}" alt="Selected gallery image" style="max-width:100%; border-radius:8px; margin-bottom:10px;">
+        <div>
+          <a class="btn-outline" href="{% url 'entries:entry_edit' author_serial=entry.author.serial entry_serial=entry.serial %}">Remove selected gallery image</a>
+        </div>
+      {% endif %}
+
+      {% if entry.image_url and not preselected_hosted %}
+        <div class="current-image">
+          <p class="muted">Current Image:</p>
+          <img src="{{ entry.image_url }}" alt="Current Image">
+          <div class="form-check">
+            <input type="checkbox" name="remove_image" id="remove_image">
+            <label for="remove_image">Remove current image</label>
+          </div>
+        </div>
+      {% endif %}
+
+      <label for="{{ form.image_file.id_for_label }}">Upload a new image (optional)</label>
+      {{ form.image_file }}
+
+      <div class="row" style="margin:10px 0;">
+        {# Build a 'next' that returns to this edit view after picking #}
+        {% url 'entries:entry_edit' author_serial=entry.author.serial entry_serial=entry.serial as edit_url %}
+        <a class="btn-outline" href="{% url 'entries:admin_image_picker' entry.author.serial %}?next={{ edit_url|urlencode }}">
+          Choose from gallery
+        </a>
+        <span class="muted">— or upload a file above</span>
+      </div>
+
+      <div class="button-group" style="margin-top:16px;">
+        <button type="submit" class="save-btn">Save Changes</button>
+      </div>
+    </form>
+
+    <!-- Delete Form -->
+    <form method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}">
+      {% csrf_token %}
+      <div class="button-group" style="margin-top: 12px;">
+        <button type="submit" class="delete-btn">Delete Entry</button>
+      </div>
+    </form>
+
+    <a href="{% url 'entries:stream_home' author_serial=entry.author.serial %}" class="back-link">&larr; Back to Entries</a>
+  </div>
 
 </body>
 </html>
