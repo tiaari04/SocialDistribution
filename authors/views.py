@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
+from adminpage.models import HostedImage
 from authors.models import Author
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
@@ -74,12 +75,15 @@ def author_edit(request, author_serial):
 
         if "profileImageFile" in request.FILES:
             uploaded_file = request.FILES["profileImageFile"]
-            # Save the uploaded profile image as a HostedImage 
-            hosted = HostedImage(file=uploaded_file, uploaded_by=user)
+            # Save the uploaded profile image as a HostedImage. Use the current request.user
+            # as the uploader (HostedImage.uploaded_by references the Django User model).
+            hosted = HostedImage(file=uploaded_file, uploaded_by=request.user)
             hosted.save()
-            profile_url = request.build_absolute_uri(hosted.file.url)
+            # Persist the hosted image absolute URL to the Author.profileImage field
+            author.profileImage = request.build_absolute_uri(hosted.file.url)
         else:
-            profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
+            if not author.profileImage:
+                author.profileImage = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
         # Save changes
         author.save()
