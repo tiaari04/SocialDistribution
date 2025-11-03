@@ -56,17 +56,14 @@ def images_list(request):
 def image_upload(request):
     """
     Upload a single image. Storage backend (e.g., Cloudinary) provides the public URL.
-    Automatically flags images uploaded by staff/superusers as admin_uploaded.
+    Always flags uploaded images as admin_uploaded=True since only admins can access this view.
     """
     if request.method == 'POST':
         form = HostedImageForm(request.POST, request.FILES)
         if form.is_valid():
             img = form.save(commit=False)
             img.uploaded_by = request.user if request.user.is_authenticated else None
-            # Auto-flag if uploader has admin privileges
-            img.admin_uploaded = bool(
-                getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False)
-            )
+            img.admin_uploaded = True  # always mark as admin upload
             img.save()
             return redirect('adminpage:images')
     else:
