@@ -115,7 +115,32 @@
     }
 
     /* ----------- Entries Section ----------- */
-    article.entries { text-align: left; }
+    .entries {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .post {
+        width: 50vw;
+        background-color: #6366f1;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .postContent {
+        background-color: white;
+        color: #374151;
+        width: full;
+        padding: 1px 15px;
+        border-radius: 10px;
+    }
+
+    article img {
+        max-width: 100%;
+        height: auto;
+    }
 
     article.entries h2 {
       font-size: 1.5rem;
@@ -123,9 +148,24 @@
       color: #1f2937;
       margin-bottom: 0.75rem;
     }
-
-    article.entries p { color: #6b7280; font-style: italic; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Parse different content types -->
+    <script>
+        'use strict';
+        document.addEventListener("DOMContentLoaded", () => {
+            const posts = document.querySelectorAll('.postText');
+            posts.forEach(post => {
+                const contentType = post.dataset.type;
+                if (contentType === "text/markdown") {
+                    const html = marked.parse(post.dataset.content);
+                    post.innerHTML = html;
+                } else {
+
+                }
+            })
+        })
+    </script>
 </head>
 
 <body>
@@ -196,9 +236,16 @@
       <h2>Public Entries</h2>
       {% if entries %}
         {% for entry in entries %}
-          <div>
-            <h3>{{ entry.title }}</h3>
-            <p>{{ entry.content|truncatewords:30 }}</p>
+          <div class="post">
+            <div class="postContent">
+                <h3>{{ entry.title }}</h3>
+                <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+                    {{ entry.content }}
+                </p>
+                {% if entry.image_url %}
+                    <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                {% endif %}
+            </div>
           </div>
         {% endfor %}
       {% else %}
