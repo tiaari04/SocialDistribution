@@ -23,6 +23,7 @@ class Entry(TimeStampedModel):
     description = models.TextField(blank=True)
     content = models.TextField(blank=True)
 
+
     class ContentType(models.TextChoices):
         MARKDOWN = "text/markdown", "text/markdown"
         PLAIN = "text/plain", "text/plain"
