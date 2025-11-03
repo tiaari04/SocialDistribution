@@ -11,6 +11,7 @@ from urllib.parse import unquote
 from .models import HostedImage
 from .forms import HostedImageForm, AuthorForm
 from authors.models import Author
+from django.core.paginator import Paginator
 
 User = get_user_model()
 
@@ -169,15 +170,57 @@ def reject_user(request, user_id):
     u.delete()
     return redirect('adminpage:pending-users')
 
-# --------- Public endpoints ---------
 
-def public_images_json(request):
+
+def author_detail(request, pk, tab=None):
     """
-    Public JSON endpoint for any user to fetch all hosted images.
+    Admin page: show an author's entries with a tabbed nav by visibility.
+    /authors/<pk>/<tab>/ where tab in [PUBLIC, FRIENDS, UNLISTED, DELETED]
+    If tab is absent, default to PUBLIC.
     """
-    data = [{
-        'id': i.id,
-        'url': i.url,
-        'created_at': i.created_at.isoformat(),
-    } for i in HostedImage.objects.order_by('-created_at')]
-    return JsonResponse({'images': data})
+    from entries.models import Entry  # local import to avoid circulars
+
+    # Normalize FQID and fetch author (tolerate trailing slash)
+    pk = unquote(pk).rstrip('/')
+    author = (
+        Author.objects.filter(id__in=[pk, pk + '/']).first()
+        or get_object_or_404(Author, pk=pk)
+    )
+
+    # Validate/normalize tab
+    valid_tabs = [c for c, _ in Entry.Visibility.choices]
+    if tab not in valid_tabs:
+        tab = Entry.Visibility.PUBLIC
+
+    # Badge counts per tab
+    counts = {
+        vis: Entry.objects.filter(author=author, visibility=vis).count()
+        for vis in valid_tabs
+    }
+
+    # Build tabs collection the template can use directly
+    tabs = [
+        {"key": vis, "label": vis.title(), "count": counts[vis]}
+        for vis in valid_tabs
+    ]
+
+    # Current tab queryset + pagination
+    qs = Entry.objects.filter(author=author, visibility=tab).order_by('-published')
+    page_obj = Paginator(qs, 10).get_page(request.GET.get("page"))
+
+    # Friendly blurb
+    tab_blurbs = {
+        Entry.Visibility.PUBLIC:   "These are publicly visible posts.",
+        Entry.Visibility.FRIENDS:  "Posts visible to accepted friends.",
+        Entry.Visibility.UNLISTED: "Unlisted posts (not shown in feeds).",
+        Entry.Visibility.DELETED:  "Posts marked as deleted.",
+    }
+
+    context = {
+        "author": author,
+        "tab": tab,
+        "tabs": tabs,
+        "blurb": tab_blurbs.get(tab, ""),
+        "page_obj": page_obj,
+    }
+    return render(request, "adminpage/author_detail.html", context)

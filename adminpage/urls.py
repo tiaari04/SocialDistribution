@@ -16,6 +16,7 @@ urlpatterns = [
     path("authors/new/", views.author_create, name="author-create"),
     path("authors/<path:pk>/edit/", views.author_update, name="author-update"),
     path("authors/<path:pk>/delete/", views.author_delete, name="author-delete"),
+    path("authors/<path:pk>/<str:tab>/", views.author_detail, name="author-detail-tab"),
 
     # Approvals (Users are still int PKs)
     path("approvals/", views.pending_users, name="pending-users"),
