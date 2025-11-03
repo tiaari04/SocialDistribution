@@ -66,23 +66,21 @@ def public_entries(request):
 @login_required
 def admin_image_picker(request, author_serial):
     """
-    Show only HostedImage where admin_uploaded=True, so the user can pick one
-    and be redirected back to the entry create form with ?hosted_id=<id>.
+    Minimal gallery of admin-uploaded images.
+    Clicking an image returns to ?next=... with hosted_id=<id>.
     """
     author = get_object_or_404(Author, serial=author_serial)
 
-    q = request.GET.get("q", "")
     images = HostedImage.objects.filter(admin_uploaded=True).order_by("-created_at")
-    if q:
-        images = images.filter(file__icontains=q)
+    page_obj = Paginator(images, 80).get_page(request.GET.get("page"))
 
-    page_obj = Paginator(images, 24).get_page(request.GET.get("page"))
+    next_url = request.GET.get("next", "")  # required to bounce back
 
-    return render(request, "entries/image_picker.html", {
-        "author": author,
-        "page_obj": page_obj,
-        "q": q,
-    })
+    return render(
+        request,
+        "entries/image_picker.html",
+        {"author": author, "page_obj": page_obj, "next": next_url},
+    )
 
 @login_required
 def entry_create(request, author_serial):

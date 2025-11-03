@@ -1,90 +1,82 @@
 {% extends "base_adminpage.html" %}
-{% block title %}Pick an Image · {{ author.displayName }}{% endblock %}
+{% block title %}Choose from Admin Images{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-  .thumb { border: 1px solid var(--gray-200); border-radius: .5rem; background: #fff; overflow: hidden; }
-  .thumb img { display: block; width: 100%; height: 140px; object-fit: cover; }
-  .thumb .actions { display: flex; justify-content: space-between; align-items: center; padding: .5rem; }
-  .muted { color: var(--gray-600); font-size: .85rem; }
-  .pagination { display:flex; gap:.5rem; margin-top:1rem; }
-  .pagination a, .pagination span {
-    padding:.4rem .65rem; border:1px solid var(--gray-200);
+  /* full-bleed minimal grid */
+  .picker-wrap { padding: 0; }
+  .thumb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .thumb {
+    display: block;
+    border: 1px solid var(--gray-200);
+    border-radius: .5rem;
+    overflow: hidden;
+    background: #fff;
+  }
+  .thumb img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+  }
+  .pager {
+    display:flex; gap:.5rem; justify-content:center; margin:12px 0 4px;
+  }
+  .pager a, .pager span {
+    padding:.35rem .6rem; border:1px solid var(--gray-200);
     border-radius:.5rem; text-decoration:none; color: var(--gray-800);
   }
-  .pagination .current { border-color: var(--blue-600); box-shadow: 0 0 0 2px var(--blue-100) inset; }
+  .pager .current {
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 2px var(--blue-100) inset;
+  }
+  /* hide header spacing from base if desired */
+  ul.container > li:first-child { display:none; }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
+<ul class="container picker-wrap">
   <li>
-    <h1 class="text-xl semibold text-primary p-4">
-      Choose from Admin Images
-      <span class="muted">·</span>
-      <span class="muted">{{ author.displayName }}</span>
-    </h1>
-  </li>
+    {% if not next %}
+      <p class="text-sm text-muted" style="margin:8px 0 12px;">
+        No <code>next</code> URL provided. Add <code>?next=...</code> to return after selection.
+      </p>
+    {% endif %}
 
-  <li>
-    <form method="get">
-      <ul class="row p-4">
-        <li style="flex:1 1 auto; min-width:0;">
-          <input name="q" value="{{ q }}" placeholder="Search file name…" />
-        </li>
-        <li><button class="btn btn-primary">Search</button></li>
-
-        {# Back: prefer ?next=..., otherwise fall back to stream_home #}
-        <li>
-          {% if request.GET.next %}
-            <a class="btn btn-outline" href="{{ request.GET.next }}">Back to Post</a>
-          {% else %}
-            <a class="btn btn-outline" href="{% url 'entries:stream_home' author.serial %}">Back</a>
-          {% endif %}
-        </li>
-      </ul>
-    </form>
-  </li>
-
-  <li>
     {% if page_obj.object_list %}
-      <div class="grid">
+      <div class="thumb-grid">
         {% for img in page_obj.object_list %}
-          <article class="thumb">
-            {# Use selection: send hosted_id back to ?next=... #}
-            {% if request.GET.next %}
-              <a href="{{ request.GET.next }}{% if '?' in request.GET.next %}&{% else %}?{% endif %}hosted_id={{ img.id }}" title="Use this image">
-                <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-              </a>
-              <div class="actions">
-                <span class="muted truncate">{{ img|default:img.id }}</span>
-                <a class="btn btn-outline" href="{{ request.GET.next }}{% if '?' in request.GET.next %}&{% else %}?{% endif %}hosted_id={{ img.id }}">Use</a>
-              </div>
-            {% else %}
-              {# If no next, just show the image and a disabled Use label #}
+          {% if next %}
+            <a class="thumb"
+               href="{{ next }}{% if '?' in next %}&{% else %}?{% endif %}hosted_id={{ img.id }}"
+               title="Use this image">
               <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-              <div class="actions">
-                <span class="muted truncate">{{ img|default:img.id }}</span>
-                <span class="muted">Set a ?next=... to return</span>
-              </div>
-            {% endif %}
-          </article>
+            </a>
+          {% else %}
+            <span class="thumb">
+              <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+            </span>
+          {% endif %}
         {% endfor %}
       </div>
 
-      <div class="pagination">
+      <div class="pager">
         {% if page_obj.has_previous %}
-          <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}">Prev</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">Prev</a>
         {% endif %}
         <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-          <a href="?q={{ q }}&page={{ page_obj.next_page_number }}{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}">Next</a>
+          <a href="?page={{ page_obj.next_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">Next</a>
         {% endif %}
       </div>
     {% else %}
-      <p class="muted">No admin-uploaded images found.</p>
+      <p class="text-sm text-muted">No admin-uploaded images found.</p>
     {% endif %}
   </li>
 </ul>
