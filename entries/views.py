@@ -40,21 +40,15 @@ def github_webhook(request):
     if event == "push":
         commits = payload.get('commits', [])
         for commit in commits:
-            github_username = commit.get("author", {}).get("username")
+            github_username = commit.get("author", {}).get("username") or payload.get("pusher", {}).get("name")
             if not github_username:
-                # fallback to commit author name if username not provided
-                github_username = commit.get("author", {}).get("name")
+                continue  # skip commits with no identifiable author
 
-            if not github_username:
-                # skip commits with no identifiable author
-                continue
-
-            # Find the author in our DB
             github_url = f"https://github.com/{github_username}".lower()
             try:
                 author = Author.objects.get(github_link__iexact=github_url)
             except Author.DoesNotExist:
-                continue  # skip if no matching author
+                continue
 
             message = commit.get('message', '(no message)')
             url = commit.get('url', '')
