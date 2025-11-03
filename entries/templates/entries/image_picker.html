@@ -5,20 +5,39 @@
   <title>Choose from Admin Images</title>
   <style>
     body { font-family: system-ui, sans-serif; margin:0; background:#f8fafc; }
-    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px 80px; } /* bottom room for bar */
     h1 { font-size: 20px; margin: 0 0 12px; color: #0f172a; }
     .thumb-grid {
       display: grid; gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
-    .thumb { display:block; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#fff; }
+    .thumb {
+      display:block; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#fff;
+      cursor: pointer; outline: none;
+    }
+    .thumb:focus-visible { box-shadow: 0 0 0 3px #c7d2fe; }
     .thumb img { width:100%; height:140px; object-fit:cover; display:block; }
+    .thumb.selected { box-shadow: 0 0 0 3px #60a5fa; border-color:#3b82f6; }
     .pager { display:flex; gap:.5rem; justify-content:center; margin:16px 0; }
     .pager a, .pager span {
       padding:.35rem .6rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#111827; background:#fff;
     }
     .pager .current { box-shadow: 0 0 0 2px #e0e7ff inset; border-color:#c7d2fe; }
     .muted { color:#6b7280; font-size: 12px; }
+
+    /* sticky action bar */
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.9);
+      border-top: 1px solid #e5e7eb; backdrop-filter: blur(6px);
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    }
+    .bar .grow { flex: 1; color:#374151; font-size: 14px; }
+    .btn {
+      appearance: none; border: 1px solid #e5e7eb; background: #111827; color: #fff;
+      border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer;
+    }
+    .btn[disabled] { opacity:.5; cursor: not-allowed; }
+    .btn.secondary { background:#fff; color:#111827; }
   </style>
 </head>
 <body>
@@ -27,24 +46,21 @@
 
     <p class="muted">
       Total: {{ page_obj.paginator.count }} &middot; On this page: {{ page_obj.object_list|length }}
-      {% if not next %}&middot; (Tip: add <code>?next=...</code> to return to a form){% endif %}
+      {% if not next %}&middot; (Tip: pass <code>?next=...</code> to return to a form){% endif %}
     </p>
 
     {% if page_obj.object_list %}
-      <div class="thumb-grid">
+      <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
         {% for img in page_obj.object_list %}
           {% with use_url=img.url %}
-            {% if next %}
-              <a class="thumb"
-                 href="{{ next }}{% if '?' in next %}&{% else %}?{% endif %}hosted_id={{ img.id }}"
-                 title="Use this image">
-                <img src="{{ use_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-              </a>
-            {% else %}
-              <span class="thumb" title="No ?next provided">
-                <img src="{{ use_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-              </span>
-            {% endif %}
+            <button
+              type="button"
+              class="thumb"
+              data-id="{{ img.id }}"
+              data-url="{{ use_url }}"
+              title="Click to select. Double-click to use.">
+              <img src="{{ use_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+            </button>
           {% endwith %}
         {% endfor %}
       </div>
@@ -62,5 +78,90 @@
       <p>No images found.</p>
     {% endif %}
   </div>
+
+  <div class="bar" id="bar">
+    <div class="grow" id="status">Pick an image.</div>
+    <button class="btn secondary" type="button" id="cancelBtn" onclick="history.back()">Cancel</button>
+    <button class="btn" type="button" id="useBtn" disabled>Use selected</button>
+  </div>
+
+  <script>
+    (function () {
+      const grid = document.getElementById('grid');
+      if (!grid) return;
+
+      const next = grid.dataset.next || '';
+      const status = document.getElementById('status');
+      const useBtn = document.getElementById('useBtn');
+
+      let selected = null;
+
+      function buildReturnUrl(hostedId) {
+        if (!next) return ''; // no next provided
+        // Append hosted_id whether next already has query or not
+        return next + (next.includes('?') ? '&' : '?') + 'hosted_id=' + encodeURIComponent(hostedId);
+      }
+
+      function updateBar() {
+        if (!selected) {
+          status.textContent = 'Pick an image.';
+          useBtn.disabled = true;
+          return;
+        }
+        const id = selected.dataset.id;
+        status.textContent = `Selected image #${id}`;
+        useBtn.disabled = false;
+      }
+
+      function selectThumb(el) {
+        if (selected) selected.classList.remove('selected');
+        selected = el;
+        selected.classList.add('selected');
+        updateBar();
+      }
+
+      grid.addEventListener('click', (e) => {
+        const el = e.target.closest('.thumb');
+        if (!el) return;
+        selectThumb(el);
+      });
+
+      // Double-click instantly navigates if next is provided
+      grid.addEventListener('dblclick', (e) => {
+        const el = e.target.closest('.thumb');
+        if (!el) return;
+        selectThumb(el);
+        const id = el.dataset.id;
+        const returnUrl = buildReturnUrl(id);
+        if (returnUrl) {
+          window.location.assign(returnUrl);
+        } else {
+          // No next: copy info to clipboard so the caller can grab it.
+          const url = `${location.origin}${location.pathname}?hosted_id=${encodeURIComponent(id)}`;
+          navigator.clipboard?.writeText(url).catch(()=>{});
+        }
+      });
+
+      useBtn.addEventListener('click', () => {
+        if (!selected) return;
+        const id = selected.dataset.id;
+        const returnUrl = buildReturnUrl(id);
+        if (returnUrl) {
+          window.location.assign(returnUrl);
+        } else {
+          const url = `${location.origin}${location.pathname}?hosted_id=${encodeURIComponent(id)}`;
+          status.textContent = `No ?next provided. Copied ${url} to clipboard.`;
+          navigator.clipboard?.writeText(url).catch(()=>{});
+        }
+      });
+
+      // Keyboard support (arrow navigate via tab; Enter uses selection)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && selected) {
+          useBtn.click();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
