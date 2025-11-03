@@ -71,10 +71,10 @@ def admin_image_picker(request, author_serial):
     """
     author = get_object_or_404(Author, serial=author_serial)
 
-    images = HostedImage.objects.filter(admin_uploaded=True).order_by("-created_at")
+    images = HostedImage.objects.all().order_by("-created_at")
     page_obj = Paginator(images, 80).get_page(request.GET.get("page"))
 
-    next_url = request.GET.get("next", "")  # required to bounce back
+    next_url = request.GET.get("next", "") 
 
     return render(
         request,
