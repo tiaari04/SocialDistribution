@@ -120,6 +120,18 @@
                 height: auto;
             }
 
+            .postContent img,
+            .postText img {
+                max-width: 100%;  
+                width: 100%;      
+                height: auto;      
+                display: block;     
+                border-radius: 8px; 
+                object-fit: contain; 
+                margin-top: 5px;
+                margin-bottom: 5px;
+            }
+
             .reactions {
                 width: full;
                 display: flex;
@@ -567,11 +579,20 @@
                         </section>
 
                         <section class="postContent">
-                            <h3>{{ entry.title }}</h3>
+                            <h2>{{ entry.title }}</h2>
+                            <h3>
+                                {{ entry.description }}
+                            </h3>
                             <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
                                 {{ entry.content }}
                             </p>
-                        </section>  
+
+                            {% if entry.image_url %}
+                                <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                            {% endif %}
+                            
+                            
+                        </section> 
 
                         <section class="reactions">
                             <p>{{ entry.likes_count }} likes</p>
