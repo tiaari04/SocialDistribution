@@ -1,5 +1,5 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <title>Red Social Dist | Home</title>
@@ -8,16 +8,20 @@
             body {
                 overflow: auto;
                 font-family: sans-serif;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                margin: 0;
             }
 
             main {
-                background-color: aliceblue;
+                background: linear-gradient(135deg, #eff6ff, #e0e7ff);
                 padding-top: 30px;
                 z-index: 50;
             }
 
             button {
-                background-color: #3f51b5;
+                background-color: #6366f1;
                 border: solid white 2px;
                 color: white;
                 font-weight: 600;
@@ -31,7 +35,12 @@
 
             button:hover {
                 cursor: pointer;
-                background-color: #7584da;
+                background-color: #a7a8fa;
+                color: #10126d;
+            }
+
+            #editButton:hover {
+                color: #10126d;
             }
 
             button a {
@@ -77,6 +86,7 @@
                 flex-direction: column;
                 align-items: center;
                 gap: 30px;
+                min-height: 80vh;
             }
 
             .stream.comment {
@@ -85,13 +95,14 @@
 
             .post {
                 width: 50vw;
-                background-color: #3f51b5;
+                background-color: #6366f1;
                 padding: 10px 20px;
                 border-radius: 20px;
+                box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.1);
             }
 
             .post.comment {
-                background-color: #13237c;
+                background-color: #3335ce;
                 width: 50vw;
                 padding: 10px 20px;
             }
@@ -107,6 +118,18 @@
             .postText img {
                 max-width: 100%;
                 height: auto;
+            }
+
+            .postContent img,
+            .postText img {
+                max-width: 100%;  
+                width: 100%;      
+                height: auto;      
+                display: block;     
+                border-radius: 8px; 
+                object-fit: contain; 
+                margin-top: 5px;
+                margin-bottom: 5px;
             }
 
             .reactions {
@@ -162,7 +185,6 @@
             .user {
                 display: flex;
                 justify-content: space-between;
-                margin-left: 4px;
                 margin-top: 10px;
                 margin-bottom: 10px;
             }
@@ -175,6 +197,24 @@
 
             .user a:hover {
                 text-decoration: underline;
+            }
+
+            .username a {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .profilePhoto {
+                width: 30px;
+                height: 30px;
+                object-fit: cover;
+                background-color: white;
+                border-radius: 20px
+            }
+
+            .profilePhoto:hover {
+                box-shadow: 0px 3px #919ff3;
             }
 
             #comments {
@@ -207,7 +247,7 @@
                 flex-direction: column;
                 justify-content: space-between;
                 transition: right 0.3s ease;
-                z-index: 2000;
+                z-index: 200;
             }
 
             #commentsPanel.visible {
@@ -241,7 +281,7 @@
             }
 
             .likeButton {
-                background-color: #3f51b5;
+                background-color: #6366f1;
                 border: solid white 2px;
                 color: white;
             }
@@ -266,12 +306,6 @@
                     if (contentType === "text/markdown") {
                         const html = marked.parse(post.dataset.content);
                         post.innerHTML = html;
-                    }
-                    else if (contentType === "image/png;base64") {
-
-                    }
-                    else if (contentType === "image/jpeg;base64") {
-                        
                     }
                 })
             })
@@ -429,7 +463,6 @@
                 async function likeComment(entryFqid, commentFqid) {
                     const eEncoded = encodeURIComponent(entryFqid);
                     const cEncoded = encodeURIComponent(commentFqid);
-                    //const res = await fetch(`/api/authors/author1serial/entries/entry6serial/comments/${cEncoded}/likes/`, {
                     const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the comment
@@ -513,14 +546,25 @@
         <header>
             <h3>CMPUT404</h3>
             <a href="{% url 'authors:list' %}">All Authors</a>
-            <a href="{% url 'authors:detail' author.serial %}">Profile</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'authors:detail' author.serial %}">
+                    <img class='profilePhoto' src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+                </a>   
+            {% else %}
+                <a href="{% url 'login:login' %}" class="button">Log In</a>
+            {% endif %}
         </header>
         <main>
             <ul class="stream" id="stream">
                 {% for entry in entries %}
                     <li id="post_{{ entry.fqid }}" class="post">
                         <section class="user">
-                            <a href="{% url 'authors:detail' entry.author.serial %}">{{ entry.author.displayName }}</a>
+                            <section class="username">
+                                <a href="{% url 'authors:detail' entry.author.serial %}">
+                                    <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+                                    {{ entry.author.displayName }}
+                                </a>
+                            </section>
                             <button data-fqid="{{ entry.fqid }}" class="share">
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>
@@ -529,14 +573,24 @@
                         </section>
 
                         <section class="postContent">
-                            <h3>{{ entry.title }}</h3>
+                            <h2>{{ entry.title }}</h2>
+                            <h3>
+                                {{ entry.description }}
+                            </h3>
                             <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
                                 {{ entry.content }}
                             </p>
-                        </section>  
+
+                            {% if entry.image_url %}
+                                <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                            {% endif %}
+                            
+                            
+                        </section> 
 
                         <section class="reactions">
                             <p>{{ entry.likes_count }} likes</p>
+                            {% if request.user.is_authenticated %}
                             <div>
                                 <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
                                     Like
@@ -548,45 +602,44 @@
                                 {% if entry.author.id == author.id %}
                                     <!-- Show only for your own posts -->
                                     <button>
-                                        <a href="{% url 'entries:edit' entry.author.serial entry.serial %}">Edit</a>
+                                        <a id='editButton' href="{% url 'entries:edit' entry.author.serial entry.serial %}">Edit</a>
                                     </button>
                                 {% endif %}
                             </div>
+                            {% endif %}
                         </section>
                     </li>
                 {% endfor %}
             </ul>
-
+            
             <button id="createPost"><a href="{% url 'entries:create' author.serial %}" id="createPost" class="button">New Post</a></button>
-
-            <!-- Comments panel -->
-            <section id="commentsPanel">
-                <header>
-                    <h3>Comments</h3>
-                    <button id="closePanel">&times;</button>
-                </header>
-
-                <!-- dynamically insert comments -->
-                <section id="comments"></section>   
-
-                <footer>
-                    <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
-                    <button id="sendComment">Send</button>
-                </footer>
-            </section>
-
-            <!-- Comment template -->
-            <template id="commentTemplate" class="comment">
-                <section class="comment">
-                    <strong class="commentAuthor"></strong>
-                    <p class="commentText"></p>
-                    <section class="reactions">
-                        <p class="commentLikes"></p>
-                        <button class="likeButton">Like</button>
-                    </section>
-                </section>
-            </template>
-
         </main>
+        <!-- Comments panel -->
+        <section id="commentsPanel">
+            <header>
+                <h3>Comments</h3>
+                <button id="closePanel">&times;</button>
+            </header>
+
+            <!-- dynamically insert comments -->
+            <section id="comments"></section>   
+
+            <footer>
+                <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+                <button id="sendComment">Send</button>
+            </footer>
+        </section>
+
+        <!-- Comment template -->
+        <template id="commentTemplate" class="comment">
+            <section class="comment">
+                <strong class="commentAuthor"></strong>
+                <p class="commentText"></p>
+                <section class="reactions">
+                    <p class="commentLikes"></p>
+                    <button class="likeButton">Like</button>
+                </section>
+            </section>
+        </template>
     </body>
 </html>

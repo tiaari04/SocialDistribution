@@ -1,0 +1,138 @@
+{% extends "base_adminpage.html" %}
+
+{% block title %}{{ author.displayName }} · Entries{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+  .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+  .tab {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .5rem .75rem; border: 1px solid var(--gray-200);
+    border-radius: 999px; text-decoration: none; color: var(--gray-800);
+    background: var(--white);
+  }
+  .tab.active {
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 2px var(--blue-100) inset;
+    color: var(--blue-700);
+    font-weight: 600;
+  }
+  .badge {
+    font-size: .75rem; line-height: 1;
+    padding: .15rem .45rem; border-radius: 999px;
+    background: var(--blue-100); color: var(--blue-700);
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    border: 1px solid var(--gray-200);
+    border-radius: .75rem;
+    background: var(--white);
+    padding: 1rem;
+  }
+  .muted { color: var(--gray-600); font-size: .9rem; }
+  .meta { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+  .pagination { display:flex; gap:.5rem; margin-top:1rem; }
+  .pagination a, .pagination span {
+    padding:.4rem .65rem; border:1px solid var(--gray-200);
+    border-radius:.5rem; text-decoration:none; color: var(--gray-800);
+  }
+  .pagination .current {
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 2px var(--blue-100) inset;
+  }
+  .section-head { display:flex; justify-content:space-between; align-items:baseline; margin:.5rem 0 1rem; }
+  .section-head h2 { margin:0; font-size:1rem; font-weight:600; color: var(--gray-800); }
+
+  /* prevent long URLs (FQIDs) from overflowing the card */
+  .break-anywhere { word-break: break-word; overflow-wrap: anywhere; }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li>
+    <h1 class="text-xl semibold text-primary p-4">
+      {{ author.displayName }}
+      <span class="muted">·</span>
+      <span class="muted break-anywhere">{{ author.id }}</span>
+    </h1>
+  </li>
+
+  <!-- Tabs -->
+  <li>
+    <nav class="tabs" aria-label="Entry visibility tabs">
+      {% for t in tabs %}
+        <a class="tab{% if t.key == tab %} active{% endif %}"
+           href="{% url 'adminpage:author-detail-tab' author.id t.key %}">
+          <span>{{ t.label }}</span>
+          <span class="badge">{{ t.count }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+  </li>
+
+  <!-- Section writing -->
+  <li class="section-head">
+    <h2>
+      {% if tab == "PUBLIC" %}Public posts{% endif %}
+      {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
+      {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
+      {% if tab == "DELETED" %}Deleted posts{% endif %}
+    </h2>
+    <span class="muted">{{ blurb }}</span>
+  </li>
+
+  <!-- Entries -->
+  <li>
+    {% if page_obj.object_list %}
+      <div class="cards">
+        {% for e in page_obj.object_list %}
+          <article class="card">
+            <header style="margin-bottom:.5rem;">
+              <div class="meta">
+                <strong>{{ e.title|default:"(untitled)" }}</strong>
+                <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
+                <span class="muted">· {{ e.content_type }}</span>
+              </div>
+            </header>
+
+            {% if e.description %}
+              <p class="muted">{{ e.description|truncatechars:160 }}</p>
+            {% endif %}
+
+            {% if e.content %}
+              <p style="margin-top:.5rem;">{{ e.content|truncatechars:220 }}</p>
+            {% endif %}
+
+            <footer style="margin-top:.75rem;" class="muted break-anywhere">
+              FQID:
+              <a class="break-anywhere" href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">
+                {{ e.fqid }}
+              </a><br/>
+              Likes: {{ e.likes_count }}
+            </footer>
+          </article>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.previous_page_number }}">Prev</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="muted">No entries for {{ tab|title }}.</p>
+    {% endif %}
+  </li>
+</ul>
+{% endblock %}

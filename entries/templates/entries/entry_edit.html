@@ -15,7 +15,6 @@
             margin: 0;
             padding: 20px;
         }
-
         .form-container {
             background-color: #fff;
             padding: 30px;
@@ -24,85 +23,32 @@
             width: 100%;
             max-width: 500px;
         }
-
-        h1 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
+        h1 { margin-top: 0; margin-bottom: 20px; font-size: 24px; color: #333; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="url"], input[type="file"], textarea, select {
+            width: 100%; padding: 10px; margin-bottom: 15px;
+            border: 1px solid #ccc; border-radius: 5px; font-size: 16px;
         }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+        input[type="text"]:focus, input[type="url"]:focus, input[type="file"]:focus,
+        textarea:focus, select:focus {
+            border-color: #007bff; outline: none; box-shadow: 0 0 5px rgba(0,123,255,0.5);
         }
+        .button-group { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; flex: 1; }
+        .save-btn { background-color: #007bff; color: white; }
+        .save-btn:hover { background-color: #0056b3; }
+        .delete-btn { background-color: #dc3545; color: white; }
+        .delete-btn:hover { background-color: #a71d2a; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: #555; }
+        .back-link:hover { text-decoration: underline; }
 
-        input[type="text"],
-        input[type="url"],
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
+        /* minimal style so the link looks like a secondary button */
+        .admin-images-link {
+            display: inline-block; padding: 10px 14px; border: 1px solid #ccc;
+            border-radius: 5px; text-decoration: none; color: #333; font-weight: bold;
+            margin: 8px 0 12px; text-align: center;
         }
-
-        input[type="text"]:focus,
-        input[type="url"]:focus,
-        textarea:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 5px rgba(0,123,255,0.5);
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            flex: 1;
-        }
-
-        .save-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .save-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .delete-btn:hover {
-            background-color: #a71d2a;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #555;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
+        .admin-images-link:hover { background: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -111,8 +57,16 @@
         <h1>Edit Entry</h1>
 
         <!-- Edit Form -->
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
+
+            <!-- carry hosted_id if user chose from Admin Images -->
+            {% if preselected_hosted %}
+              <input type="hidden" name="hosted_id" value="{{ preselected_hosted.id }}">
+            {% elif request.GET.hosted_id %}
+              <input type="hidden" name="hosted_id" value="{{ request.GET.hosted_id }}">
+            {% endif %}
+
             {% for field in form %}
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
@@ -124,12 +78,18 @@
                 {% endif %}
             {% endfor %}
 
+            <!-- Choose from Admin Images (wording exactly) -->
+            {% url 'entries:entry_edit' author_serial=entry.author.serial entry_serial=entry.serial as back_here %}
+            <a class="admin-images-link" href="{% url 'entries:admin_image_picker' entry.author.serial %}?next={{ back_here|urlencode }}">
+              Choose from Admin Images
+            </a>
+
             <div class="button-group">
                 <button type="submit" class="save-btn">Save Changes</button>
             </div>
         </form>
 
-        <!-- Delete Form (separate) -->
+        <!-- Delete Form -->
         <form method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}">
             {% csrf_token %}
             <div class="button-group" style="margin-top: 10px;">

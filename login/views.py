@@ -7,6 +7,7 @@ from authors.models import Author
 from django.utils.crypto import get_random_string
 from django.contrib.sites.models import Site
 from django.urls import reverse
+from adminpage.models import HostedImage
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -61,13 +62,12 @@ def signup_view(request):
             uploaded_file = form.cleaned_data.get("profileImageFile")
             if "profileImageFile" in request.FILES:
                 uploaded_file = request.FILES["profileImageFile"]
-                path = default_storage.save(f"profile_images/{uploaded_file.name}", uploaded_file)
-                profile_url = request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")
+                # Save the uploaded profile image as a HostedImage 
+                hosted = HostedImage(file=uploaded_file, uploaded_by=user)
+                hosted.save()
+                profile_url = request.build_absolute_uri(hosted.file.url)
             else:
-      
-                url_input = request.POST.get("profileImage", "").strip()
-                if url_input:
-                    profile_url = url_input
+                profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
             # Create Author instance
             author = Author.objects.create(

@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from entries import services as entries_services
 from inbox import services as followers_services
+from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 
 def _not_implemented(endpoint_name):
@@ -18,9 +19,15 @@ def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
 
 def api_author_followers(request, author_serial):
-	return _not_implemented("api_author_followers")
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	resp, status_code = followers_serializers.serialize_followers_view(author)
+	return JsonResponse(resp, status=status_code)
 
 def api_author_follower_detail(request, author_serial, foreign_encoded):
+	if request.method not in ["GET", "PUT", "DELETE"]:
+		return JsonResponse({"detail": "Method not allowed"}, status=405)
+
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
 	actor_fqid = unquote(foreign_encoded)
@@ -34,20 +41,28 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 		
 	if not request.user.is_authenticated:
 		return JsonResponse({"detail": "Authentication required"}, status=403)
-		
-	if str(request.user.author.serial) != str(author_serial):
-		return JsonResponse({"detail": "Forbidden"}, status=403)
 
-	if request.method == "PUT":
-		followers_services.add_follower(author, actor)
-		return JsonResponse({"detail": "Follower added"}, status=201)
+	if str(request.user.author.serial) == str(author_serial):
 
-	elif request.method == "DELETE":
-		success = followers_services.remove_follower(author, actor)
-		return JsonResponse({"detail": "Follower removed"}, status=200)
+		if request.method == "PUT":
+			followers_services.add_follower(author, actor)
+			return JsonResponse({"detail": "Follower added"}, status=201)
 
-	return JsonResponse({"detail": "Method not allowed"}, status=405)
+		elif request.method == "DELETE":
+			response = followers_services.remove_follower(author, actor)
+			if response:
+				return JsonResponse({"detail": "Follower removed"}, status=200)
+			return JsonResponse({"detail": "Follower didn't exist"}, status=200)
 
+	elif str(request.user.author.id) == str(actor_fqid):
+		if request.method == "DELETE":
+			response = followers_services.remove_follower(author, actor)
+			if response:
+				return JsonResponse({"detail": "Author unfollowed"}, status=200)
+			return JsonResponse({"detail": "You didn't follow this author"}, status=200)
+
+	return JsonResponse({"detail": "Forbidden"}, status=403)
+	
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':

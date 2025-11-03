@@ -11,6 +11,7 @@ from urllib.parse import unquote
 from .models import HostedImage
 from .forms import HostedImageForm, AuthorForm
 from authors.models import Author
+from django.core.paginator import Paginator
 
 User = get_user_model()
 
@@ -42,10 +43,11 @@ def dashboard(request):
 
 def images_list(request):
     """
-    List all hosted images (always public). Optional ?q= filters by file name.
+    List hosted images that are flagged as admin-uploaded.
+    Optional ?q= filters by file name.
     """
     q = request.GET.get('q', '')
-    qs = HostedImage.objects.all().order_by('-created_at')
+    qs = HostedImage.objects.filter(admin_uploaded=True).order_by('-created_at')
     if q:
         # 'file' holds the relative storage name (e.g., uploads/images/<uuid>.png)
         qs = qs.filter(file__icontains=q)
@@ -53,13 +55,15 @@ def images_list(request):
 
 def image_upload(request):
     """
-    Upload a single image (always public). Backend relies on storage (Cloudinary in prod).
+    Upload a single image. Storage backend (e.g., Cloudinary) provides the public URL.
+    Always flags uploaded images as admin_uploaded=True since only admins can access this view.
     """
     if request.method == 'POST':
         form = HostedImageForm(request.POST, request.FILES)
         if form.is_valid():
             img = form.save(commit=False)
-            img.uploaded_by = request.user
+            img.uploaded_by = request.user if request.user.is_authenticated else None
+            img.admin_uploaded = True  # always mark as admin upload
             img.save()
             return redirect('adminpage:images')
     else:
@@ -169,15 +173,50 @@ def reject_user(request, user_id):
     u.delete()
     return redirect('adminpage:pending-users')
 
-# --------- Public endpoints ---------
 
-def public_images_json(request):
-    """
-    Public JSON endpoint for any user to fetch all hosted images.
-    """
-    data = [{
-        'id': i.id,
-        'url': i.url,
-        'created_at': i.created_at.isoformat(),
-    } for i in HostedImage.objects.order_by('-created_at')]
-    return JsonResponse({'images': data})
+
+def author_detail(request, pk, tab=None):
+    from entries.models import Entry
+    pk = unquote(pk).rstrip('/')
+    author = (
+        Author.objects.filter(id__in=[pk, pk + '/']).first()
+        or get_object_or_404(Author, pk=pk)
+    )
+
+    # Validate/normalize tab
+    valid_tabs = [c for c, _ in Entry.Visibility.choices]
+    if tab not in valid_tabs:
+        tab = Entry.Visibility.PUBLIC
+
+    # Badge counts per tab
+    counts = {
+        vis: Entry.objects.filter(author=author, visibility=vis).count()
+        for vis in valid_tabs
+    }
+
+    # Build tabs collection the template can use directly
+    tabs = [
+        {"key": vis, "label": vis.title(), "count": counts[vis]}
+        for vis in valid_tabs
+    ]
+
+    # Current tab queryset + pagination
+    qs = Entry.objects.filter(author=author, visibility=tab).order_by('-published')
+    page_obj = Paginator(qs, 10).get_page(request.GET.get("page"))
+
+    # Friendly blurb
+    tab_blurbs = {
+        Entry.Visibility.PUBLIC:   "These are publicly visible posts.",
+        Entry.Visibility.FRIENDS:  "Posts visible to accepted friends.",
+        Entry.Visibility.UNLISTED: "Unlisted posts (not shown in feeds).",
+        Entry.Visibility.DELETED:  "Posts marked as deleted.",
+    }
+
+    context = {
+        "author": author,
+        "tab": tab,
+        "tabs": tabs,
+        "blurb": tab_blurbs.get(tab, ""),
+        "page_obj": page_obj,
+    }
+    return render(request, "adminpage/author_detail.html", context)
