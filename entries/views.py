@@ -1,5 +1,5 @@
 from django.forms import model_to_dict
-from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from inbox.models import FollowRequest
 from .models import Entry
 from authors.models import Author
@@ -89,9 +89,40 @@ def entry_create(request, author_serial):
 
 
 def entry_detail(request, author_serial, entry_serial):
+
     author = get_object_or_404(Author, serial=author_serial)
     entry = get_object_or_404(Entry, author=author, serial=entry_serial)
-    return render(request, "stream_home.html", {"entries": [entry], "author": author})
+
+    # no one can see deleted posts
+    if entry.visibility == Entry.Visibility.DELETED:
+        return HttpResponseForbidden("This post has been deleted.")
+
+    # everyone can see public posts
+    if entry.visibility == Entry.Visibility.PUBLIC:
+        return render(request, "stream_home.html", {"entries": [entry], "author": author})
+    
+    # if you have the link you can see unlisted posts
+    if entry.visibility == Entry.Visibility.UNLISTED:
+        return render(request, "stream_home.html", {"entries": [entry], "author": author})
+
+    # you can always see your own posts
+
+    if request.user.is_authenticated:
+        viewer = request.user.author
+        if viewer == author:
+            return render(request, "stream_home.html", {"entries": [entry], "author": author})
+
+        follows = FollowRequest.objects.filter(actor=viewer, author_followed=author, state=FollowRequest.State.ACCEPTED).exists()
+        followed_by = FollowRequest.objects.filter(actor=author, author_followed=viewer, state=FollowRequest.State.ACCEPTED).exists()
+
+        # friends can see friends-only posts -> requires you to be logged in
+        if entry.visibility == Entry.Visibility.FRIENDS:
+            if follows and followed_by:
+                return render(request, "stream_home.html", {"entries": [entry], "author": author})
+            return HttpResponseForbidden("You must be friends with this author to view this post.")
+    else:
+        return render(request, "stream_home.html", {"entries": [], "author": author})
+
         
 def entry_edit(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial)

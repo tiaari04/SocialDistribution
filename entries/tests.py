@@ -115,3 +115,72 @@ class EntryViewsTestCase(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Entry.objects.filter(serial=self.entry.serial).exists())
+		
+class EntryDetailVisibilityTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.user1 = User.objects.create_user(username="user1", password="pass")
+        self.user2 = User.objects.create_user(username="user2", password="pass")
+        self.a1 = Author.objects.create(user=self.user1, serial="a1", displayName="Author 1", host="http://localhost")
+        self.a2 = Author.objects.create(user=self.user2, serial="a2", displayName="Author 2", host="http://localhost")
+
+        self.public_entry = Entry.objects.create(
+            author=self.a2,
+            serial="public1",
+            visibility=Entry.Visibility.PUBLIC,
+            content="public post",
+            published=timezone.now(),
+        )
+        self.unlisted_entry = Entry.objects.create(
+            author=self.a2,
+            serial="unlisted1",
+            visibility=Entry.Visibility.UNLISTED,
+            content="unlisted post",
+            published=timezone.now(),
+        )
+        self.friends_entry = Entry.objects.create(
+            author=self.a2,
+            serial="friends1",
+            visibility=Entry.Visibility.FRIENDS,
+            content="friends post",
+            published=timezone.now(),
+        )
+
+    def test_public_visible_to_anyone(self):
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.public_entry.serial})
+        response = self.client.get(url)
+        self.assertContains(response, "public post")
+
+    def test_unlisted_visible_even_when_logged_out(self):
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.unlisted_entry.serial})
+        response = self.client.get(url)
+        self.assertContains(response, "unlisted post")
+
+    def test_friends_hidden_when_not_logged_in(self):
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.friends_entry.serial})
+        response = self.client.get(url)
+        self.assertNotContains(response, "friends post")
+
+    def test_friends_hidden_when_logged_in_but_not_friends(self):
+        self.client.login(username="user1", password="pass")
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.friends_entry.serial})
+        response = self.client.get(url)
+        self.assertNotContains(response, "friends post")
+
+    def test_friends_visible_to_mutual_followers(self):
+        from entries.models import FollowRequest
+  
+        FollowRequest.objects.create(actor=self.a1, author_followed=self.a2, state=FollowRequest.State.ACCEPTED)
+        FollowRequest.objects.create(actor=self.a2, author_followed=self.a1, state=FollowRequest.State.ACCEPTED)
+
+        self.client.login(username="user1", password="pass")
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.friends_entry.serial})
+        response = self.client.get(url)
+        self.assertContains(response, "friends post")
+
+    def test_author_can_see_own_friends_post(self):
+        self.client.login(username="user2", password="pass")
+        url = reverse("entries:entry_detail", kwargs={"author_serial": self.a2.serial, "entry_serial": self.friends_entry.serial})
+        response = self.client.get(url)
+        self.assertContains(response, "friends post")
