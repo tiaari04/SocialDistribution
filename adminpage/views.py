@@ -173,14 +173,7 @@ def reject_user(request, user_id):
 
 
 def author_detail(request, pk, tab=None):
-    """
-    Admin page: show an author's entries with a tabbed nav by visibility.
-    /authors/<pk>/<tab>/ where tab in [PUBLIC, FRIENDS, UNLISTED, DELETED]
-    If tab is absent, default to PUBLIC.
-    """
-    from entries.models import Entry  # local import to avoid circulars
-
-    # Normalize FQID and fetch author (tolerate trailing slash)
+    from entries.models import Entry
     pk = unquote(pk).rstrip('/')
     author = (
         Author.objects.filter(id__in=[pk, pk + '/']).first()
