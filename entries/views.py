@@ -1,5 +1,6 @@
 from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
+from adminpage.models import HostedImage
 from inbox.models import FollowRequest
 from .models import Entry
 from authors.models import Author
@@ -70,14 +71,20 @@ def entry_create(request, author_serial):
             entry = form.save(commit=False)
             entry.author = author
 
+            # Assign a unique serial
             entry.serial = uuid.uuid4().hex[:12]
-            
-            # build entry url based on current link 
-            domain = request.get_host()
+
+            # Generate fqid based on current host
             scheme = 'https' if request.is_secure() else 'http'
-            full_url = f"{scheme}://{domain}"
-            host = full_url
-            entry.fqid = f"{host}/authors/{author.serial}/entries/{entry.serial}"
+            domain = request.get_host()
+            entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
+
+            # Handle image upload if present
+            if 'image_file' in request.FILES:
+                uploaded_file = request.FILES['image_file']
+                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user)
+                hosted.save()
+                entry.image_url = request.build_absolute_uri(hosted.file.url)
 
             entry.published = timezone.now()
             entry.save()
@@ -124,23 +131,37 @@ def entry_detail(request, author_serial, entry_serial):
         return render(request, "stream_home.html", {"entries": [], "author": author})
 
         
+@login_required
 def entry_edit(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial)
 
-    # Check ownership
     if request.user != entry.author.user:
         return HttpResponse("You do not have permission to edit this post.", status=403)
 
     if request.method == "POST":
         form = EntryForm(request.POST, request.FILES, instance=entry)
         if form.is_valid():
-            form.save()
+            entry = form.save(commit=False)
+
+            # Handle new image upload
+            if 'image_file' in request.FILES:
+                uploaded_file = request.FILES['image_file']
+                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user)
+                hosted.save()
+                entry.image_url = request.build_absolute_uri(hosted.file.url)
+
+            # Handle image removal
+            elif 'remove_image' in request.POST:
+                entry.image_url = None
+
+            entry.save()
             return redirect("entries:stream_home", author_serial=entry.author.serial)
     else:
         form = EntryForm(instance=entry)
 
     return render(request, "entries/entry_edit.html", {"form": form, "entry": entry})
 
+@login_required
 def entry_delete(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
     if request.method == "POST":

@@ -2,9 +2,11 @@ from django import forms
 from .models import Entry
 
 class EntryForm(forms.ModelForm):
+    image_file = forms.FileField(required=False,widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}))
+
     class Meta:
         model = Entry
-        fields = ["title", "description", "content", "content_type", "visibility"]
+        fields = ["title", "description", "content", "image_file", "content_type", "visibility"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter a title"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 2, "placeholder": "Short description"}),
