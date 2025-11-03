@@ -65,14 +65,11 @@ def public_entries(request):
 
 @login_required
 def admin_image_picker(request, author_serial):
-    # Verify author exists. No redirect; we remain in entries.
     get_object_or_404(Author, serial=author_serial)
 
     qs = HostedImage.objects.filter(admin_uploaded=True).order_by("-created_at")
     paginator = Paginator(qs, 24)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
-
-    # Optional next URL (relative or same-origin only)
     next_url = request.GET.get("next", "")
     if next_url:
         p = urlparse(next_url)
@@ -87,8 +84,6 @@ def admin_image_picker(request, author_serial):
 @login_required
 def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
-
-    # If they came from the gallery, preselect that image for preview.
     preselected_hosted = None
     hosted_id = request.GET.get("hosted_id") or request.POST.get("hosted_id")
     if hosted_id:
@@ -99,22 +94,14 @@ def entry_create(request, author_serial):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.author = author
-
-            # Assign a unique serial
             entry.serial = uuid.uuid4().hex[:12]
-
-            # Generate fqid based on current host
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
-
-            # Priority 1: if they picked a hosted image from the gallery
             hosted_id = request.POST.get("hosted_id")
             if hosted_id:
                 hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
-
-            # Priority 2: direct file upload
             elif 'image_file' in request.FILES:
                 uploaded_file = request.FILES['image_file']
                 hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
