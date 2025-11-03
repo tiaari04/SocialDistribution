@@ -9,6 +9,7 @@ from .forms import EntryForm
 from django.utils import timezone
 import uuid
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
@@ -61,9 +62,37 @@ def public_entries(request):
         return JsonResponse(data, safe=False)
     return HttpResponseNotAllowed(["GET"])
 
+
+@login_required
+def admin_image_picker(request, author_serial):
+    """
+    Show only HostedImage where admin_uploaded=True, so the user can pick one
+    and be redirected back to the entry create form with ?hosted_id=<id>.
+    """
+    author = get_object_or_404(Author, serial=author_serial)
+
+    q = request.GET.get("q", "")
+    images = HostedImage.objects.filter(admin_uploaded=True).order_by("-created_at")
+    if q:
+        images = images.filter(file__icontains=q)
+
+    page_obj = Paginator(images, 24).get_page(request.GET.get("page"))
+
+    return render(request, "entries/image_picker.html", {
+        "author": author,
+        "page_obj": page_obj,
+        "q": q,
+    })
+
 @login_required
 def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
+
+    # If they came from the gallery, preselect that image for preview.
+    preselected_hosted = None
+    hosted_id = request.GET.get("hosted_id") or request.POST.get("hosted_id")
+    if hosted_id:
+        preselected_hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
 
     if request.method == "POST":
         form = EntryForm(request.POST, request.FILES or None)
@@ -79,10 +108,16 @@ def entry_create(request, author_serial):
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
 
-            # Handle image upload if present
-            if 'image_file' in request.FILES:
+            # Priority 1: if they picked a hosted image from the gallery
+            hosted_id = request.POST.get("hosted_id")
+            if hosted_id:
+                hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
+                entry.image_url = request.build_absolute_uri(hosted.file.url)
+
+            # Priority 2: direct file upload
+            elif 'image_file' in request.FILES:
                 uploaded_file = request.FILES['image_file']
-                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user)
+                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
                 hosted.save()
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
 
@@ -92,8 +127,11 @@ def entry_create(request, author_serial):
     else:
         form = EntryForm()
 
-    return render(request, "entries/entry_form.html", {"form": form, "author": author})
-
+    return render(request, "entries/entry_form.html", {
+        "form": form,
+        "author": author,
+        "preselected_hosted": preselected_hosted,  # for preview + hidden input
+    })
 
 def entry_detail(request, author_serial, entry_serial):
 

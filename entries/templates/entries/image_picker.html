@@ -1,0 +1,73 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Pick an Image · {{ author.displayName }}{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+  .thumb { border: 1px solid var(--gray-200); border-radius: .5rem; background: #fff; overflow: hidden; }
+  .thumb img { display: block; width: 100%; height: 140px; object-fit: cover; }
+  .thumb .actions { display: flex; justify-content: space-between; align-items: center; padding: .5rem; }
+  .muted { color: var(--gray-600); font-size: .85rem; }
+  .pagination { display:flex; gap:.5rem; margin-top:1rem; }
+  .pagination a, .pagination span {
+    padding:.4rem .65rem; border:1px solid var(--gray-200);
+    border-radius:.5rem; text-decoration:none; color: var(--gray-800);
+  }
+  .pagination .current { border-color: var(--blue-600); box-shadow: 0 0 0 2px var(--blue-100) inset; }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li>
+    <h1 class="text-xl semibold text-primary p-4">
+      Pick an Image
+      <span class="muted">·</span>
+      <span class="muted">{{ author.displayName }}</span>
+    </h1>
+  </li>
+
+  <li>
+    <form method="get">
+      <ul class="row p-4">
+        <li style="flex:1 1 auto; min-width:0;">
+          <input name="q" value="{{ q }}" placeholder="Search file name…" />
+        </li>
+        <li><button class="btn btn-primary">Search</button></li>
+        <li><a class="btn btn-outline" href="{% url 'entries:entry_create' author.serial %}">Back to Post</a></li>
+      </ul>
+    </form>
+  </li>
+
+  <li>
+    {% if page_obj.object_list %}
+      <div class="grid">
+        {% for img in page_obj.object_list %}
+          <article class="thumb">
+            <a href="{% url 'entries:entry_create' author.serial %}?hosted_id={{ img.id }}" title="Use this image">
+              <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+            </a>
+            <div class="actions">
+              <span class="muted truncate">{{ img|default:img.id }}</span>
+              <a class="btn btn-outline" href="{% url 'entries:entry_create' author.serial %}?hosted_id={{ img.id }}">Use</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Prev</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?q={{ q }}&page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="muted">No admin-uploaded images found.</p>
+    {% endif %}
+  </li>
+</ul>
+{% endblock %}
