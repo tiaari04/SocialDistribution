@@ -11,6 +11,96 @@ from urllib.parse import urlparse
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+@csrf_exempt
+@require_POST
+def github_webhook(request):
+    # Parse JSON payload
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    # Determine event type
+    event = request.headers.get('X-GitHub-Event', '')
+    # Get repository and author info
+    repo = payload.get('repository', {}).get('full_name')
+    github_username = payload.get('repository', {}).get('owner', {}).get('login')
+
+    if not github_username:
+        return JsonResponse({'error': 'Missing GitHub username'}, status=400)
+
+    # Construct full GitHub profile link -> as it is viwewed in Author.github_link
+    github_url = f"https://github.com/{github_username}".lower()
+
+    # Find author with matching GitHub link 
+    try:
+        author = Author.objects.get(github_link__iexact=github_url)
+    except Author.DoesNotExist:
+        return JsonResponse({'error': f'No author with GitHub link {github_url}'}, status=404)
+
+    entries_created = []
+
+    if event == "push":
+        commits = payload.get('commits', [])
+        for commit in commits:
+            message = commit.get('message', '(no message)')
+            url = commit.get('url', '')
+            author_name = commit.get('author', {}).get('name', github_username)
+
+            content = (
+                f"[{author_name}](https://github.com/{github_username}) pushed to "
+                f"[{repo}]({payload.get('repository', {}).get('html_url')}):\n\n"
+                f"**{message}**\n\n[View commit]({url})"
+            )
+
+            serial = uuid.uuid4().hex[:12]
+            fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
+
+            entry = Entry.objects.create(
+                author=author,
+                serial=serial,
+                title=f"GitHub Activity - {repo}",
+                content=content,
+                visibility=Entry.Visibility.PUBLIC,
+                published=timezone.now(),
+                fqid=fqid
+            )
+            entries_created.append(entry.serial)
+
+    elif event == "pull_request":
+        action = payload.get('action')
+        pr = payload.get('pull_request', {})
+        title = pr.get('title')
+        url = pr.get('html_url')
+
+        content = (
+            f"[{github_username}](https://github.com/{github_username}) "
+            f"{action} a pull request in [{repo}]({payload.get('repository', {}).get('html_url')}):\n\n"
+            f"**{title}**\n\n[View PR]({url})"
+        )
+
+        serial = uuid.uuid4().hex[:12]
+        fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
+
+        entry = Entry.objects.create(
+            author=author,
+            serial=serial,
+            title=f"PR {action} - {repo}",
+            content=content,
+            visibility=Entry.Visibility.PUBLIC,
+            published=timezone.now(),
+            fqid=fqid
+        )
+        entries_created.append(entry.serial)
+
+    else:
+        return JsonResponse({'status': 'ignored', 'event': event})
+    
+    return JsonResponse({'status': 'ok', 'entries_created': entries_created})
 
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
