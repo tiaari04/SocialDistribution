@@ -17,8 +17,6 @@ from django.views.decorators.http import require_POST
 
 @csrf_exempt
 @require_POST
-@csrf_exempt
-@require_POST
 def github_webhook(request):
     import json, uuid
     from django.utils import timezone
