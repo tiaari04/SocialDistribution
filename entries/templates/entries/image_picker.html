@@ -1,43 +1,82 @@
+<!-- entries/templates/entries/image_picker.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Choose from Admin Images</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: system-ui, sans-serif; margin:0; background:#f8fafc; }
-    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px 80px; } /* bottom room for bar */
-    h1 { font-size: 20px; margin: 0 0 12px; color: #0f172a; }
+    /* Layout */
+    :root {
+      --ink: #0f172a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --ring: #c7d2fe;
+      --ring-strong: #60a5fa;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; margin:0; background: var(--bg); color: var(--ink); }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px 88px; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+
+    /* Grid */
     .thumb-grid {
-      display: grid; gap: 10px;
+      display: grid;
+      gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     .thumb {
-      display:block; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#fff;
-      cursor: pointer; outline: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--panel);
+      cursor: pointer;
+      padding: 0;
     }
-    .thumb:focus-visible { box-shadow: 0 0 0 3px #c7d2fe; }
-    .thumb img { width:100%; height:140px; object-fit:cover; display:block; }
-    .thumb.selected { box-shadow: 0 0 0 3px #60a5fa; border-color:#3b82f6; }
-    .pager { display:flex; gap:.5rem; justify-content:center; margin:16px 0; }
+    .thumb:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .thumb img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .thumb.selected { box-shadow: 0 0 0 3px var(--ring-strong); border-color: #3b82f6; }
+
+    /* Pager */
+    .pager { display:flex; gap:.5rem; justify-content:center; margin:16px 0; flex-wrap: wrap; }
     .pager a, .pager span {
-      padding:.35rem .6rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#111827; background:#fff;
+      padding:.35rem .6rem; border:1px solid var(--border); border-radius:.5rem;
+      text-decoration:none; color: #111827; background:#fff;
     }
     .pager .current { box-shadow: 0 0 0 2px #e0e7ff inset; border-color:#c7d2fe; }
-    .muted { color:#6b7280; font-size: 12px; }
+    .muted { color: var(--muted); font-size: 12px; }
 
-    /* sticky action bar */
+    /* Sticky action bar */
     .bar {
-      position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.9);
-      border-top: 1px solid #e5e7eb; backdrop-filter: blur(6px);
-      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,.9);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px;
     }
-    .bar .grow { flex: 1; color:#374151; font-size: 14px; }
+    .bar .grow { flex: 1; color:#374151; font-size: 14px; min-width: 0; }
     .btn {
-      appearance: none; border: 1px solid #e5e7eb; background: #111827; color: #fff;
-      border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer;
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #111827; color: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
     }
     .btn[disabled] { opacity:.5; cursor: not-allowed; }
     .btn.secondary { background:#fff; color:#111827; }
+    .ellipsis {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw;
+      display: inline-block; vertical-align: bottom;
+    }
   </style>
 </head>
 <body>
@@ -52,15 +91,17 @@
     {% if page_obj.object_list %}
       <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
         {% for img in page_obj.object_list %}
-          {% with use_url=img.url %}
-            <button
-              type="button"
-              class="thumb"
-              data-id="{{ img.id }}"
-              data-url="{{ use_url }}"
-              title="Click to select. Double-click to use.">
-              <img src="{{ use_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-            </button>
+          {% with rel_url=img.url %}
+            {% with abs_url=request.build_absolute_uri rel_url %}
+              <button
+                type="button"
+                class="thumb"
+                data-id="{{ img.id }}"
+                data-url="{{ abs_url }}"
+                title="Click to select. Double-click to use.">
+                <img src="{{ abs_url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+              </button>
+            {% endwith %}
           {% endwith %}
         {% endfor %}
       </div>
@@ -80,7 +121,10 @@
   </div>
 
   <div class="bar" id="bar">
-    <div class="grow" id="status">Pick an image.</div>
+    <div class="grow" id="status">
+      Pick an image.
+      {% if next %}<span class="muted">(Will return to <span class="ellipsis">{{ next }}</span>)</span>{% endif %}
+    </div>
     <button class="btn secondary" type="button" id="cancelBtn" onclick="history.back()">Cancel</button>
     <button class="btn" type="button" id="useBtn" disabled>Use selected</button>
   </div>
@@ -96,10 +140,16 @@
 
       let selected = null;
 
-      function buildReturnUrl(hostedId) {
-        if (!next) return ''; // no next provided
-        // Append hosted_id whether next already has query or not
-        return next + (next.includes('?') ? '&' : '?') + 'hosted_id=' + encodeURIComponent(hostedId);
+      function appendParam(url, key, value) {
+        const sep = url.includes('?') ? '&' : '?';
+        return url + sep + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+      }
+
+      function buildReturnUrl(hostedId, imageUrl) {
+        if (!next) return '';
+        let url = appendParam(next, 'hosted_id', hostedId);
+        url = appendParam(url, 'image_url', imageUrl);
+        return url;
       }
 
       function updateBar() {
@@ -108,8 +158,7 @@
           useBtn.disabled = true;
           return;
         }
-        const id = selected.dataset.id;
-        status.textContent = `Selected image #${id}`;
+        status.textContent = `Selected image #${selected.dataset.id}`;
         useBtn.disabled = false;
       }
 
@@ -126,38 +175,35 @@
         selectThumb(el);
       });
 
-      // Double-click instantly navigates if next is provided
+      // Double-click instantly returns (if next is present)
       grid.addEventListener('dblclick', (e) => {
         const el = e.target.closest('.thumb');
         if (!el) return;
         selectThumb(el);
         const id = el.dataset.id;
-        const returnUrl = buildReturnUrl(id);
-        if (returnUrl) {
-          window.location.assign(returnUrl);
-        } else {
-          // No next: copy info to clipboard so the caller can grab it.
-          const url = `${location.origin}${location.pathname}?hosted_id=${encodeURIComponent(id)}`;
-          navigator.clipboard?.writeText(url).catch(()=>{});
-        }
+        const url = el.dataset.url;
+        const returnUrl = buildReturnUrl(id, url);
+        if (returnUrl) window.location.assign(returnUrl);
       });
 
       useBtn.addEventListener('click', () => {
         if (!selected) return;
         const id = selected.dataset.id;
-        const returnUrl = buildReturnUrl(id);
+        const url = selected.dataset.url;
+        const returnUrl = buildReturnUrl(id, url);
         if (returnUrl) {
           window.location.assign(returnUrl);
         } else {
-          const url = `${location.origin}${location.pathname}?hosted_id=${encodeURIComponent(id)}`;
-          status.textContent = `No ?next provided. Copied ${url} to clipboard.`;
-          navigator.clipboard?.writeText(url).catch(()=>{});
+          // No ?next provided: copy markdown to clipboard as a convenience
+          const md = `![image](${url})`;
+          status.textContent = 'No ?next provided. Copied markdown to clipboard.';
+          navigator.clipboard?.writeText(md).catch(()=>{});
         }
       });
 
-      // Keyboard support (arrow navigate via tab; Enter uses selection)
+      // Keyboard: Enter uses selection
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && selected) {
+        if (e.key === 'Enter' && selected && !useBtn.disabled) {
           useBtn.click();
         }
       });
