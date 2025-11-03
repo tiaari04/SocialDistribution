@@ -186,35 +186,79 @@ Notes about scope
 ## Following / Friends
 
 34. As an author, I want to follow local authors.
-    - Status: Partial
-        - Implemented in: `authors` views (follow_requests_page template). `adminpage` exposes follower
-            management helpers via `inbox.services` (internal). The API endpoint
-            `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is implemented (not a stub).
-        - Relevant code: `api.views.api_author_follower_detail` (GET/PUT/DELETE),
-            `inbox.services` (follower helpers).
-        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
-            documents it.
-                - Next steps: add per-field request/response examples for `PUT` follower add and `DELETE`
-                    remove in `docs/api.md` and the OpenAPI document.
+    - Status: Implemented
+        - Implemented in (UI): `authors` views (followRequests template). `adminpage` exposes 
+            follower management helpers via `inbox.services` (internal).
+        - Implemented in (API): `api.views.api_author_inbox` supports POST and is implemented. 
+            Helper function in `entries.services`
+        - Docs: `docs/api.md` notes the inbox endpoint behavior; `docs/endpoints.md` documents it.
+        - Next steps: add per-field request/response examples for `PUT` follower add and `DELETE` 
+            remove in `docs/api.md` and the OpenAPI document.
 
 35. As an author, I want to follow remote authors (Part 3-5)
-    - Status: Not implemented (federation)
+    - Status: Implemented
 
 36. As an author, I want to be able to approve or deny other authors following me.
-        - Status: Partial — the follow requests page UI exists. The `api_author_follower_detail` endpoint
-            supports PUT/DELETE and requires owner authentication.
-    - Implemented in: `authors.views.follow_requests_page`, `api.views.api_author_follower_detail`
-    - Next steps: add example PUT payloads for follower add (what remote actor payload looks like) to `docs/api.md` and OpenAPI.
+    - Status: Implemented
+        - Implemented in (UI): `authors.views.follow_requests_page` has accept and deny buttons that 
+            fetch the API
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper functions `add_follower` and `remove_follower` are implemented 
+            in `inbox.services`
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+        - Next steps: add example PUT payloads for follower add (what remote actor payload looks like) to `docs/api.md` and OpenAPI.
 
 37. As an author, I want to know if I have "follow requests".
-        - Status: Partial — UI exists (`follow_requests_page`), but there is no dedicated API endpoint
-            returning pending follow requests (could be added).
+    - Status: Implemented
+        - Implemented in (UI): `authors.views.author_detail` fetches a count of follow requests from the
+            databse and shows the number on the follow request button.
+        - Implemented in (API): no dedicated API endpoint returning pending follow requests but they are 
+        retrieved in `authors.views.author_detail`.
 
 38. As an author, I want to unfollow authors I am following.
-    - Status: Partial — follower removal via `api_author_follower_detail` (DELETE) exists.
+    - Status: Implemented
+        - Implemented in (UI): Unfollow button shown on `authors.templates.authors.authorDetails` if that
+            author is being followed. It fetches the API endpoint from there.
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper function `remove_follower` are implemented 
+            in `inbox.services`.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
 
-39–43. Friend/following relationship semantics
-    - Status: Partial — models and follower helpers exist; some parts are UI only. Clarify behaviour and document API responses.
+39. As an author, if I am following another author, and they are following me I want us to be considered friends.
+    - Status: Implemented
+        - Implemented in (UI): Friends list is shown on `authors.templates.followPages.followers` and is rendered
+            by `authors.views.author_followers_page`.
+        - Implemented in (API): no dedicated API endpoint returning a list of friends but all followers are 
+            retrieved in `authors.views.author_followers_page`. `is_friend` function is implemented in 
+            authors.models to check if 2 authors are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+
+40. As an author, I want to unfriend other authors by unfollowing them.
+    - Status: Implemented
+        - Implemented in (UI): Unfollow button shown on `authors.templates.authors.authorDetails` if that
+            author is being followed. Clicking it unfollows the author by fetching the API endpoint. 
+            Unfriending someone is observed on follower page where that author will move from the followers 
+            list to the friends list.
+        - Implemented in (API): `api.views.api_author_follower_detail` supports GET/PUT/DELETE and is 
+            implemented (not a stub). Helper function `remove_follower` are implemented 
+            in `inbox.services`. `is_friend` function is implemented in authors.models to check if 2 authors 
+            are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
+
+41. As an author, my node will know about my followers, who I am following, and my friends.
+    - Status: Implemented
+        - Implemented in (UI): Friends and followers list is shown on `authors.templates.followPages.followers` 
+            and is rendered by `authors.views.author_followers_page`. Following list is shown on `authors.templates.followPages.following`and is rendered by `authors.views.author_following_page`. Both pages can be accessed
+            from `authors/authorDetail.html`.
+        - Implemented in (API): no dedicated API endpoint returning a list of friends but all followers are 
+            retrieved in `authors.views.author_followers_page`. `is_friend` function is implemented in 
+            authors.models to check if 2 authors are friends.
+        - Docs: `docs/api.md` notes the follower-detail endpoint behavior; `docs/endpoints.md`
+            documents it.
 
 ---
 
