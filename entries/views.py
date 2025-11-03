@@ -19,7 +19,6 @@ from django.views.decorators.http import require_POST
 @csrf_exempt
 @require_POST
 def github_webhook(request):
-    """Handle GitHub webhook events: push and pull_request"""
     try:
         payload = json.loads(request.body.decode('utf-8'))
     except json.JSONDecodeError:
@@ -49,11 +48,7 @@ def github_webhook(request):
             url = commit.get('url', '')
             author_name = commit.get('author', {}).get('name', github_username)
 
-            content = (
-                f"{author_name} pushed to "
-                f"{repo}:\n\n"
-                f"**{message}**\n\n{url}"
-            )
+            content = (f"{author_name} pushed to {repo}: {message}")
 
             serial = uuid.uuid4().hex[:12]
             fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
@@ -85,10 +80,7 @@ def github_webhook(request):
         title = pr.get('title')
         url = pr.get('html_url')
 
-        content = (
-            f"{author_name} {action} a pull request in {repo}:\n\n"
-            f"**{title}**\n\n{url}"
-        )
+        content = (f"{author_name} {action} a pull request in {repo}: {title}")
 
         serial = uuid.uuid4().hex[:12]
         fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
