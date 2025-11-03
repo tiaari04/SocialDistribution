@@ -15,7 +15,6 @@
             margin: 0;
             padding: 20px;
         }
-
         .form-container {
             background-color: #fff;
             padding: 30px;
@@ -24,118 +23,30 @@
             width: 100%;
             max-width: 500px;
         }
-
-        h1 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
+        h1 { margin-top: 0; margin-bottom: 20px; font-size: 24px; color: #333; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="url"], input[type="file"], textarea, select {
+            width: 100%; padding: 10px; margin-bottom: 15px;
+            border: 1px solid #ccc; border-radius: 5px; font-size: 16px;
         }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+        input[type="text"]:focus, input[type="url"]:focus, input[type="file"]:focus,
+        textarea:focus, select:focus {
+            border-color: #007bff; outline: none; box-shadow: 0 0 5px rgba(0,123,255,0.5);
         }
-
-        input[type="text"],
-        input[type="url"],
-        input[type="file"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        input[type="text"]:focus,
-        input[type="url"]:focus,
-        input[type="file"]:focus,
-        textarea:focus,
-        select:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 5px rgba(0,123,255,0.5);
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            flex: 1;
-        }
-
-        .save-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .save-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .delete-btn:hover {
-            background-color: #a71d2a;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #555;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .current-image {
-            margin-bottom: 15px;
-        }
-
-        .current-image img {
-            max-width: 100%;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 5px;
-        }
+        .button-group { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; flex: 1; }
+        .save-btn { background-color: #007bff; color: white; }
+        .save-btn:hover { background-color: #0056b3; }
+        .delete-btn { background-color: #dc3545; color: white; }
+        .delete-btn:hover { background-color: #a71d2a; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: #555; }
+        .back-link:hover { text-decoration: underline; }
 
         /* minimal style so the link looks like a secondary button */
         .admin-images-link {
-            display: inline-block;
-            padding: 10px 14px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            margin: 8px 0 12px;
-            text-align: center;
+            display: inline-block; padding: 10px 14px; border: 1px solid #ccc;
+            border-radius: 5px; text-decoration: none; color: #333; font-weight: bold;
+            margin: 8px 0 12px; text-align: center;
         }
         .admin-images-link:hover { background: #f8f9fa; }
     </style>
@@ -149,7 +60,7 @@
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <!-- (NEW) carry hosted_id if user chose from Admin Images -->
+            <!-- carry hosted_id if user chose from Admin Images -->
             {% if preselected_hosted %}
               <input type="hidden" name="hosted_id" value="{{ preselected_hosted.id }}">
             {% elif request.GET.hosted_id %}
@@ -167,18 +78,7 @@
                 {% endif %}
             {% endfor %}
 
-            {% if entry.image_url %}
-                <div class="current-image">
-                    <p>Current Image:</p>
-                    <img src="{{ entry.image_url }}" alt="Current Image">
-                    <div class="form-check">
-                        <input type="checkbox" name="remove_image" id="remove_image">
-                        <label for="remove_image">Remove current image</label>
-                    </div>
-                </div>
-            {% endif %}
-
-            <!-- (NEW) Choose from Admin Images link (no reorder; placed just before buttons) -->
+            <!-- Choose from Admin Images (wording exactly) -->
             {% url 'entries:entry_edit' author_serial=entry.author.serial entry_serial=entry.serial as back_here %}
             <a class="admin-images-link" href="{% url 'entries:admin_image_picker' entry.author.serial %}?next={{ back_here|urlencode }}">
               Choose from Admin Images

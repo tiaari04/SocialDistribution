@@ -22,7 +22,7 @@
 <ul class="container gap-6">
   <li>
     <h1 class="text-xl semibold text-primary p-4">
-      Pick an Image
+      Choose from Admin Images
       <span class="muted">·</span>
       <span class="muted">{{ author.displayName }}</span>
     </h1>
@@ -35,7 +35,15 @@
           <input name="q" value="{{ q }}" placeholder="Search file name…" />
         </li>
         <li><button class="btn btn-primary">Search</button></li>
-        <li><a class="btn btn-outline" href="{% url 'entries:entry_create' author.serial %}">Back to Post</a></li>
+
+        {# Back: prefer ?next=..., otherwise fall back to stream_home #}
+        <li>
+          {% if request.GET.next %}
+            <a class="btn btn-outline" href="{{ request.GET.next }}">Back to Post</a>
+          {% else %}
+            <a class="btn btn-outline" href="{% url 'entries:stream_home' author.serial %}">Back</a>
+          {% endif %}
+        </li>
       </ul>
     </form>
   </li>
@@ -45,24 +53,34 @@
       <div class="grid">
         {% for img in page_obj.object_list %}
           <article class="thumb">
-            <a href="{% url 'entries:entry_create' author.serial %}?hosted_id={{ img.id }}" title="Use this image">
+            {# Use selection: send hosted_id back to ?next=... #}
+            {% if request.GET.next %}
+              <a href="{{ request.GET.next }}{% if '?' in request.GET.next %}&{% else %}?{% endif %}hosted_id={{ img.id }}" title="Use this image">
+                <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+              </a>
+              <div class="actions">
+                <span class="muted truncate">{{ img|default:img.id }}</span>
+                <a class="btn btn-outline" href="{{ request.GET.next }}{% if '?' in request.GET.next %}&{% else %}?{% endif %}hosted_id={{ img.id }}">Use</a>
+              </div>
+            {% else %}
+              {# If no next, just show the image and a disabled Use label #}
               <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-            </a>
-            <div class="actions">
-              <span class="muted truncate">{{ img|default:img.id }}</span>
-              <a class="btn btn-outline" href="{% url 'entries:entry_create' author.serial %}?hosted_id={{ img.id }}">Use</a>
-            </div>
+              <div class="actions">
+                <span class="muted truncate">{{ img|default:img.id }}</span>
+                <span class="muted">Set a ?next=... to return</span>
+              </div>
+            {% endif %}
           </article>
         {% endfor %}
       </div>
 
       <div class="pagination">
         {% if page_obj.has_previous %}
-          <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Prev</a>
+          <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}">Prev</a>
         {% endif %}
         <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-          <a href="?q={{ q }}&page={{ page_obj.next_page_number }}">Next</a>
+          <a href="?q={{ q }}&page={{ page_obj.next_page_number }}{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}">Next</a>
         {% endif %}
       </div>
     {% else %}
