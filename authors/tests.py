@@ -4,6 +4,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 from authors.models import Author
+from django.core.files.uploadedfile import SimpleUploadedFile
+from adminpage.models import HostedImage
 
 
 class AuthorViewsTest(TestCase):
@@ -61,4 +63,29 @@ class AuthorViewsTest(TestCase):
         self.author.refresh_from_db()
         self.assertEqual(self.author.displayName, "Test User Updated")
         self.assertEqual(self.author.description, "New bio text")
+
+    def test_author_edit_upload_profile_image(self):
+        # Uploading a profile image should create a HostedImage and set Author.profileImage
+        self.client.login(username="TestUser", password="testpass123")
+        url = reverse("authors:edit", args=[self.author.serial])
+
+        # Minimal PNG header bytes for a tiny valid image
+        png_bytes = (
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde"
+            b"\x00\x00\x00\x0cIDATx\x9cc``\x00\x00\x00\x02\x00\x01\xe2!\xbc\x33\x00\x00\x00\x00IEND\xaeB`\x82"
+        )
+        upload = SimpleUploadedFile("avatar.png", png_bytes, content_type="image/png")
+
+        # Include the uploaded file in the POST data so the test client encodes it as multipart
+        response = self.client.post(url, {"displayName": "TestUser", "profileImageFile": upload}, follow=False)
+        # Should redirect to detail on success
+        self.assertIn(response.status_code, (302, 200))
+
+        # HostedImage created and Author.profileImage updated
+        self.assertEqual(HostedImage.objects.count(), 1)
+        hosted = HostedImage.objects.first()
+
+        self.author.refresh_from_db()
+        self.assertTrue(self.author.profileImage)
+        self.assertIn(hosted.file.url, self.author.profileImage)
 
