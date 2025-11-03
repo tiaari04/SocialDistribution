@@ -63,6 +63,14 @@ def github_webhook(request):
             serial = uuid.uuid4().hex[:12]
             fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
 
+
+            import logging
+            logger = logging.getLogger(__name__)
+
+            logger.info("Creating Entry: author=%s, serial=%s, title=%s, visibility=%s", 
+                        author, serial, title, Entry.Visibility.PUBLIC)
+            
+            
             entry = Entry.objects.create(
                 author=author,
                 serial=serial,
