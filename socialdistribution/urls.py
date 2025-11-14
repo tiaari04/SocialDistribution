@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path("federation/", include(("federation.urls", "federation"), namespace="federation")), # federation endpoints
     path("admin/", admin.site.urls),
     path("adminpage/", include(("adminpage.urls", "adminpage"), namespace="adminpage")), #adminpage
 
