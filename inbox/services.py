@@ -21,15 +21,9 @@ def add_follower(author, actor):
 
     if follow_request and not follow_request.state == FollowRequest.State.ACCEPTED:
         follow_request.state = FollowRequest.State.ACCEPTED
+        follow_request.save()
     elif follow_request:
         pass
-    else:
-        follow_request = FollowRequest.objects.create(
-            actor=actor,
-            author_followed = author,
-            state=FollowRequest.State.ACCEPTED
-        )
-    follow_request.save()
     
     return follow_request
 
