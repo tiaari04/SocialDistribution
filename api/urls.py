@@ -10,6 +10,7 @@ urlpatterns = [
         views.api_author_follower_detail,
         name="author-follower-detail",
     ),
+    path("authors/<str:author_serial>/follow_requests/", views.api_author_follow_requests, name="author-follow-requests"),
 
     path("authors/<str:author_serial>/inbox/", views.api_author_inbox, name="author-inbox"),
 

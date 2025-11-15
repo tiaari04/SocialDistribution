@@ -8,6 +8,11 @@ from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 
+# followers serializer will use variables to know how to format the data
+FOLLOWERS = 1
+FOLLOWING = 2
+FOLLOW_REQS = 3
+
 def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
 
@@ -19,9 +24,12 @@ def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
 
 def api_author_followers(request, author_serial):
+	if request.method != "GET":
+		return JsonResponse({"detail": "Method not allowed"}, status=405)
+
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	resp, status_code = followers_serializers.serialize_followers_view(author)
+	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOWERS)
 	return JsonResponse(resp, status=status_code)
 
 def api_author_follower_detail(request, author_serial, foreign_encoded):
@@ -64,6 +72,15 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 	# 		return JsonResponse({"detail": "You didn't follow this author"}, status=200)
 
 	return JsonResponse({"detail": "Forbidden"}, status=403)
+
+def api_author_follow_requests(request, author_serial):
+	if request.method != "GET":
+		return JsonResponse({"detail": "Method not allowed"}, status=405)
+
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	resp, status_code = followers_serializers.serialize_followers_view(author, True)
+	return JsonResponse(resp, status=status_code)
 
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
