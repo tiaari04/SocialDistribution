@@ -29,10 +29,48 @@ The authors claiming copyright, if they wish to be known, can list their names h
 5. Ervin Lanada, elanada
 6. Tiandra Wallace, tiandra
 
-
+       
 
 ## Heroku
 
 https://cmput404-project-red-9e98d52591b5.herokuapp.com/
 
 
+## Testing
+
+### 1. Create and Activate a Virtual Environment
+
+```bash
+python -m venv .venv
+
+# On macOS/Linux:
+source .venv/bin/activate
+
+# On Windows (PowerShell):
+.venv\Scripts\Activate
+```
+
+### 2. Install Project Dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Run Database Migrations
+
+```bash
+python manage.py migrate
+```
+
+### 4. Run Tests
+
+Run all tests:
+```bash
+python manage.py test
+```
+
+Run tests for a specific app:
+```bash
+python manage.py test <app_name>
+```

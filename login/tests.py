@@ -14,6 +14,7 @@ class AuthViewTests(TestCase):
 
     def test_signup_creates_author_and_user(self):
         #As an author, I can sign up and get an Author profile created.
+        print("Login test: signup_creates_author_and_user — submitting signup form to create User + Author")
         data = {
             "username": "testuser",
             "password1": "123passWordddd123",

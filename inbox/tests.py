@@ -47,7 +47,7 @@ class FollowersAndFollowRequestsTests(TestCase):
 # Tests for inbox API
     def test_create_follow_request_object(self):
         """Tests creating friend request object"""
-        print("Tests creating friend request object")
+        print("Inbox Tests: Tests creating friend request object")
 
         # A1 requests to follow A2
         payload = {
@@ -93,11 +93,10 @@ class FollowersAndFollowRequestsTests(TestCase):
             state=FollowRequest.State.REQUESTING,
         ).exists()
         self.assertTrue(fr_exists)
-        print("Finished")
 
     def test_create_follow_request_already_exists(self):
         """Tests retrieving friend request object instead of creating a new one"""
-        print("Tests retrieving friend request object instead of creating a new one")
+        print("Inbox Tests: Tests retrieving friend request object instead of creating a new one")
         # A1 requests to follow A2
         payload = {
             "type": "follow",
@@ -151,11 +150,10 @@ class FollowersAndFollowRequestsTests(TestCase):
             state=FollowRequest.State.REQUESTING,
         ).exists()
         self.assertTrue(fr_exists)
-        print("Finished")
 
     def test_create_follow_request_missing_object(self):
         """Tests creating a new friend request with no object"""
-        print("Tests creating a new friend request with no object (fails)")
+        print("Inbox Tests: Tests creating a new friend request with no object")
         # A1 requests to follow "no author"
         payload = {
             "type": "follow",
@@ -191,13 +189,11 @@ class FollowersAndFollowRequestsTests(TestCase):
             state=FollowRequest.State.REQUESTING,
         ).exists()
         self.assertFalse(fr_exists)
-        print("Finished")
-
 
 # Tests for followers API
     def test_approve_follow_request(self):
         """Approving follow request logged in as correct author"""
-        print("Tests approving follow request logged in as correct author")
+        print("Inbox Tests: Tests approving follow request logged in as correct author")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user2)
@@ -222,11 +218,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check that the FollowRequest state has been updated
         follow_request.refresh_from_db()
         self.assertEqual(follow_request.state, FollowRequest.State.ACCEPTED)
-        print("Finished")
 
     def test_reject_follow_request(self):
         """Rejecting follow request logged in as correct author"""
-        print("Tests rejecting follow request logged in as correct author")
+        print("Inbox Tests: Tests rejecting follow request logged in as correct author")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user2)
@@ -250,12 +245,11 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check that the FollowRequest was deleted from the database
         self.assertFalse(FollowRequest.objects.filter(actor=self.a1, author_followed=self.a2).exists())
-        print("Finished")
 
     def test_reject_follow_request_wrong_author(self):
         """Rejecting follow request logged in as incorrect author"""
-        print("Tests rejecting follow request logged in as incorrect author")
-        # Login as a2 (the follower)
+        print("Inbox Tests: Tests rejecting follow request logged in as incorrect author")
+        # Login as a3 
         self.client = Client()
         self.client.force_login(self.user3)
 
@@ -279,11 +273,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check that the FollowRequest state has not changed
         follow_request.refresh_from_db()
         self.assertEqual(follow_request.state, FollowRequest.State.REQUESTING)
-        print("Finished")
 
     def test_approve_follow_request_fake_author(self):
         """Approving follow request logged in as fake author"""
-        print("Tests approving follow request logged in as fake author (fails)")
+        print("Inbox Tests: Tests approving follow request logged in as fake author")
         # A1 sends request to A2
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
@@ -306,11 +299,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check that the FollowRequest state has not changed
         follow_request.refresh_from_db()
         self.assertEqual(follow_request.state, FollowRequest.State.REQUESTING)
-        print("Finished")
 
     def test_get_follower_exists(self):
-        """Tests GETting an author's follower and that follower exists"""
-        print("Tests GETting an author's follower and that follower exists")
+        """Tests GET for an author's follower and that follower exists"""
+        print("Inbox Tests: Tests GET for an author's follower and that follower exists")
         # Login as a2 (the follower)
         self.client = Client()
         self.client.force_login(self.user2)
@@ -330,11 +322,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.json(), {"is_follower": True})
-        print("Finished")
 
     def test_get_follower_not_exists(self):
-        """Tests GETting an author's follower and that follower does not exist"""
-        print("Tests GETting an author's follower and that follower does not exist (fails)")
+        """Tests GET for an author's follower and that follower does not exist"""
+        print("Inbox Tests: Tests GET for an author's follower and that follower does not exist")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user2)
@@ -348,11 +339,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"is_follower": False})
-        print("Finished")
 
     def test_approve_follow_request_incorrect_author(self):
         """Approving follow request logged in as incorrect author"""
-        print("Tests approving follow request logged in as incorrect author (fails)")
+        print("Inbox Tests: Tests approving follow request logged in as incorrect author (fails)")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user1)
@@ -376,11 +366,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check that the FollowRequest state has not changed
         follow_request.refresh_from_db()
         self.assertEqual(follow_request.state, FollowRequest.State.REQUESTING)
-        print("Finished")
 
     def test_POSTing_to_followers_API(self):
         """Test trying to post to followers api"""
-        print("Tests trying to post to the followers API (returns 405)")
+        print("Inbox Tests: Tests trying to post to the followers API (returns 405)")
         response = self.client.post(
             f"/api/authors/{self.a2.serial}/followers/{self.a1.id}/",
             content_type="application/json",
@@ -388,19 +377,17 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.status_code, 405)
-        print("Finished")
 
 # Tests for followers API helper functions
     def test_get_follower_function_not_following(self):
         """Test result of get_follower helper function if a2 doesn't follow a1"""
-        print("Tests result of get_follower helper function if a2 doesn't follow a1")
+        print("Inbox Tests: Tests result of get_follower helper function if a2 doesn't follow a1")
         result = get_follower(self.a1, self.a2)
         self.assertEqual(result, None)
-        print("Finished")
 
     def test_get_follower_function_is_following(self):
         """Test result of get_follower helper function if a2 doesn't follow a1"""
-        print("Tests result of get_follower helper function if a2 follows a1")
+        print("Inbox Tests: Tests result of get_follower helper function if a2 follows a1")
 
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
@@ -410,11 +397,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         result = get_follower(self.a2, self.a1)
         self.assertEqual(result, {"is_follower": True})
-        print("Finished")
 
     def test_add_follower_accepting_request(self):
         """Test result of add_follower helper function if a2 sent a1 a follow request"""
-        print("Tests result of add_follower helper function if a2 sent a1 a follow request")
+        print("Inbox Tests: Tests result of add_follower helper function if a2 sent a1 a follow request")
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -423,11 +409,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         result = add_follower(self.a2, self.a1)
         self.assertEqual(result.state, FollowRequest.State.ACCEPTED)
-        print("Finished")
 
     def test_add_follower_already_following(self):
         """Test result of add_follower helper function if a2 already follows a1"""
-        print("Tests result of add_follower helper function if a2 already follows a1")
+        print("Inbox Tests: Tests result of add_follower helper function if a2 already follows a1")
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -436,11 +421,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         result = add_follower(self.a2, self.a1)
         self.assertEqual(result, follow_request)
-        print("Finished")
 
     def test_add_follower_create_new(self):
         """Test result of add_follower helper function if there isn't a previous follow request"""
-        print("Tests result of add_follower helper function if there isn't a previous follow request")
+        print("Inbox Tests: Tests result of add_follower helper function if there isn't a previous follow request")
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -449,11 +433,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         result = add_follower(self.a2, self.a1)
         self.assertEqual(result, follow_request)
-        print("Finished")
 
     def test_remove_follower_exists(self):
         """Test result of remove_follower helper function if there is a previous follow request"""
-        print("Tests result of remove_follower helper function if there is a previous follow request")
+        print("Inbox Tests: Tests result of remove_follower helper function if there is a previous follow request")
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -464,19 +447,17 @@ class FollowersAndFollowRequestsTests(TestCase):
         self.assertEqual(result.actor, follow_request.actor)
         self.assertEqual(result.author_followed, follow_request.author_followed)
         self.assertEqual(result.state, follow_request.state)
-        print("Finished")
 
     def test_remove_follower_not_exists(self):
         """Test result of remove_follower helper function if there isn't a previous follow request"""
-        print("Tests result of remove_follower helper function if there isn't a previous follow request")
+        print("Inbox Tests: Tests result of remove_follower helper function if there isn't a previous follow request")
   
         result = remove_follower(self.a2, self.a1)
         self.assertEqual(result, None)
-        print("Finished")
 
     def test_followers_API_has_followers(self):
         """Test get /followers/ API if the author has followers"""
-        print("Tests GET /followers/ API if the author has followers")
+        print("Inbox Tests: Tests GET /followers/ API if the author has followers")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a2,
             author_followed=self.a1,
@@ -508,11 +489,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         for expected_id in expected_ids:
             self.assertIn(expected_id, follower_ids)
-        print("Finished")
 
     def test_followers_API_has_no_followers(self):
         """Test get /followers/ API if the author has no followers"""
-        print("Tests GET /followers/ API if the author has no followers")
+        print("Inbox Tests: Tests GET /followers/ API if the author has no followers")
 
         # Login as a1
         self.client = Client()
@@ -527,12 +507,11 @@ class FollowersAndFollowRequestsTests(TestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["followers"], [])
-        print("Finished")
 
 # Tests for friends functionality
     def test_is_friend(self):
         """Tests if 2 authors have accepted requests they are friends"""
-        print("Tests if 2 authors have accepted requests they are friends")
+        print("Inbox Tests: Tests if 2 authors have accepted requests they are friends")
         # A1 accepts request from A2
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
@@ -550,11 +529,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check if they are friends
         self.assertTrue(self.a1.is_friend(self.a2))
         self.assertTrue(self.a2.is_friend(self.a1))
-        print("Finished")
 
     def test_is_friend_not_friends(self):
         """Test if 1 author has accepted request and the other hasn't they are not friends"""
-        print("Tests if 1 author has accepted request and the other hasn't they are not friends (fails)")
+        print("Inbox Tests: Tests if 1 author has accepted request and the other hasn't they are not friends")
         # A1 accepts request from A2
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
@@ -572,11 +550,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check if they are friends
         self.assertFalse(self.a1.is_friend(self.a2))
         self.assertFalse(self.a2.is_friend(self.a1))
-        print("Finished")
 
     def test_is_friend_not_friends_accepted_then_rejected(self):
         """Test if 1 author has accepted then removed request and the other hasn't they are not friends"""
-        print("Tests if 1 author has accepted then removed request and the other hasn't they are not friends")
+        print("Inbox Tests: Tests if 1 author has accepted then removed request and the other hasn't they are not friends")
         # A1 accepts request from A2
         follow_request = FollowRequest.objects.create(
             actor=self.a1,
@@ -610,12 +587,11 @@ class FollowersAndFollowRequestsTests(TestCase):
         # They are no longer friends
         self.assertFalse(self.a1.is_friend(self.a2))
         self.assertFalse(self.a2.is_friend(self.a1))
-        print("Finished")
 
 # Tests for following API
     def test_get_list_of_authors_following(self):
         """Test get /following/ API if the author is following anyone"""
-        print("Tests GET /following/ API if the author is following anyone")
+        print("Inbox Tests: Tests GET /following/ API if the author is following anyone")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -647,11 +623,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         for expected_id in expected_ids:
             self.assertIn(expected_id, following_ids)
-        print("Finished")
 
     def test_get_list_of_authors_following_not_following_anyone(self):
         """Test get /following/ API if the author is following anyone"""
-        print("Tests GET /following/ API if the author is following anyone")
+        print("Inbox Tests: Tests GET /following/ API if the author is following anyone")
 
         # Login as a1
         self.client = Client()
@@ -666,11 +641,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["followers"], [])
-        print("Finished")
 
     def test_get_list_of_authors_following_not_logged_in(self):
         """Test get /following/ API if the author is following anyone"""
-        print("Tests GET /following/ API if the author is following anyone (not logged in)")
+        print("Inbox Tests: Tests GET /following/ API if the author is following anyone (not logged in)")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -689,11 +663,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.status_code, 403)
-        print("Finished")
 
     def test_POSTing_to_following_API(self):
         """Test trying to post to following api"""
-        print("Tests trying to post to the following API (returns 405)")
+        print("Inbox Tests: Tests trying to post to the following API (returns 405)")
         response = self.client.post(
             f"/api/authors/{self.a2.serial}/following/{self.a1.id}/",
             content_type="application/json",
@@ -701,11 +674,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.status_code, 405)
-        print("Finished")
 
     def test_get_author_followed_exists(self):
         """Tests GETting an author followed and that follower exists"""
-        print("Tests GETting an author followed and that follower exists")
+        print("Inbox Tests: Tests GETting an author followed and that follower exists")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user1)
@@ -725,11 +697,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.json(), {"is_following": True})
-        print("Finished")
 
     def test_get_author_followed_not_exists(self):
         """Tests GETting an author followed and that follower doesn't exists"""
-        print("Tests GETting an author followed and that follower doesn't exists")
+        print("Inbox Tests: Tests GETting an author followed and that follower doesn't exists")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user1)
@@ -742,11 +713,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.json(), {"is_following": False})
-        print("Finished")
 
     def test_PUT_to_following_API_local_req_exists(self):
         """Test PUT follow request to send follow request to local author, request already exists"""
-        print("Test PUT follow request to local author, request already exists")
+        print("Inbox Tests: Test PUT follow request to local author, request already exists")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a2,
@@ -766,11 +736,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"detail": "Follow request already exists"})
-        print("Finished")
 
     def test_PUT_to_following_API_remote_req_exists(self):
         """Test PUT follow request to send follow request to remote author, request already exists"""
-        print("Test PUT follow request to remote author, request already exists")
+        print("Inbox Tests: Test PUT follow request to remote author, request already exists")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a4,
@@ -790,11 +759,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"detail": "Follow request already exists"})
-        print("Finished")
 
     def test_PUT_to_following_API_local_req_not_exists(self):
         """Test PUT follow request to send follow request to local author, request doesn't exist"""
-        print("Test PUT follow request to local author, request doesn't exist")
+        print("Inbox Tests: Test PUT follow request to local author, request doesn't exist")
 
         # Login as a1 (the follower)
         self.client = Client()
@@ -809,12 +777,11 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json(), {"detail": "Follow request sent"})
-        print("Finished")
 
     @patch("inbox.services.requests.post")
     def test_PUT_to_following_API_remote_req_not_exists(self, mock_post):
         """Test PUT follow request to send follow request to remote author, request doesn't exist"""
-        print("Test PUT follow request to remote author, request doesn't exist")
+        print("Inbox Tests: Test PUT follow request to remote author, request doesn't exist")
         mock_post.return_value.status_code = 200
 
         # Login as a1 (the follower)
@@ -830,11 +797,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json(), {"detail": "Follow request sent"})
-        print("Finished")
 
     def test_following_API_unfollow_author(self):
         """Test DELETE follow request to unfollow author"""
-        print("Tests DELETE follow request to unfollow author")
+        print("Inbox Tests: Tests DELETE follow request to unfollow author")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a2,
             author_followed=self.a1,
@@ -853,11 +819,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"detail": "Author unfollowed"})
-        print("Finished")
         
     def test_following_API_unfollow_author_not_logged_in(self):
         """Test DELETE follow request to unfollow author without logging in"""
-        print("Tests DELETE follow request to unfollow author without logging in (fails)")
+        print("Inbox Tests: Tests DELETE follow request to unfollow author without logging in (fails)")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a2,
             author_followed=self.a1,
@@ -871,11 +836,10 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         # Check the response
         self.assertEqual(response.status_code, 403)
-        print("Finished")
 
     def test_following_API_delete_pending_request(self):
         """Test DELETE follow request to remove pending follow request"""
-        print("Tests DELETE follow request to remove pending follow request")
+        print("Inbox Tests: Tests DELETE follow request to remove pending follow request")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a2,
             author_followed=self.a1,
@@ -894,11 +858,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"detail": "Author unfollowed"})
-        print("Finished")
 
     def test_following_API_unfollow_req_not_exist(self):
         """Test DELETE follow request to unfollow author but never requested to follow"""
-        print("Tests DELETE follow request to unfollow author but never requested to follow")
+        print("Inbox Tests: Tests DELETE follow request to unfollow author but never requested to follow")
         # Login as a1 (the follower)
         self.client = Client()
         self.client.force_login(self.user1)
@@ -911,12 +874,11 @@ class FollowersAndFollowRequestsTests(TestCase):
         # Check the response
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "You didn't follow this author"})
-        print("Finished")
 
 # Tests for follow request API
     def test_get_follow_requests_has_none(self):
         """Test get /follow_requests/ API if the author has requests, they don't"""
-        print("Tests GET /follow_requests/ API if the author has requests, they don't")
+        print("Inbox Tests: Tests GET /follow_requests/ API if the author has requests, they don't")
 
         response = self.client.get(
             f"/api/authors/{self.a1.serial}/follow_requests/",
@@ -927,11 +889,10 @@ class FollowersAndFollowRequestsTests(TestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["followers"], [])
-        print("Finished")
 
     def test_get_follow_requests_has_some(self):
         """Test get /follow_requests/ API if the author has requests, they do"""
-        print("Tests GET GET /follow_requests/ API if the author has requests, they do")
+        print("Inbox Tests: Tests GET GET /follow_requests/ API if the author has requests, they do")
         follow_request1 = FollowRequest.objects.create(
             actor=self.a1,
             author_followed=self.a3,
@@ -959,4 +920,3 @@ class FollowersAndFollowRequestsTests(TestCase):
 
         for expected_id in expected_ids:
             self.assertIn(expected_id, follow_reqs_ids)
-        print("Finished")

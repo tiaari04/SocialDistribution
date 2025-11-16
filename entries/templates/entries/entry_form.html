@@ -68,6 +68,17 @@
         a:hover {
             text-decoration: underline;
         }
+        .admin-images-link {
+            display: inline-block;
+            margin-top: .5rem;
+            padding: .5rem .75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #374151;
+            font-weight: 600;
+        }
+        .admin-images-link:hover { background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -76,7 +87,26 @@
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+
+        {# carry a chosen admin image id if we just returned from the picker #}
+        {% if preselected_hosted %}
+          <input type="hidden" name="hosted_id" value="{{ preselected_hosted.id }}">
+        {% elif request.GET.hosted_id %}
+          <input type="hidden" name="hosted_id" value="{{ request.GET.hosted_id }}">
+        {% endif %}
+
         {{ form.as_p }}
+
+        {# link to minimal picker; return here after choosing an image #}
+        <a
+          class="admin-images-link"
+          href="{% url 'entries:admin_image_picker' author.serial %}?next={{ request.build_absolute_uri|urlencode }}"
+        >
+          Choose from Admin Images
+        </a>
+
+        <br/>
+
         <input type="submit" value="Publish Post">
     </form>
 
