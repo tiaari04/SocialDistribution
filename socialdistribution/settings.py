@@ -175,4 +175,7 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
