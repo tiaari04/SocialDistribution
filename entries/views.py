@@ -177,9 +177,10 @@ def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
     preselected_hosted = None
     hosted_id = request.GET.get("hosted_id") or request.POST.get("hosted_id")
+    
     if hosted_id:
         preselected_hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
-
+    
     if request.method == "POST":
         form = EntryForm(request.POST, request.FILES or None)
         if form.is_valid():
@@ -189,6 +190,7 @@ def entry_create(request, author_serial):
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
+            
             hosted_id = request.POST.get("hosted_id")
             if hosted_id:
                 hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
@@ -198,10 +200,22 @@ def entry_create(request, author_serial):
                 hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
                 hosted.save()
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
-
+            
             entry.published = timezone.now()
             entry.save()
-            send_entry_to_federation(model_to_dict(entry))
+            
+            entry_dict = model_to_dict(entry, fields=[
+                "fqid", "serial", "title", "web", "description", 
+                "content", "image_url", "content_type", 
+                "is_edited", "likes_count", "visibility", "created", "updated"
+            ])
+            entry_dict["author_id"] = str(entry.author.id) if entry.author else ""
+            entry_dict["published"] = entry.published.isoformat() if entry.published else ""
+            entry_dict["created"] = entry.created.isoformat() if entry.created else ""
+            entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
+            
+            send_entry_to_federation(entry_dict)
+            
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()
