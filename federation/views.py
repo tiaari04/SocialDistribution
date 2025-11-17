@@ -6,10 +6,6 @@ from authors.models import Author
 from entries.models import Entry
 
 @csrf_exempt
-def index(request):
-    return JsonResponse({"status": "federation index"}, status=200)
-
-@csrf_exempt
 def newEntry(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
@@ -63,3 +59,4 @@ def newEntry(request):
         "created": created,
         "fqid": entry.fqid,
     }, status=200)
+
