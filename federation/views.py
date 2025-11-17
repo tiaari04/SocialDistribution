@@ -12,6 +12,7 @@ def newEntry(request):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
+        print(data)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
