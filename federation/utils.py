@@ -11,7 +11,7 @@ def send_entry_to_federation(entry):
     for node in friend_nodes:
         inbox_url = f"{node}/federation/"
         try:
-            response = requests.post(inbox_url, json="federation entry post")
+            response = requests.post(inbox_url, json=entry)
             print(response.status_code)
             response.raise_for_status()
         except requests.RequestException as e:

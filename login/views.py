@@ -19,6 +19,11 @@ from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login
 from django.urls import reverse
 from authors.models import Author
+from django.contrib.sites.models import Site
+from .forms import CustomSignupForm
+from django.utils.crypto import get_random_string
+from adminpage.models import HostedImage
+import os
 
 def login_view(request):
     if request.method == "POST":
@@ -56,7 +61,7 @@ def signup_view(request):
 
             current_site = Site.objects.get_current()
 
-            domain = f"https://{current_site.domain}" 
+            domain = os.getenv("NODE_ID", "")
 
             profile_url = ""
             uploaded_file = form.cleaned_data.get("profileImageFile")
