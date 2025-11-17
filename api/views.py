@@ -18,7 +18,20 @@ def _not_implemented(endpoint_name):
 
 # Authors
 def api_authors_list(request):
-	return _not_implemented("api_authors_list")
+	from authors.models import Author
+	if request.method == "GET":
+		authors = Author.objects.all()
+		data = {"items": []}
+		for a in authors:
+			data["items"].append({
+				"id": a.id,
+				"displayName": a.displayName,
+				"host": a.host,
+				"github": a.github,
+				"profileImage": a.profileImage,
+				"web": a.web,
+			})
+		return JsonResponse(data)
 
 def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
@@ -119,6 +132,7 @@ def api_author_follow_requests(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOW_REQS)
 	return JsonResponse(resp, status=status_code)
 
+@csrf_exempt
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':
