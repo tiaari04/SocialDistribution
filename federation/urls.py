@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views
+from federation import views
 
 urlpatterns = [
-    path('', views.inbox, name='inbox'),
+    path('', views.newEntry, name='newEntry'),
 ]
