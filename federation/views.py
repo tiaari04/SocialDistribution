@@ -3,7 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 import json
 
-from .models import Entry, Author
+from authors.models import Author
+from entries.models import Entry
 
 
 @csrf_exempt
