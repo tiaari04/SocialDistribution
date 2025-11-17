@@ -301,15 +301,24 @@ def entry_edit(request, author_serial, entry_serial):
             entry.is_edited = True
             entry.save()
             
-            entry_dict = model_to_dict(entry, fields=[
-                "fqid", "serial", "title", "web", "description", 
-                "content", "image_url", "content_type", 
-                "is_edited", "likes_count", "visibility", "created", "updated"
-            ])
-            entry_dict["author_id"] = str(entry.author.id) if entry.author else ""
-            entry_dict["published"] = entry.published.isoformat() if entry.published else ""
-            entry_dict["created"] = entry.created.isoformat() if entry.created else ""
-            entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
+            # Use the EXACT same dictionary construction as entry_create
+            entry_dict = {
+                "fqid": entry.fqid,
+                "serial": entry.serial,
+                "title": entry.title,
+                "web": entry.web,
+                "description": entry.description,
+                "content": entry.content,
+                "image_url": entry.image_url,
+                "content_type": entry.content_type,
+                "is_edited": entry.is_edited,
+                "likes_count": entry.likes_count,
+                "visibility": entry.visibility,
+                "created": entry.created.isoformat() if entry.created else "",
+                "updated": entry.updated.isoformat() if entry.updated else "",
+                "author_id": str(entry.author.id) if entry.author else "",
+                "published": entry.published.isoformat() if entry.published else "",
+            }
             
             send_entry_to_federation(entry_dict)
             
