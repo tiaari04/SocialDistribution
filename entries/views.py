@@ -219,12 +219,11 @@ def entry_create(request, author_serial):
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()
-    
-    # Render the form for GET requests
-    return render(request, 'entries/entry_create.html', {
-        'form': form, 
-        'author': author,
-        'preselected_hosted': preselected_hosted
+
+    return render(request, "entries/entry_form.html", {
+        "form": form,
+        "author": author,
+        "preselected_hosted": preselected_hosted,  # for preview + hidden input
     })
 
 def entry_detail(request, author_serial, entry_serial):
