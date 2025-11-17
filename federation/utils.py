@@ -1,5 +1,7 @@
 import os
 import requests
+from authors.models import Author
+
 
 def send_entry_to_federation(entry):
     friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
