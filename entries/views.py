@@ -298,11 +298,26 @@ def entry_edit(request, author_serial, entry_serial):
                     hosted.save()
                     entry.image_url = request.build_absolute_uri(hosted.file.url)
 
+            entry.is_edited = True
             entry.save()
+            
+            # Send update to federation
+            entry_dict = model_to_dict(entry, fields=[
+                "fqid", "serial", "title", "web", "description", 
+                "content", "image_url", "content_type", 
+                "is_edited", "likes_count", "visibility", "created", "updated"
+            ])
+            entry_dict["author_id"] = entry.author  # Pass the Author object
+            entry_dict["published"] = entry.published.isoformat() if entry.published else ""
+            entry_dict["created"] = entry.created.isoformat() if entry.created else ""
+            entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
+            
+            send_entry_to_federation(entry_dict)
+            
             return redirect("entries:stream_home", author_serial=entry.author.serial)
     else:
         form = EntryForm(instance=entry)
-
+    
     return render(
         request,
         "entries/entry_edit.html",
