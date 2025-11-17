@@ -6,33 +6,22 @@ def send_entry_to_federation(entry):
     if not friend_nodes:
         return
 
-    # Build the payload
-    payload = {
-        "fqid": entry.fqid,
-        "serial": entry.serial,
-        "title": entry.title,
-        "web": entry.web,
-        "description": entry.description,
-        "content": entry.content,
-        "image_url": entry.image_url,
-        "content_type": entry.content_type,
-        "is_edited": entry.is_edited,
-        "likes_count": entry.likes_count,
-        "visibility": entry.visibility,
-        "published": entry.published.isoformat() if entry.published else None,
-        "author": {
-            "id": entry.author.id,
-            "displayName": entry.author.displayName,
-            "url": entry.author.url,
-        } if entry.author else None
-    }
+    entry_data = entry.copy()  # if you want to manipulate before sending
+    # include author info
+    if "author" in entry_data and isinstance(entry_data["author"], Author):
+        author = entry_data["author"]
+        entry_data["author"] = {
+            "id": author.id,
+            "displayName": author.displayName,
+            "url": author.url,
+        }
 
-    # Send to all friend nodes
     for node in friend_nodes:
         inbox_url = f"{node}/federation/"
         try:
-            response = requests.post(inbox_url, json=payload)
+            response = requests.post(inbox_url, json=entry_data)
             print(response.status_code, response.text)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"Failed to send entry to {inbox_url}: {e}")
+
