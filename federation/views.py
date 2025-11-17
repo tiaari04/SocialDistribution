@@ -16,19 +16,28 @@ def newEntry(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-
+    # Parse the published datetime
     published_raw = data.get("published")
+    published = parse_datetime(published_raw) if published_raw else None
 
-    if published_raw:
-        published = parse_datetime(published_raw)
-    else:
-        published = None
+    # Handle the author
+    author_data = data.get("author")
+    author_instance = None
+    if author_data:
+        author_instance, _ = Author.objects.get_or_create(
+            id=author_data.get("id"),
+            defaults={
+                "displayName": author_data.get("displayName", ""),
+                "url": author_data.get("url", "")
+            }
+        )
 
+    # Create or update the entry
     entry, created = Entry.objects.update_or_create(
         fqid=data.get("fqid"),
         defaults={
             "serial": data.get("serial"),
-            "author": data.get("author"),
+            "author": author_instance,
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
@@ -41,6 +50,7 @@ def newEntry(request):
         }
     )
 
+    # Update published if provided
     if published is not None:
         entry.published = published
         entry.save()
@@ -50,4 +60,3 @@ def newEntry(request):
         "created": created,
         "fqid": entry.fqid,
     }, status=200)
-
