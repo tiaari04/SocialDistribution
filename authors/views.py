@@ -47,7 +47,19 @@ def author_detail(request, author_serial):
         except FollowRequest.DoesNotExist:
             follow_status = "Request To Follow"
 
-    entries = Entry.objects.filter(author_id=author.id)
+    # get relevant entries to display according to logged in author
+    # NOT author whose profile is being viewed 
+    following = FollowRequest.objects.filter(
+        actor=author, state=FollowRequest.State.ACCEPTED
+    ).values_list("author_followed_id", flat=True)
+
+    followers = FollowRequest.objects.filter(
+        author_followed=author, state=FollowRequest.State.ACCEPTED
+    ).values_list("actor_id", flat=True)
+
+    base_entries = Entry.objects.exclude(visibility=Entry.Visibility.DELETED)
+    public_entries = base_entries.filter(visibility=Entry.Visibility.PUBLIC)
+    entries = public_entries.filter(author=author)
 
     return render(
         request,

@@ -1,3 +1,4 @@
+from signal import pause
 from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
@@ -11,6 +12,96 @@ from urllib.parse import urlparse
 import uuid
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from federation.utils import send_entry_to_federation
+from django.forms.models import model_to_dict
+
+
+@csrf_exempt
+@require_POST
+def github_webhook(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    event = request.headers.get('X-GitHub-Event', '')
+    repo = payload.get('repository', {}).get('full_name', '')
+    repo_html_url = payload.get('repository', {}).get('html_url', '')
+    entries_created = []
+
+    if event == "push":
+        commits = payload.get('commits', [])
+        for commit in commits:
+            github_username = commit.get("author", {}).get("username") or payload.get("pusher", {}).get("name")
+            if not github_username:
+                continue
+
+            github_url = f"https://github.com/{github_username}".lower()
+            try:
+                author = Author.objects.get(github__iexact=github_url)
+            except Author.DoesNotExist:
+                continue
+            except Author.MultipleObjectsReturned:
+                continue
+
+            message = commit.get('message', '(no message)')
+            url = commit.get('url', '')
+            author_name = commit.get('author', {}).get('name', github_username)
+
+            content = (f"{author_name} pushed to {repo}: {message}")
+
+            serial = uuid.uuid4().hex[:12]
+            fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
+
+            entry = Entry.objects.create(
+                author=author,
+                serial=serial,
+                title=f"GitHub Activity - {repo}",
+                content=content,
+                visibility=Entry.Visibility.PUBLIC,
+                published=timezone.now(),
+                fqid=fqid
+            )
+            entries_created.append(entry.serial)
+
+    elif event == "pull_request":
+        pr = payload.get('pull_request', {})
+        github_username = pr.get("user", {}).get("login")
+        if not github_username:
+            return JsonResponse({'status': 'ignored', 'reason': 'PR user missing'}, status=400)
+
+        github_url = f"https://github.com/{github_username}".lower()
+        try:
+            author = Author.objects.get(github__iexact=github_url)
+        except Author.DoesNotExist:
+            return JsonResponse({'status': 'ignored', 'reason': f'No author with GitHub link {github_url}'}, status=404)
+
+        action = payload.get('action')
+        title = pr.get('title')
+        url = pr.get('html_url')
+
+        content = (f"{author_name} {action} a pull request in {repo}: {title}")
+
+        serial = uuid.uuid4().hex[:12]
+        fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
+
+        entry = Entry.objects.create(
+            author=author,
+            serial=serial,
+            title=f"GitHub Activity - {repo}",
+            content=content,
+            visibility=Entry.Visibility.PUBLIC,
+            published=timezone.now(),
+            fqid=fqid
+        )
+        entries_created.append(entry.serial)
+    else:
+        return JsonResponse({'status': 'ignored', 'event': event})
+
+    return JsonResponse({'status': 'ok', 'entries_created': entries_created})
 
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
@@ -110,6 +201,7 @@ def entry_create(request, author_serial):
 
             entry.published = timezone.now()
             entry.save()
+            send_entry_to_federation(model_to_dict(entry))
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()

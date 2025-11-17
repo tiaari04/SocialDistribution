@@ -115,7 +115,32 @@
     }
 
     /* ----------- Entries Section ----------- */
-    article.entries { text-align: left; }
+    .entries {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .post {
+        width: 50vw;
+        background-color: #6366f1;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .postContent {
+        background-color: white;
+        color: #374151;
+        width: full;
+        padding: 1px 15px;
+        border-radius: 10px;
+    }
+
+    article img {
+        max-width: 100%;
+        height: auto;
+    }
 
     article.entries h2 {
       font-size: 1.5rem;
@@ -123,9 +148,24 @@
       color: #1f2937;
       margin-bottom: 0.75rem;
     }
-
-    article.entries p { color: #6b7280; font-style: italic; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Parse different content types -->
+    <script>
+        'use strict';
+        document.addEventListener("DOMContentLoaded", () => {
+            const posts = document.querySelectorAll('.postText');
+            posts.forEach(post => {
+                const contentType = post.dataset.type;
+                if (contentType === "text/markdown") {
+                    const html = marked.parse(post.dataset.content);
+                    post.innerHTML = html;
+                } else {
+
+                }
+            })
+        })
+    </script>
 </head>
 
 <body>
@@ -169,6 +209,7 @@
             data-initial-state="{{ follow_status|escapejs }}"
             data-actor-id="{{ request.user.author.id|escapejs }}"
             data-actor-host="{{ request.user.author.host|escapejs }}"
+            data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
             data-actor-username="{{ request.user.username|escapejs }}"
             data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
             data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
@@ -176,7 +217,6 @@
             data-object-id="{{ author.id|escapejs }}"
             data-object-host="{{ author.host|escapejs }}"
             data-object-displayname="{{ author.displayName|escapejs }}"
-            data-object-serial="{{ author.serial|default:''|escapejs }}"
             data-object-github="{{ author.github|default:''|escapejs }}"
             data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
             data-object-web="{{ author.web|default:''|escapejs }}"
@@ -196,9 +236,16 @@
       <h2>Public Entries</h2>
       {% if entries %}
         {% for entry in entries %}
-          <div>
-            <h3>{{ entry.title }}</h3>
-            <p>{{ entry.content|truncatewords:30 }}</p>
+          <div class="post">
+            <div class="postContent">
+                <h3>{{ entry.title }}</h3>
+                <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+                    {{ entry.content }}
+                </p>
+                {% if entry.image_url %}
+                    <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                {% endif %}
+            </div>
           </div>
         {% endfor %}
       {% else %}
@@ -290,9 +337,9 @@
         } else if (state === "Pending" || state === "Unfollow") {
           // Call delete API to remove pending or accepted follow requests
           // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
-            const authorSerial = btn.dataset.objectSerial;
-            const followerId = this.dataset.actorId;
-            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
+            const authorSerial = btn.dataset.actorSerial;
+            const followedAuthorId = encodeURI(btn.dataset.objectId);
+            deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
             try{
               const res = await fetch(deleteEndpoint, {
                 method: "DELETE",
@@ -312,31 +359,6 @@
             catch (err) {
               console.error(err);
               alert("Network error while removing follow request.");
-            }
-        } else if (state === "Unfollow") {
-          // Unfollow locally; ideally call a DELETE API to remove accepted follow
-          const authorSerial = btn.dataset.objectSerial;
-            const followerId = this.dataset.actorId;
-            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
-            try{
-              const res = await fetch(deleteEndpoint, {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": csrfToken
-                }
-              });
-              if (res.ok) {
-                applyVisual("Request To Follow");
-              } else {
-                const text = await res.text();
-                console.error('Request to unfollow author failed', res.status, text);
-                alert("Failed to unfollow author");
-              }
-            }
-            catch (err) {
-              console.error(err);
-              alert("Network error while unfollowing author.");
             }
         }
       });
