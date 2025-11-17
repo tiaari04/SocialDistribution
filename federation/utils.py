@@ -3,6 +3,7 @@ import requests
 from authors.models import Author
 from datetime import datetime
 from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404
 
 def send_entry_to_federation(entry):
     friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
@@ -27,11 +28,8 @@ def send_entry_to_federation(entry):
         "web": entry.get("web") or "",
     }
     
-    # If author_id is an Author object, extract all its data
-    if isinstance(payload["author_id"], Author):
-        author = payload["author_id"]
-        # Manually extract all author fields
-        author_data = {
+    author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
+    author_data = {
             "id": str(author.id),
             "serial": author.serial or "",
             "displayName": author.displayName or "",
@@ -39,16 +37,17 @@ def send_entry_to_federation(entry):
             "host": author.host or "",
             "is_active": author.is_active if hasattr(author, 'is_active') else True,
             "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
-            "is_approved": author.is_approved if hasattr(author, 'is_approved') else False,
-            "is_local": author.is_local if hasattr(author, 'is_local') else False,
+            "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
+            "is_local": False,
             "profileImage": author.profileImage or "",
             "description": author.description or "",
             "web": author.web or "",
             "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
             "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
-        }
-        payload["author_id"] = str(author.id)
-        payload["author_data"] = author_data 
+    }
+    payload["author_id"] = str(author.id)
+    payload["author_data"] = author_data 
+    print(author_data)
     
     for node in friend_nodes:
         inbox_url = f"{node}/federation/"
