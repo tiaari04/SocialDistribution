@@ -13,6 +13,10 @@ def send_entry_to_federation(entry):
         try:
             response = requests.post(inbox_url, json=entry)
             print(response.status_code)
+            try:
+                print(response.text)
+            except Exception:
+                pass
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"Failed to send entry to {inbox_url}: {e}")

@@ -2,7 +2,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 import json
-
 from authors.models import Author
 from entries.models import Entry
 
@@ -46,12 +45,15 @@ def newEntry(request):
             "content": data.get("content", ""),
             "image_url": data.get("image_url"),
             "content_type": data.get("content_type", Entry.ContentType.PLAIN),
-            "published": published or entry.published if not created else published,
             "is_edited": data.get("is_edited", False),
             "likes_count": data.get("likes_count", 0),
             "visibility": data.get("visibility", Entry.Visibility.PUBLIC),
         }
     )
+
+    if published is not None:
+        entry.published = published
+        entry.save()
 
     return JsonResponse({
         "status": "saved",
