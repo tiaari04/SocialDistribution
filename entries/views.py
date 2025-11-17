@@ -337,6 +337,27 @@ def entry_delete(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
     if request.method == "POST":
         entry.mark_deleted()
+        
+        # Send the deleted entry to federation
+        entry_dict = {
+            "fqid": entry.fqid,
+            "serial": entry.serial,
+            "title": entry.title,
+            "web": entry.web,
+            "description": entry.description,
+            "content": entry.content,
+            "image_url": entry.image_url,
+            "content_type": entry.content_type,
+            "is_edited": entry.is_edited,
+            "likes_count": entry.likes_count,
+            "visibility": entry.visibility,
+            "created": entry.created.isoformat() if entry.created else "",
+            "updated": entry.updated.isoformat() if entry.updated else "",
+            "author_id": str(entry.author.id) if entry.author else "",
+            "published": entry.published.isoformat() if entry.published else "",
+        }
+        
+        send_entry_to_federation(entry_dict)
+        
         return redirect("entries:stream_home", author_serial=author_serial)
-    
     return redirect("entries:entry_edit", author_serial=author_serial, entry_serial=entry_serial)
