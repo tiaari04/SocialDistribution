@@ -5,11 +5,21 @@
 {% block styles %}
 {{ block.super }}
 <style>
-  .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
   .tab {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .5rem .75rem; border: 1px solid var(--gray-200);
-    border-radius: 999px; text-decoration: none; color: var(--gray-800);
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--gray-800);
     background: var(--white);
   }
   .tab.active {
@@ -19,10 +29,14 @@
     font-weight: 600;
   }
   .badge {
-    font-size: .75rem; line-height: 1;
-    padding: .15rem .45rem; border-radius: 999px;
-    background: var(--blue-100); color: var(--blue-700);
+    font-size: .75rem;
+    line-height: 1;
+    padding: .15rem .45rem;
+    border-radius: 999px;
+    background: var(--blue-100);
+    color: var(--blue-700);
   }
+
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -33,23 +47,75 @@
     border-radius: .75rem;
     background: var(--white);
     padding: 1rem;
+    min-width: 0; /* prevent grid items from forcing overflow */
   }
-  .muted { color: var(--gray-600); font-size: .9rem; }
-  .meta { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
-  .pagination { display:flex; gap:.5rem; margin-top:1rem; }
-  .pagination a, .pagination span {
-    padding:.4rem .65rem; border:1px solid var(--gray-200);
-    border-radius:.5rem; text-decoration:none; color: var(--gray-800);
+
+  .muted {
+    color: var(--gray-600);
+    font-size: .9rem;
+  }
+  .meta {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .pagination {
+    display: flex;
+    gap: .5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .pagination a,
+  .pagination span {
+    padding: .4rem .65rem;
+    border: 1px solid var(--gray-200);
+    border-radius: .5rem;
+    text-decoration: none;
+    color: var(--gray-800);
   }
   .pagination .current {
     border-color: var(--blue-600);
     box-shadow: 0 0 0 2px var(--blue-100) inset;
   }
-  .section-head { display:flex; justify-content:space-between; align-items:baseline; margin:.5rem 0 1rem; }
-  .section-head h2 { margin:0; font-size:1rem; font-weight:600; color: var(--gray-800); }
 
-  /* prevent long URLs (FQIDs) from overflowing the card */
-  .break-anywhere { word-break: break-word; overflow-wrap: anywhere; }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: .5rem 0 1rem;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+
+  /* prevent long URLs / IDs / base64 from causing horizontal overflow */
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal; /* override any global a { white-space: nowrap } */
+  }
+
+  .content-preview {
+    margin-top: .5rem;
+    font-size: .9rem;
+  }
+
+  /* make any images inside cards behave */
+  .card img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: .5rem;
+    margin-top: .5rem;
+  }
 </style>
 {% endblock %}
 
@@ -94,7 +160,7 @@
         {% for e in page_obj.object_list %}
           <article class="card">
             <header style="margin-bottom:.5rem;">
-              <div class="meta">
+              <div class="meta break-anywhere">
                 <strong>{{ e.title|default:"(untitled)" }}</strong>
                 <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
                 <span class="muted">· {{ e.content_type }}</span>
@@ -102,16 +168,30 @@
             </header>
 
             {% if e.description %}
-              <p class="muted">{{ e.description|truncatechars:160 }}</p>
+              <p class="muted break-anywhere">
+                {{ e.description|truncatechars:160 }}
+              </p>
             {% endif %}
 
-            {% if e.content %}
-              <p style="margin-top:.5rem;">{{ e.content|truncatechars:220 }}</p>
-            {% endif %}
+            <div class="content-preview break-anywhere">
+              {# If this is an image-type entry, try to actually show the image #}
+              {% if "image" in e.content_type|default_if_none:"" %}
+                {% if e.content %}
+                  <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}">
+                {% endif %}
+              {% else %}
+                {% if e.content %}
+                  {{ e.content|truncatechars:220 }}
+                {% endif %}
+              {% endif %}
+            </div>
 
             <footer style="margin-top:.75rem;" class="muted break-anywhere">
               FQID:
-              <a class="break-anywhere" href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">
+              <a class="break-anywhere"
+                 href="{{ e.fqid }}"
+                 target="_blank"
+                 rel="noopener noreferrer">
                 {{ e.fqid }}
               </a><br/>
               Likes: {{ e.likes_count }}
