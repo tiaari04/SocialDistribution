@@ -19,22 +19,42 @@ def newEntry(request):
     # Parse datetime fields
     published_raw = data.get("published")
     published = parse_datetime(published_raw) if published_raw else None
-    
     created_raw = data.get("created")
     created = parse_datetime(created_raw) if created_raw else None
-    
     updated_raw = data.get("updated")
     updated = parse_datetime(updated_raw) if updated_raw else None
     
-    # Handle the author as a string ID
+    # Handle the author - create if doesn't exist
     author_id = data.get("author_id")
+    if not author_id:
+        return JsonResponse({"error": "author_id is required"}, status=400)
+    
+    # Check if author_data was provided (from another node)
+    author_data = data.get("author_data")
+    
+    if author_data:
+        # Use the provided author data to create/update
+        author_defaults = {k: v for k, v in author_data.items() if k != 'id'}
+        author, author_created = Author.objects.update_or_create(
+            id=author_id,
+            defaults=author_defaults
+        )
+    else:
+        # Minimal fallback if no author_data provided
+        author, author_created = Author.objects.get_or_create(
+            id=author_id,
+            defaults={
+                "serial": author_id.split("/")[-1] if "/" in author_id else author_id,
+                # Add minimal required fields here
+            }
+        )
     
     # Create or update the entry
     entry, created_flag = Entry.objects.update_or_create(
         fqid=data.get("fqid"),
         defaults={
             "serial": data.get("serial"),
-            "author_id": author_id,
+            "author": author,  # Use the Author object, not the string
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
@@ -54,12 +74,12 @@ def newEntry(request):
         entry.created = created
     if updated is not None:
         entry.updated = updated
-    
     if published is not None or created is not None or updated is not None:
         entry.save()
     
     return JsonResponse({
         "status": "saved",
         "created": created_flag,
+        "author_created": author_created,
         "fqid": entry.fqid,
     }, status=200)
