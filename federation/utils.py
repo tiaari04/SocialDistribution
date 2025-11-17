@@ -28,7 +28,7 @@ def send_entry_to_federation(entry):
         "web": entry.get("web") or "",
     }
     
-    author = get_object_or_404(Author, displayName=entry.get("author_id").split("/")[-1])
+    author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
     author_data = {
             "id": str(author.id),
             "serial": author.serial or "",

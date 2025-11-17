@@ -16,7 +16,7 @@ def newEntry(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     
-    # Parse datetime fields
+
     published_raw = data.get("published")
     published = parse_datetime(published_raw) if published_raw else None
     created_raw = data.get("created")
@@ -24,20 +24,17 @@ def newEntry(request):
     updated_raw = data.get("updated")
     updated = parse_datetime(updated_raw) if updated_raw else None
     
-    # Handle the author - create if doesn't exist
+
     author_id = data.get("author_id")
     if not author_id:
         return JsonResponse({"error": "author_id is required"}, status=400)
     
-    # Check if author_data was provided (from another node)
+ 
     author_data = data.get("author_data")
     
     if author_data:
-        # Parse datetime fields from author_data
         author_created_dt = parse_datetime(author_data.get("created")) if author_data.get("created") else None
         author_updated_dt = parse_datetime(author_data.get("updated")) if author_data.get("updated") else None
-        
-        # Use the provided author data to create/update
         author_defaults = {
             "serial": author_data.get("serial", ""),
             "displayName": author_data.get("displayName", ""),
@@ -46,7 +43,7 @@ def newEntry(request):
             "is_active": author_data.get("is_active", True),
             "is_admin": author_data.get("is_admin", False),
             "is_approved": author_data.get("is_approved", False),
-            "is_local": False,  # Remote authors are never local
+            "is_local": False, 
             "profileImage": author_data.get("profileImage", ""),
             "description": author_data.get("description", ""),
             "web": author_data.get("web", ""),
@@ -57,7 +54,6 @@ def newEntry(request):
             defaults=author_defaults
         )
         
-        # Set datetime fields separately if provided
         if author_created_dt:
             author.created = author_created_dt
         if author_updated_dt:
@@ -65,21 +61,19 @@ def newEntry(request):
         if author_created_dt or author_updated_dt:
             author.save()
     else:
-        # Minimal fallback if no author_data provided
         author, author_created = Author.objects.get_or_create(
             id=author_id,
             defaults={
                 "serial": author_id.split("/")[-1] if "/" in author_id else author_id,
-                # Add minimal required fields here
             }
         )
     
-    # Create or update the entry
+
     entry, created_flag = Entry.objects.update_or_create(
         fqid=data.get("fqid"),
         defaults={
             "serial": data.get("serial"),
-            "author": author,  # Use the Author object, not the string
+            "author": author,  
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
@@ -92,7 +86,6 @@ def newEntry(request):
         }
     )
     
-    # Set timestamp fields separately if provided
     if published is not None:
         entry.published = published
     if created is not None:
