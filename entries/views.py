@@ -201,7 +201,9 @@ def entry_create(request, author_serial):
 
             entry.published = timezone.now()
             entry.save()
-            send_entry_to_federation(model_to_dict(entry))
+            entry_dict = model_to_dict(entry)
+            entry_dict["published"] = entry.published.isoformat()
+            send_entry_to_federation(entry_dict)
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()
