@@ -7,6 +7,37 @@
   /* optional page tweaks */
   .author-link { color: var(--blue-700); text-decoration: none; }
   .author-link:hover { text-decoration: underline; }
+
+  /* utility to prevent long strings (IDs, URLs, etc.) from causing horizontal scroll */
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal; /* in case links or spans are globally nowrap */
+  }
+
+  /* help the 6-column grid shrink nicely instead of forcing overflow */
+  .grid.cols-6 {
+    grid-template-columns:
+      minmax(0, 2.5fr)   /* Author */
+      minmax(0, 1.5fr)   /* User */
+      minmax(0, 0.8fr)   /* Local */
+      minmax(0, 0.8fr)   /* Admin */
+      minmax(0, 0.8fr)   /* Active */
+      minmax(0, 2fr);    /* Actions */
+  }
+
+  .grid.cols-6 > li {
+    min-width: 0; /* critical: allow content to wrap instead of expanding the grid out of viewport */
+  }
+
+  /* table wrapper */
+  .authors-table {
+    display: block;
+    max-width: 100%;
+    /* uncomment if you want the table to scroll internally instead of the whole page
+    overflow-x: auto;
+    */
+  }
 </style>
 {% endblock %}
 
@@ -42,31 +73,35 @@
 
   <!-- Body -->
   <li>
-    <ul class="border rounded shadow text-sm">
+    <ul class="border rounded shadow text-sm authors-table">
       {% for a in authors %}
       <li class="border-top">
         <ul class="grid cols-6 gap-2 p-3">
           <!-- Author (click name to view posts: PUBLIC tab) -->
           <li>
             <ul class="gap-2">
-              <li class="bold">
+              <li class="bold break-anywhere">
                 <a
-                  class="author-link"
+                  class="author-link break-anywhere"
                   href="{% url 'adminpage:author-detail-tab' a.id 'PUBLIC' %}"
                   title="View {{ a.displayName }}'s posts"
                 >
                   {{ a.displayName }}
                 </a>
               </li>
-              <li class="text-sm text-muted mono" style="word-break:break-all;">
+              <li class="text-sm text-muted mono break-anywhere">
                 {{ a.id }}
               </li>
             </ul>
           </li>
 
           <!-- User -->
-          <li>
-            {% if a.user %}{{ a.user.username }}{% else %}<span class="text-muted">—</span>{% endif %}
+          <li class="break-anywhere">
+            {% if a.user %}
+              {{ a.user.username }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
           </li>
 
           <!-- Local -->

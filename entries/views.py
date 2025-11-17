@@ -1,3 +1,4 @@
+from signal import pause
 from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
@@ -14,6 +15,8 @@ from django.core.paginator import Paginator
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from federation.utils import send_entry_to_federation
+from django.forms.models import model_to_dict
 
 
 @csrf_exempt
@@ -174,9 +177,10 @@ def entry_create(request, author_serial):
     author = get_object_or_404(Author, serial=author_serial)
     preselected_hosted = None
     hosted_id = request.GET.get("hosted_id") or request.POST.get("hosted_id")
+    
     if hosted_id:
         preselected_hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
-
+    
     if request.method == "POST":
         form = EntryForm(request.POST, request.FILES or None)
         if form.is_valid():
@@ -186,6 +190,7 @@ def entry_create(request, author_serial):
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
+            
             hosted_id = request.POST.get("hosted_id")
             if hosted_id:
                 hosted = get_object_or_404(HostedImage, pk=hosted_id, admin_uploaded=True)
@@ -195,9 +200,22 @@ def entry_create(request, author_serial):
                 hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
                 hosted.save()
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
-
+            
             entry.published = timezone.now()
             entry.save()
+            
+            entry_dict = model_to_dict(entry, fields=[
+                "fqid", "serial", "title", "web", "description", 
+                "content", "image_url", "content_type", 
+                "is_edited", "likes_count", "visibility", "created", "updated"
+            ])
+            entry_dict["author_id"] = str(entry.author.id) if entry.author else ""
+            entry_dict["published"] = entry.published.isoformat() if entry.published else ""
+            entry_dict["created"] = entry.created.isoformat() if entry.created else ""
+            entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
+            
+            send_entry_to_federation(entry_dict)
+            
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()
@@ -247,7 +265,7 @@ def entry_detail(request, author_serial, entry_serial):
 @login_required
 def entry_edit(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
-
+    author = get_object_or_404(Author, serial=author_serial)
     if request.user != entry.author.user:
         return HttpResponse("You do not have permission to edit this post.", status=403)
 
@@ -280,11 +298,34 @@ def entry_edit(request, author_serial, entry_serial):
                     hosted.save()
                     entry.image_url = request.build_absolute_uri(hosted.file.url)
 
+            entry.is_edited = True
             entry.save()
-            return redirect("entries:stream_home", author_serial=entry.author.serial)
+            
+            # Use the EXACT same dictionary construction as entry_create
+            entry_dict = {
+                "fqid": entry.fqid,
+                "serial": entry.serial,
+                "title": entry.title,
+                "web": entry.web,
+                "description": entry.description,
+                "content": entry.content,
+                "image_url": entry.image_url,
+                "content_type": entry.content_type,
+                "is_edited": entry.is_edited,
+                "likes_count": entry.likes_count,
+                "visibility": entry.visibility,
+                "created": entry.created.isoformat() if entry.created else "",
+                "updated": entry.updated.isoformat() if entry.updated else "",
+                "author_id": str(entry.author.id) if entry.author else "",
+                "published": entry.published.isoformat() if entry.published else "",
+            }
+            
+            send_entry_to_federation(entry_dict)
+            
+            return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm(instance=entry)
-
+    
     return render(
         request,
         "entries/entry_edit.html",
@@ -296,6 +337,27 @@ def entry_delete(request, author_serial, entry_serial):
     entry = get_object_or_404(Entry, serial=entry_serial, author__serial=author_serial)
     if request.method == "POST":
         entry.mark_deleted()
+        
+        # Send the deleted entry to federation
+        entry_dict = {
+            "fqid": entry.fqid,
+            "serial": entry.serial,
+            "title": entry.title,
+            "web": entry.web,
+            "description": entry.description,
+            "content": entry.content,
+            "image_url": entry.image_url,
+            "content_type": entry.content_type,
+            "is_edited": entry.is_edited,
+            "likes_count": entry.likes_count,
+            "visibility": entry.visibility,
+            "created": entry.created.isoformat() if entry.created else "",
+            "updated": entry.updated.isoformat() if entry.updated else "",
+            "author_id": str(entry.author.id) if entry.author else "",
+            "published": entry.published.isoformat() if entry.published else "",
+        }
+        
+        send_entry_to_federation(entry_dict)
+        
         return redirect("entries:stream_home", author_serial=author_serial)
-    
     return redirect("entries:entry_edit", author_serial=author_serial, entry_serial=entry_serial)
