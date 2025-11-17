@@ -16,29 +16,19 @@ def newEntry(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    fqid = data.get("fqid")
-    author_serial = data.get("author")
-    serial = data.get("serial")
-
-    if not fqid or not author_serial:
-        return JsonResponse({"error": "Missing required fields: fqid, author"}, status=400)
-
-    try:
-        author = Author.objects.get(serial=author_serial)
-    except Author.DoesNotExist:
-        return JsonResponse({"error": "Author not found"}, status=404)
 
     published_raw = data.get("published")
+
     if published_raw:
         published = parse_datetime(published_raw)
     else:
         published = None
 
     entry, created = Entry.objects.update_or_create(
-        fqid=fqid,
+        fqid=data.get("fqid"),
         defaults={
-            "serial": serial,
-            "author": author,
+            "serial": data.get("serial"),
+            "author": data.get("author"),
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
