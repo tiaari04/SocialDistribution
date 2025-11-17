@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'inbox',
     'api',
     'adminpage',
+    'federation',
     
     
     
