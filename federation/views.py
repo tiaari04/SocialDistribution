@@ -20,15 +20,15 @@ def newEntry(request):
     published_raw = data.get("published")
     published = parse_datetime(published_raw) if published_raw else None
 
-    # Handle the author
-    author_data = data.get("author")
+    # Handle the author as a URL string
+    author_url = data.get("author")
     author_instance = None
-    if author_data:
+    if author_url:
         author_instance, _ = Author.objects.get_or_create(
-            id=author_data.get("id"),
+            url=author_url,
             defaults={
-                "displayName": author_data.get("displayName", ""),
-                "url": author_data.get("url", "")
+                "displayName": "",  # optional, can be empty
+                "id": author_url.split("/")[-1]  # use last part of URL as id
             }
         )
 

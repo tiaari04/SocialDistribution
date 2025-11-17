@@ -201,8 +201,17 @@ def entry_create(request, author_serial):
 
             entry.published = timezone.now()
             entry.save()
-            entry_dict = model_to_dict(entry)
+
+            entry_dict = model_to_dict(entry, fields=[
+                "fqid", "serial", "title", "web", "description", 
+                "content", "image_url", "content_type", 
+                "is_edited", "likes_count", "visibility"
+            ])
+
+            entry_dict["author"] = entry.author.url if entry.author else None
+
             entry_dict["published"] = entry.published.isoformat()
+
             send_entry_to_federation(entry_dict)
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
