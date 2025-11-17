@@ -7,7 +7,7 @@ def send_entry_to_federation(entry):
     friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
     if not friend_nodes:
         return
-
+    
     payload = {
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
@@ -16,7 +16,7 @@ def send_entry_to_federation(entry):
         "description": entry.get("description") or "",
         "fqid": entry.get("fqid") or "",
         "image_url": entry.get("image_url") or "",
-        "is_edited": entry.get("is_edited") if entry.get("is_edited") is not None else False,
+        "is_edited": entry.get("is_edited") if entry.get("is_edit ed") is not None else False,
         "likes_count": entry.get("likes_count") or 0,
         "published": entry.get("published").isoformat() if isinstance(entry.get("published"), datetime) else entry.get("published") or "",
         "serial": entry.get("serial") or "",
@@ -25,12 +25,11 @@ def send_entry_to_federation(entry):
         "visibility": entry.get("visibility") or "",
         "web": entry.get("web") or "",
     }
-
-
+    
     if isinstance(payload["author_id"], Author):
         author = payload["author_id"]
         payload["author_id"] = str(author.id)
-
+    
     for node in friend_nodes:
         inbox_url = f"{node}/federation/"
         try:
