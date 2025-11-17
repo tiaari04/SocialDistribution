@@ -21,23 +21,15 @@ def newEntry(request):
     published = parse_datetime(published_raw) if published_raw else None
 
     # Handle the author as a URL string
-    author_url = data.get("author")
-    author_instance = None
-    if author_url:
-        author_instance, _ = Author.objects.get_or_create(
-            url=author_url,
-            defaults={
-                "displayName": "",  # optional, can be empty
-                "id": author_url.split("/")[-1]  # use last part of URL as id
-            }
-        )
+    author_url = data.get("author_id")
+
 
     # Create or update the entry
     entry, created = Entry.objects.update_or_create(
         fqid=data.get("fqid"),
         defaults={
             "serial": data.get("serial"),
-            "author": author_instance,
+            "author": author_url,
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
@@ -50,7 +42,6 @@ def newEntry(request):
         }
     )
 
-    # Update published if provided
     if published is not None:
         entry.published = published
         entry.save()

@@ -8,7 +8,6 @@ def send_entry_to_federation(entry):
     if not friend_nodes:
         return
 
-    # Build a clean payload
     payload = {
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
@@ -27,7 +26,7 @@ def send_entry_to_federation(entry):
         "web": entry.get("web") or "",
     }
 
-    # Ensure author_id is string
+
     if isinstance(payload["author_id"], Author):
         author = payload["author_id"]
         payload["author_id"] = str(author.id)

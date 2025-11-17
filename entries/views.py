@@ -208,8 +208,7 @@ def entry_create(request, author_serial):
                 "is_edited", "likes_count", "visibility"
             ])
 
-            entry_dict["author"] = entry.author.url if entry.author else None
-
+            entry_dict["author_id"] = entry.author if entry.author else None
             entry_dict["published"] = entry.published.isoformat()
 
             send_entry_to_federation(entry_dict)
