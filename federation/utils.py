@@ -9,7 +9,7 @@ def send_entry_to_federation(entry):
 
     
     for node in friend_nodes:
-        inbox_url = f"{node}/federation/entry/"
+        inbox_url = f"{node}/federation/"
         try:
             response = requests.post(inbox_url, json=entry)
             print(response.status_code)
