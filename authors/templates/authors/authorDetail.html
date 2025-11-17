@@ -209,6 +209,7 @@
             data-initial-state="{{ follow_status|escapejs }}"
             data-actor-id="{{ request.user.author.id|escapejs }}"
             data-actor-host="{{ request.user.author.host|escapejs }}"
+            data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
             data-actor-username="{{ request.user.username|escapejs }}"
             data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
             data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
@@ -216,7 +217,6 @@
             data-object-id="{{ author.id|escapejs }}"
             data-object-host="{{ author.host|escapejs }}"
             data-object-displayname="{{ author.displayName|escapejs }}"
-            data-object-serial="{{ author.serial|default:''|escapejs }}"
             data-object-github="{{ author.github|default:''|escapejs }}"
             data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
             data-object-web="{{ author.web|default:''|escapejs }}"
@@ -337,9 +337,9 @@
         } else if (state === "Pending" || state === "Unfollow") {
           // Call delete API to remove pending or accepted follow requests
           // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
-            const authorSerial = btn.dataset.objectSerial;
-            const followerId = this.dataset.actorId;
-            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
+            const authorSerial = btn.dataset.actorSerial;
+            const followedAuthorId = encodeURI(btn.dataset.objectId);
+            deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
             try{
               const res = await fetch(deleteEndpoint, {
                 method: "DELETE",
@@ -359,31 +359,6 @@
             catch (err) {
               console.error(err);
               alert("Network error while removing follow request.");
-            }
-        } else if (state === "Unfollow") {
-          // Unfollow locally; ideally call a DELETE API to remove accepted follow
-          const authorSerial = btn.dataset.objectSerial;
-            const followerId = this.dataset.actorId;
-            deleteEndpoint = `/api/authors/${authorSerial}/followers/${followerId}/`;
-            try{
-              const res = await fetch(deleteEndpoint, {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": csrfToken
-                }
-              });
-              if (res.ok) {
-                applyVisual("Request To Follow");
-              } else {
-                const text = await res.text();
-                console.error('Request to unfollow author failed', res.status, text);
-                alert("Failed to unfollow author");
-              }
-            }
-            catch (err) {
-              console.error(err);
-              alert("Network error while unfollowing author.");
             }
         }
       });

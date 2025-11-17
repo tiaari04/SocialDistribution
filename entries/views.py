@@ -1,3 +1,4 @@
+from signal import pause
 from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
@@ -14,6 +15,8 @@ from django.core.paginator import Paginator
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from federation.utils import send_entry_to_federation
+from django.forms.models import model_to_dict
 
 
 @csrf_exempt
@@ -198,6 +201,7 @@ def entry_create(request, author_serial):
 
             entry.published = timezone.now()
             entry.save()
+            send_entry_to_federation(model_to_dict(entry))
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
         form = EntryForm()
