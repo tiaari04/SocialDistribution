@@ -29,7 +29,7 @@ def newEntry(request):
         fqid=data.get("fqid"),
         defaults={
             "serial": data.get("serial"),
-            "author": author_url,
+            "author_id": author_url,
             "title": data.get("title", ""),
             "web": data.get("web", ""),
             "description": data.get("description", ""),
