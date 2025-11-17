@@ -11,6 +11,8 @@ def _ensure_author(author_payload: dict) -> Author:
     author_id = author_payload.get('id')
     if not author_id:
         return None
+
+    author_id = author_id.encode('utf-8').decode('unicode-escape')
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
