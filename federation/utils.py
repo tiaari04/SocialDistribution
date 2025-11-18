@@ -80,11 +80,11 @@ def fetch_remote_authors(remote_base_url):
     authors = data.get("items", [])
 
     for remote in authors:
+        remote_host = remote.get("host", "").rstrip("/")
         if remote_host.startswith(LOCAL_NODE_ID):
             continue
 
         serial = remote["id"].split("/")[-1]
-        remote_host = remote.get("host", "").rstrip("/")
 
         Author.objects.update_or_create(
             id=remote["id"],  # remote author's full URL
