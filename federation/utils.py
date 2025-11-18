@@ -65,7 +65,7 @@ def sync_remote_authors():
         fetch_remote_authors(node)
 
 def fetch_remote_authors(remote_base_url):
-    
+    LOCAL_NODE_ID = os.getenv("NODE_ID", "")
     url = f"{remote_base_url.rstrip('/')}/api/authors"
     print("Fetching authors from:", url)
 
@@ -81,6 +81,10 @@ def fetch_remote_authors(remote_base_url):
 
     for remote in authors:
         serial = remote["id"].split("/")[-1]
+        remote_host = remote.get("host", "")
+
+        if remote_host == LOCAL_NODE_ID:
+            continue
 
         Author.objects.update_or_create(
             id=remote["id"],  # remote author's full URL
@@ -95,3 +99,5 @@ def fetch_remote_authors(remote_base_url):
                 "serial":serial,
             }
         )
+
+        
