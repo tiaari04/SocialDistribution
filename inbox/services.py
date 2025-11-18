@@ -100,6 +100,5 @@ def remove_followed_author(author, actor):
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req(actor, obj)
     inbox_url = f"{obj.host}authors/{obj.serial}/inbox/"
-    print(inbox_url)
     resp = requests.post(inbox_url, json=data, timeout=5)
     resp.raise_for_status()
