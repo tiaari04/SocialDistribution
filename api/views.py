@@ -134,6 +134,7 @@ def api_author_follow_requests(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOW_REQS)
 	return JsonResponse(resp, status=status_code)
 
+@csrf_exempt
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':
