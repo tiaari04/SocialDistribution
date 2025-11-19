@@ -101,6 +101,7 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 	author = get_object_or_404(Author, serial=author_serial)
 	actor_fqid = unquote(foreign_encoded)
 	actor = get_object_or_404(Author, id=actor_fqid)
+	print("here")
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
 		return JsonResponse({"detail": "Authentication required"}, status=403)
