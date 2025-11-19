@@ -98,13 +98,10 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 		return JsonResponse({"detail": "Method not allowed"}, status=405)
 
 	from authors.models import Author
-	print(f"Printed values: {author_serial} {foreign_encoded}")
 	author = get_object_or_404(Author, serial=author_serial)
 	actor_fqid = decode(foreign_encoded, 'unicode_escape')
 	actor_fqid = unquote(actor_fqid)
-	print("Looking for:", repr(actor_fqid))
 	actor = get_object_or_404(Author, id=actor_fqid)
-	print("here")
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
 		return JsonResponse({"detail": "Authentication required"}, status=403)
@@ -137,7 +134,6 @@ def api_author_follow_requests(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOW_REQS)
 	return JsonResponse(resp, status=status_code)
 
-@csrf_exempt
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':

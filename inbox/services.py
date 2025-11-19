@@ -93,7 +93,6 @@ def remove_followed_author(author, actor):
         )
         follow_request.delete()
     except FollowRequest.DoesNotExist:
-        print("here1")
         follow_request = None
     
     return follow_request
