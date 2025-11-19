@@ -338,7 +338,7 @@
           // Call delete API to remove pending or accepted follow requests
           // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
             const authorSerial = btn.dataset.actorSerial;
-            const followedAuthorId = btn.dataset.objectId;
+            const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
             deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
             try{
               const res = await fetch(deleteEndpoint, {
