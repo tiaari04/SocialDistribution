@@ -100,8 +100,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 	from authors.models import Author
 	print(f"Printed values: {author_serial} {foreign_encoded}")
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = decode(actor_fqid, 'unicode_escape')
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	print("Looking for:", repr(actor_fqid))
 	actor = get_object_or_404(Author, id=actor_fqid)
 	print("here")
