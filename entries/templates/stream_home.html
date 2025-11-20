@@ -4,6 +4,7 @@
     <head>
         <title>Red Social Dist | Home</title>
         <meta charset="UTF-8">
+        <meta name="csrf-token" content="{{ csrf_token }}">
         <style>
             body {
                 overflow: auto;
@@ -310,30 +311,12 @@
                 })
             })
         </script>
-        <!-- Get cookies -->
-        <script>
-            'use strict';
-            // following function from Stack Overflow, https://stackoverflow.com/questions/62416617/add-csrf-in-fetch-js-for-django. 2025-10-20
-            function getCookie(name) {
-                var cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    var cookies = document.cookie.split(';');
-                    for (var i = 0; i < cookies.length; i++) {
-                        var cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-        </script>
         <!-- User session info -->
         <script>
             'use strict';
             const userName = '{{ author.displayName }}';
             const userFqid = '{{ author.id }}';
+            const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
         </script>
         <!-- Handle like functionality -->
         <script>
@@ -346,7 +329,7 @@
                     const eEncoded = encodeURIComponent(entryFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the post
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the post
                         body: JSON.stringify({}),
                     }) .then(() => window.location.reload());
                     if (!res.ok) throw new Error(await res.text());
@@ -453,7 +436,7 @@
                     const eEncoded = encodeURIComponent(entryFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that sent the comment
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that sent the comment
                         body: JSON.stringify({ comment: text }),
                     })
                     if (!res.ok) throw new Error(await res.text());
@@ -465,7 +448,7 @@
                     const cEncoded = encodeURIComponent(commentFqid);
                     const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the comment
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the comment
                         body: JSON.stringify({}),
                     }) .then(() => openComments(entryFqid));
                     if (!res.ok) throw new Error(await res.text());
