@@ -4,6 +4,7 @@ from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
 from entries.models import Entry
+from entries.services import _ensure_author
 
 @csrf_exempt
 def newEntry(request):
@@ -100,4 +101,77 @@ def newEntry(request):
         "created": created_flag,
         "author_created": author_created,
         "fqid": entry.fqid,
+    }, status=200)
+
+@csrf_exempt
+def newLike(request): # works for entry likes and comment likes 
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        print(data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    author_payload = data.get('author') or {}
+    author = _ensure_author(author_payload)
+    object_fqid = data.get('object_fqid')
+    if not object_fqid:
+        return {'status': 'error', 'error': 'missing_object'}
+
+    # idempotent: if like exists, return existing
+    if author:
+        existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
+        if existing:
+            return {'status': 'exists', 'object': existing}
+
+    like = Like.objects.create(
+        fqid=data.get('fqid'),
+        author=author,
+        object_fqid=object_fqid,
+        published=data.get('published'),
+    )
+
+    return JsonResponse({
+        "status": "saved",
+        "fqid": like.fqid,
+        "object_fqid": like.object_fqid,
+    }, status=200)
+
+@csrf_exempt
+def newComment(request): 
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        print(data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    author_payload = data.get('author') or {}
+    author = _ensure_author(author_payload)
+    entry_fqid = data.get('entry_id')
+    if not entry_fqid:
+        return {'status': 'error', 'error': 'missing_entry'}
+    try:
+        entry = Entry.objects.get(fqid=entry_fqid)
+    except Entry.DoesNotExist:
+        return {'status': 'error', 'error': 'entry_not_found'}
+
+    comment = Comment.objects.create(
+        fqid=data.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+        author=author,
+        entry=entry,
+        content=data.get('comment') or data.get('content') or '',
+        content_type=data.get('contentType') or data.get('content_type') or entry.ContentType.MARKDOWN,
+        published=data.get('published') or timezone.now(),
+        web=data.get('web', ''),
+    )
+
+    return JsonResponse({
+        "status": "saved",
+        "fqid": comment.fqid,
+        "entry_fqid": entry_fqid,
     }, status=200)

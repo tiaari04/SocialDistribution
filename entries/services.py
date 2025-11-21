@@ -2,7 +2,7 @@ from authors.models import Author
 from inbox.models import InboxItem, FollowRequest
 from .models import Entry, Comment, Like
 from django.utils import timezone
-
+from django.forms.models import model_to_dict
 
 def _ensure_author(author_payload: dict) -> Author:
     """Create or get an Author from an incoming payload dict."""
@@ -63,6 +63,16 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
         )
+
+        comment_dict = model_to_dict(comment, fields=[
+            'fqid', 'content', 'content_type', 'web', 'likes_count'
+        ])
+        comment_dict['author_id'] = str(author.id) if author else ''
+        comment_dict['entry_id'] = str(entry.id) if entry else ''
+        comment_dict['published'] = comment.published.isoformat()
+
+        send_comment_to_federation(comment_dict)
+
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
@@ -84,6 +94,15 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             object_fqid=object_fqid,
             published=payload.get('published') or timezone.now(),
         )
+
+        like_dict = model_to_dict(like, fields=[
+            'fqid', 'object_fqid'
+        ])
+        like_dict['author_id'] = str(author.id) if author else ''
+        like_dict['published'] = like.published.isoformat()
+
+        send_like_to_federation(like_dict)
+
         return {'status': 'created', 'object': like}
 
     if typ == 'follow':
