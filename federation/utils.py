@@ -4,6 +4,7 @@ from authors.models import Author
 from datetime import datetime
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404
+from django.utils.crypto import get_random_string
 
 def send_entry_to_federation(entry):
     friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
@@ -57,3 +58,46 @@ def send_entry_to_federation(entry):
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"Failed to send entry to {inbox_url}: {e}")
+
+def sync_remote_authors():
+    friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
+    for node in friend_nodes:
+        fetch_remote_authors(node)
+
+def fetch_remote_authors(remote_base_url):
+    LOCAL_NODE_ID = os.getenv("NODE_ID", "").rstrip("/")
+    url = f"{remote_base_url.rstrip('/')}/api/authors"
+    print("Fetching authors from:", url)
+
+    try:
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+    except Exception as e:
+        print("Failed to fetch remote authors:", e)
+        return
+
+    data = resp.json()
+    authors = data.get("items", [])
+
+    for remote in authors:
+        remote_host = remote.get("host", "").rstrip("/")
+        if remote_host.startswith(LOCAL_NODE_ID):
+            continue
+
+        serial = remote["id"].split("/")[-1]
+
+        Author.objects.update_or_create(
+            id=remote["id"],  # remote author's full URL
+            defaults={
+                "displayName": remote.get("displayName", ""),
+                "host": remote.get("host", ""),
+                "github": remote.get("github", ""),
+                "profileImage": remote.get("profileImage", ""),
+                "web": remote.get("web", ""),
+                "is_local":False,
+                "is_approved":True,
+                "serial":serial,
+            }
+        )
+
+        

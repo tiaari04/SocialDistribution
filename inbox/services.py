@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from inbox.models import FollowRequest
 from inbox.serializers import serialize_follow_req
 import requests
+from requests.auth import HTTPBasicAuth
 
 def get_follower(author, actor):
     follow_request = FollowRequest.objects.filter(
@@ -70,17 +71,17 @@ def add_followed_author(author, actor):
         follow_request.save()
         return {"details": "created"}
 
-    
-    follow_request = FollowRequest.objects.create(
-        actor=author,
-        author_followed = actor,
-        state=FollowRequest.State.ACCEPTED
-    ) 
-    follow_request.save()
+    try:
+        send_remote_follow_request(author, actor)
 
-    data = serialize_follow_req(author, actor)
-    url = f"{actor.id}/inbox"
-    resp = requests.post(url, data)
+        follow_request = FollowRequest.objects.create(
+            actor=author,
+            author_followed = actor,
+            state=FollowRequest.State.ACCEPTED
+        ) 
+        follow_request.save()
+    except Exception as e:
+        print("Failed sending follow:", e)
     
     return {"details": "created"}
 
@@ -95,3 +96,9 @@ def remove_followed_author(author, actor):
         follow_request = None
     
     return follow_request
+
+def send_remote_follow_request(actor, obj):
+    data = serialize_follow_req(actor, obj)
+    inbox_url = f"{obj.host}authors/{obj.serial}/inbox/"
+    resp = requests.post(inbox_url, json=data, timeout=5)
+    resp.raise_for_status()

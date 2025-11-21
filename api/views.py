@@ -7,6 +7,7 @@ from entries import services as entries_services
 from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
+from codecs import decode
 
 # followers serializer will use variables to know how to format the data
 FOLLOWERS = 1
@@ -18,7 +19,20 @@ def _not_implemented(endpoint_name):
 
 # Authors
 def api_authors_list(request):
-	return _not_implemented("api_authors_list")
+	from authors.models import Author
+	if request.method == "GET":
+		authors = Author.objects.all()
+		data = {"items": []}
+		for a in authors:
+			data["items"].append({
+				"id": a.id,
+				"displayName": a.displayName,
+				"host": a.host,
+				"github": a.github,
+				"profileImage": a.profileImage,
+				"web": a.web,
+			})
+		return JsonResponse(data)
 
 def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
@@ -85,7 +99,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -119,6 +134,7 @@ def api_author_follow_requests(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOW_REQS)
 	return JsonResponse(resp, status=status_code)
 
+@csrf_exempt
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':
