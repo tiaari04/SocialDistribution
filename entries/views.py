@@ -67,6 +67,30 @@ def github_webhook(request):
                 published=timezone.now(),
                 fqid=fqid
             )
+
+            entry_dict = {
+                "fqid": entry.fqid,
+                "serial": entry.serial,
+                "title": entry.title,
+                "web": entry.web,
+                "description": entry.description,
+                "content": entry.content,
+                "image_url": entry.image_url,
+                "content_type": entry.content_type,
+                "is_edited": entry.is_edited,
+                "likes_count": entry.likes_count,
+                "visibility": entry.visibility,
+                "created": entry.created.isoformat() if entry.created else "",
+                "updated": entry.updated.isoformat() if entry.updated else "",
+                "author_id": str(entry.author.id) if entry.author else "",
+                "published": entry.published.isoformat() if entry.published else "",
+            }
+            
+            try:
+                send_entry_to_federation(entry_dict)
+            except Exception as e:
+                logger.error(f"Federation error: {e}")
+
             entries_created.append(entry.serial)
 
     elif event == "pull_request":
@@ -99,6 +123,30 @@ def github_webhook(request):
             published=timezone.now(),
             fqid=fqid
         )
+
+        entry_dict = {
+            "fqid": entry.fqid,
+            "serial": entry.serial,
+            "title": entry.title,
+            "web": entry.web,
+            "description": entry.description,
+            "content": entry.content,
+            "image_url": entry.image_url,
+            "content_type": entry.content_type,
+            "is_edited": entry.is_edited,
+            "likes_count": entry.likes_count,
+            "visibility": entry.visibility,
+            "created": entry.created.isoformat() if entry.created else "",
+            "updated": entry.updated.isoformat() if entry.updated else "",
+            "author_id": str(entry.author.id) if entry.author else "",
+            "published": entry.published.isoformat() if entry.published else "",
+        }
+        
+        try:
+            send_entry_to_federation(entry_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
+
         entries_created.append(entry.serial)
     else:
         return JsonResponse({'status': 'ignored', 'event': event})
