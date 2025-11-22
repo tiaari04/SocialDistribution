@@ -8,6 +8,8 @@ from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 from codecs import decode
+from federation.utils import check_basic_auth
+
 
 # followers serializer will use variables to know how to format the data
 FOLLOWERS = 1
@@ -20,7 +22,13 @@ def _not_implemented(endpoint_name):
 # Authors
 @csrf_exempt
 def api_authors_list(request):
+	node = check_basic_auth(request)
+	print("basic auth: ", node)
+	if not node:
+		return JsonResponse({"error": "Unauthorized"}, status=401)
+
 	if request.method == 'POST':
+		print(f"req: {request}")
 		# Handle federation posts - these are PUBLIC posts sent to everyone
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
