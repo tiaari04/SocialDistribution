@@ -1,15 +1,45 @@
-import os
 import requests
 from authors.models import Author
 from datetime import datetime
-from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from .models import FederatedNode, FederationLog
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def send_entry_to_federation(entry):
-    friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
-    if not friend_nodes:
-        return
+    """Send entry to all active federated nodes."""
+    active_nodes = FederatedNode.objects.filter(is_active=True)
     
+    if not active_nodes.exists():
+        logger.info("No active federated nodes configured")
+        return {"successful": 0, "failed": 0, "logs": []}
+    
+    payload = _build_entry_payload(entry)
+    
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": []
+    }
+    
+    for node in active_nodes:
+        log_entry = _send_to_node(node, payload, entry.get("fqid"))
+        results["logs"].append(log_entry)
+        
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+    
+    logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
+    return results
+
+
+def _build_entry_payload(entry):
+    """Build federation payload from entry data."""
     payload = {
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
@@ -28,8 +58,9 @@ def send_entry_to_federation(entry):
         "web": entry.get("web") or "",
     }
     
-    author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
-    author_data = {
+    try:
+        author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
+        author_data = {
             "id": str(author.id),
             "serial": author.serial or "",
             "displayName": author.displayName or "",
@@ -44,16 +75,92 @@ def send_entry_to_federation(entry):
             "web": author.web or "",
             "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
             "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
-    }
-    payload["author_id"] = str(author.id)
-    payload["author_data"] = author_data 
-    print(author_data)
+        }
+        payload["author_id"] = str(author.id)
+        payload["author_data"] = author_data
+    except Exception as e:
+        logger.error(f"Error building author data: {e}")
     
-    for node in friend_nodes:
-        inbox_url = f"{node}/federation/"
-        try:
-            response = requests.post(inbox_url, json=payload)
-            print(f"Sent to {inbox_url}: {response.status_code}")
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Failed to send entry to {inbox_url}: {e}")
+    return payload
+
+
+def _send_to_node(node, payload, entry_fqid):
+    """Send payload to a specific node and log result."""
+    log_entry = FederationLog.objects.create(
+        node=node,
+        entry_fqid=entry_fqid or "unknown",
+        request_payload=payload,
+        status=FederationLog.Status.PENDING
+    )
+    
+    try:
+        # Get authentication headers from node configuration
+        headers = node.get_auth_headers()
+        
+        # Send POST request to node's inbox
+        response = requests.post(
+            node.full_inbox_url,
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        log_entry.response_status_code = response.status_code
+        log_entry.response_body = response.text[:5000]
+        log_entry.completed = timezone.now()
+        
+        if response.status_code in [200, 201]:
+            log_entry.status = FederationLog.Status.SUCCESS
+            node.record_success()
+            logger.info(f"Successfully sent to {node.name} ({node.full_inbox_url})")
+        else:
+            log_entry.status = FederationLog.Status.FAILURE
+            log_entry.error_message = f"HTTP {response.status_code}: {response.text[:500]}"
+            node.record_failure()
+            logger.warning(f"Failed to send to {node.name}: HTTP {response.status_code}")
+        
+    except requests.RequestException as e:
+        log_entry.status = FederationLog.Status.FAILURE
+        log_entry.error_message = str(e)[:1000]
+        log_entry.completed = timezone.now()
+        node.record_failure()
+        logger.error(f"Error sending to {node.name}: {e}")
+    
+    except Exception as e:
+        log_entry.status = FederationLog.Status.FAILURE
+        log_entry.error_message = f"Unexpected error: {str(e)}"[:1000]
+        log_entry.completed = timezone.now()
+        node.record_failure()
+        logger.exception(f"Unexpected error sending to {node.name}")
+    
+    finally:
+        log_entry.save()
+    
+    return log_entry
+
+
+def get_federation_status():
+    """
+    Get a summary of federation node statuses.
+    
+    Returns:
+        dict: Summary of all nodes and their health
+    """
+    nodes = FederatedNode.objects.all()
+    
+    return {
+        "total_nodes": nodes.count(),
+        "active_nodes": nodes.filter(is_active=True).count(),
+        "nodes": [
+            {
+                "id": node.id,
+                "name": node.name,
+                "url": node.base_url,
+                "is_active": node.is_active,
+                "success_rate": node.success_rate,
+                "total_sends": node.total_sends,
+                "last_successful_send": node.last_successful_send,
+            }
+            for node in nodes
+        ]
+    }
