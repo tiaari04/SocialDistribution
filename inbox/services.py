@@ -105,7 +105,7 @@ def send_remote_follow_request(actor, obj):
     data = serialize_follow_req(actor, obj)
     inbox_url = f"{obj.host}authors/{obj.serial}/inbox/"
 
-    base_url = obj.host.removesuffix('/api')
+    base_url = obj.host.removesuffix('/api/')
     node = FederatedNode.objects.get(base_url=base_url)
 
     log_entry = FederationLog.objects.create(
