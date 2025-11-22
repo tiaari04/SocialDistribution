@@ -4,15 +4,9 @@ from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
 from entries.models import Entry
-from federation.utils import check_basic_auth
 
 @csrf_exempt
 def newEntry(request):
-    node = check_basic_auth(request)
-    print("basic auth: ", node)
-    if not node:
-        return JsonResponse({"error": "Unauthorized"}, status=401)
-
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
     
