@@ -20,18 +20,17 @@ def _not_implemented(endpoint_name):
 @csrf_exempt
 def api_authors_list(request):
 	if request.method == 'POST':
-		# Handle federation posts
+		# Handle federation posts - these are PUBLIC posts sent to everyone
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
-			author_id = payload.get('author_id')
-			if author_id:
-				# Extract author serial from the ID
-				author_serial = author_id.split('/')[-1] if '/' in author_id else author_id
-				result = entries_services.process_inbox_for(author_serial, payload)
-				if result.get('status') in ('created', 'exists'):
-					return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
-				if result.get('status') == 'ignored':
-					return JsonResponse({'detail': 'ignored'}, status=200)
+			# For public posts, process without a specific recipient
+			result = entries_services.process_federated_public_post(payload)
+			if result.get('status') in ('created', 'exists'):
+				return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
+			if result.get('status') == 'ignored':
+				return JsonResponse({'detail': 'ignored'}, status=200)
+			if result.get('status') == 'error':
+				return JsonResponse({'detail': result.get('error', 'unknown error')}, status=400)
 			return JsonResponse({'detail': 'Entry processed'}, status=200)
 		except Exception as e:
 			return JsonResponse({'detail': str(e)}, status=400)
