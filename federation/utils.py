@@ -165,6 +165,7 @@ def get_federation_status():
 def check_basic_auth(request):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Basic "):
+        print("here1")
         return None
 
     encoded = auth_header.split(" ")[1]
@@ -176,6 +177,7 @@ def check_basic_auth(request):
         return None
 
     try:
+        print("here3")
         return FederatedNode.objects.get(
             auth_method=FederatedNode.AuthMethod.BASIC,
             username=username,
