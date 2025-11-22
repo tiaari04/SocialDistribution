@@ -55,7 +55,8 @@ def send_like_to_federation(like):
         logger.error(f"Error building author data: {e}")
 
     for node in active_nodes:
-        log_entry = _send_to_node(node, payload, like.get("fqid"))
+        inbox_url = f"{node.base_url}/federation/like/"
+        log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
         if log_entry.status == FederationLog.Status.SUCCESS:
@@ -90,7 +91,8 @@ def send_comment_to_federation(comment):
         logger.error(f"Error building author data: {e}")
 
     for node in active_nodes:
-        log_entry = _send_to_node(node, payload, comment.get("fqid"))
+        inbox_url = f"{node.base_url}/federation/comment/"
+        log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
         if log_entry.status == FederationLog.Status.SUCCESS:
@@ -100,13 +102,6 @@ def send_comment_to_federation(comment):
 
     logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
     return results
-        # inbox_url = f"{node.base_url}/federation/comment/"
-        # try:
-        #     response = requests.post(inbox_url, json=payload)
-        #     print(f"Comment sent to {inbox_url}: {response.status_code}")
-        #     response.raise_for_status()
-        # except requests.RequestException as e:
-        #     print(f"Failed to send comment to {inbox_url}: {e}")
 
 
 def _build_entry_payload(entry):
@@ -159,19 +154,23 @@ def _build_author_payload(author):
 
     return payload
 
-def _send_to_node(node, payload, entry_fqid):
+def _send_to_node(node, payload, entry_fqid, endpoint=None):
     log_entry = FederationLog.objects.create(
         node=node,
         entry_fqid=entry_fqid or "unknown",
         request_payload=payload,
         status=FederationLog.Status.PENDING
     )
+
+    url = node.full_inbox_url
+    if endpoint: 
+        url = endpoint
     
     try:
         headers = node.get_auth_headers()
         
         response = requests.post(
-            node.full_inbox_url,
+            url,
             json=payload,
             headers=headers,
             timeout=30
@@ -184,7 +183,7 @@ def _send_to_node(node, payload, entry_fqid):
         if response.status_code in [200, 201]:
             log_entry.status = FederationLog.Status.SUCCESS
             node.record_success()
-            logger.info(f"Successfully sent to {node.name} ({node.full_inbox_url})")
+            logger.info(f"Successfully sent to {node.name} ({url})")
         else:
             log_entry.status = FederationLog.Status.FAILURE
             log_entry.error_message = f"HTTP {response.status_code}: {response.text[:500]}"

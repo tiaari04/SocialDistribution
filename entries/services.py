@@ -114,7 +114,10 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         comment_dict['entry_id'] = entry_fqid
         comment_dict['published'] = comment.published.isoformat()
 
-        send_comment_to_federation(comment_dict)
+        try:
+            send_comment_to_federation(comment_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
 
         return {'status': 'created', 'object': comment}
 
@@ -144,7 +147,10 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         like_dict['author_id'] = str(author.id) if author else ''
         like_dict['published'] = like.published.isoformat()
 
-        send_like_to_federation(like_dict)
+        try:
+            send_like_to_federation(like_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
 
         return {'status': 'created', 'object': like}
 
