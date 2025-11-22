@@ -2,7 +2,7 @@ from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
 from inbox.models import FollowRequest
-from .models import Entry
+from .models import Entry, Like
 from authors.models import Author
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EntryForm
@@ -141,9 +141,15 @@ def stream_home(request, author_serial):
         | own_entries
     ).select_related("author").order_by("-published")
 
+    likes = Like.objects.filter(fqid__icontains=current_author.id)
+    like_ids = []
+    for like in likes: 
+        like_ids.append(like.object_fqid)
+
     return render(request, "stream_home.html", {
         "entries": entries,
         "author": current_author,
+        "likes": like_ids,
     })
 
 def public_entries(request):
