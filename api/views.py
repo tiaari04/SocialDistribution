@@ -34,6 +34,7 @@ def api_authors_list(request):
 			# Add user to the database if they aren't there already
 			author_data = data.get("author_data")
 			create_user = create_remote_author(author_data)
+			print("here5")
 
 			# For public posts, process without a specific recipient
 			result = entries_services.process_federated_public_post(payload)
