@@ -48,9 +48,6 @@
                 <th style="text-align: left; padding: 8px;">Name</th>
                 <th style="text-align: left; padding: 8px;">URL</th>
                 <th style="text-align: center; padding: 8px;">Status</th>
-                <th style="text-align: right; padding: 8px;">Success Rate</th>
-                <th style="text-align: right; padding: 8px;">Total Sends</th>
-                <th style="text-align: left; padding: 8px;">Last Success</th>
               </tr>
             </thead>
             <tbody>
@@ -69,23 +66,6 @@
                     <span style="color: red;">● Inactive</span>
                   {% endif %}
                 </td>
-                <td style="text-align: right; padding: 8px;">
-                  {% if node.success_rate >= 90 %}
-                    <span style="color: green;">{{ node.success_rate|floatformat:1 }}%</span>
-                  {% elif node.success_rate >= 70 %}
-                    <span style="color: orange;">{{ node.success_rate|floatformat:1 }}%</span>
-                  {% else %}
-                    <span style="color: red;">{{ node.success_rate|floatformat:1 }}%</span>
-                  {% endif %}
-                </td>
-                <td style="text-align: right; padding: 8px;">{{ node.total_sends }}</td>
-                <td style="padding: 8px; font-size: 0.875rem;">
-                  {% if node.last_successful_send %}
-                    {{ node.last_successful_send|date:"M d, Y H:i" }}
-                  {% else %}
-                    <span style="color: #999;">Never</span>
-                  {% endif %}
-                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -97,37 +77,5 @@
     </ul>
   </li>
 
-  <!-- Recent Activity -->
-  <li class="card p-4">
-    <ul class="gap-4">
-      <li><h2 class="text-lg semibold">Recent Activity</h2></li>
-      {% if recent_logs %}
-        <li>
-          <ul class="gap-2">
-            {% for log in recent_logs %}
-            <li style="padding: 8px; border-left: 3px solid {% if log.status == 'success' %}green{% elif log.status == 'failure' %}red{% else %}orange{% endif %}; background: #f9f9f9;">
-              <ul class="gap-1">
-                <li>
-                  <strong>{{ log.node.name }}</strong> - 
-                  <span style="color: {% if log.status == 'success' %}green{% elif log.status == 'failure' %}red{% else %}orange{% endif %};">
-                    {{ log.get_status_display }}
-                  </span>
-                </li>
-                <li style="font-size: 0.875rem; color: #666;">
-                  {{ log.entry_fqid|truncatechars:60 }} - {{ log.created|date:"M d, Y H:i:s" }}
-                </li>
-                {% if log.error_message %}
-                <li style="font-size: 0.875rem; color: red;">{{ log.error_message|truncatechars:100 }}</li>
-                {% endif %}
-              </ul>
-            </li>
-            {% endfor %}
-          </ul>
-        </li>
-      {% else %}
-        <li class="text-muted">No recent activity</li>
-      {% endif %}
-    </ul>
-  </li>
 </ul>
 {% endblock %}

@@ -14,7 +14,6 @@
           <button type="submit" class="btn btn-danger">Delete</button>
         </form>
       </li>
-      <li><a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-secondary">Back to List</a></li>
     </ul>
   </li>
 
@@ -34,52 +33,12 @@
               {% endif %}
             </li>
             <li><strong>Base URL:</strong> <a href="{{ node.base_url }}" target="_blank" style="color: #0066cc;">{{ node.base_url }}</a></li>
-            <li><strong>Inbox URL:</strong> <code>{{ node.full_inbox_url }}</code></li>
-            <li><strong>API Version:</strong> {{ node.api_version }}</li>
             <li><strong>Auth Method:</strong> {{ node.get_auth_method_display }}</li>
-            <li><strong>Bidirectional:</strong> {% if node.is_bidirectional %}Yes{% else %}No{% endif %}</li>
           </ul>
         </li>
       </ul>
     </div>
 
-    <div class="card p-4">
-      <ul class="gap-4">
-        <li><h2 class="text-lg semibold">Statistics</h2></li>
-        <li>
-          <ul class="gap-2">
-            <li><strong>Total Sends:</strong> {{ node.total_sends }}</li>
-            <li><strong>Total Failures:</strong> <span style="color: red;">{{ node.total_failures }}</span></li>
-            <li>
-              <strong>Success Rate:</strong>
-              {% if node.success_rate >= 90 %}
-                <span style="color: green; font-weight: 500;">{{ node.success_rate|floatformat:2 }}%</span>
-              {% elif node.success_rate >= 70 %}
-                <span style="color: orange; font-weight: 500;">{{ node.success_rate|floatformat:2 }}%</span>
-              {% else %}
-                <span style="color: red; font-weight: 500;">{{ node.success_rate|floatformat:2 }}%</span>
-              {% endif %}
-            </li>
-            <li>
-              <strong>Last Successful Send:</strong>
-              {% if node.last_successful_send %}
-                {{ node.last_successful_send|date:"M d, Y H:i:s" }}
-              {% else %}
-                <span style="color: #999;">Never</span>
-              {% endif %}
-            </li>
-            <li>
-              <strong>Last Failed Send:</strong>
-              {% if node.last_failed_send %}
-                <span style="color: red;">{{ node.last_failed_send|date:"M d, Y H:i:s" }}</span>
-              {% else %}
-                <span style="color: #999;">Never</span>
-              {% endif %}
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
   </li>
 
   <!-- Additional Info -->
@@ -104,9 +63,8 @@
   <!-- Recent Logs -->
   <li class="card p-4">
     <ul class="gap-4">
-      <li class="row align-center" style="justify-content: space-between;">
+      <li>
         <h2 class="text-lg semibold">Recent Activity (Last 50)</h2>
-        <a href="{% url 'adminpage:federation-logs' %}?node={{ node.pk }}" class="btn btn-sm btn-secondary">View All Logs</a>
       </li>
       
       {% if logs %}
