@@ -27,8 +27,6 @@
           <th style="text-align: left; padding: 12px;">Name</th>
           <th style="text-align: left; padding: 12px;">Base URL</th>
           <th style="text-align: center; padding: 12px;">Auth</th>
-          <th style="text-align: right; padding: 12px;">Success Rate</th>
-          <th style="text-align: right; padding: 12px;">Sends</th>
           <th style="text-align: center; padding: 12px;">Actions</th>
         </tr>
       </thead>
@@ -63,30 +61,8 @@
               {{ node.get_auth_method_display }}
             </span>
           </td>
-          <td style="text-align: right; padding: 12px;">
-            {% if node.success_rate >= 90 %}
-              <span style="color: green; font-weight: 500;">{{ node.success_rate|floatformat:1 }}%</span>
-            {% elif node.success_rate >= 70 %}
-              <span style="color: orange; font-weight: 500;">{{ node.success_rate|floatformat:1 }}%</span>
-            {% else %}
-              <span style="color: red; font-weight: 500;">{{ node.success_rate|floatformat:1 }}%</span>
-            {% endif %}
-          </td>
-          <td style="text-align: right; padding: 12px;">
-            {{ node.total_sends }}
-          </td>
           <td style="text-align: center; padding: 12px;">
-            <ul class="row gap-2" style="justify-content: center;">
-              <li>
-                <a href="{% url 'adminpage:federation-node-detail' node.pk %}" class="btn btn-sm btn-secondary">View</a>
-              </li>
-              <li>
-                <a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-sm btn-primary">Edit</a>
-              </li>
-              <li>
-                <button onclick="testNode({{ node.pk }})" class="btn btn-sm" style="background: #17a2b8; color: white;">Test</button>
-              </li>
-            </ul>
+            <a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-sm btn-primary">Edit</a>
           </td>
         </tr>
         {% endfor %}
