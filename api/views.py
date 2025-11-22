@@ -18,21 +18,24 @@ def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
 
 # Authors
+@csrf_exempt
 def api_authors_list(request):
-	from authors.models import Author
-	if request.method == "GET":
-		authors = Author.objects.all()
-		data = {"items": []}
-		for a in authors:
-			data["items"].append({
-				"id": a.id,
-				"displayName": a.displayName,
-				"host": a.host,
-				"github": a.github,
-				"profileImage": a.profileImage,
-				"web": a.web,
-			})
-		return JsonResponse(data)
+	if request.method == 'POST':
+		# Handle federation posts - these are PUBLIC posts sent to everyone
+		try:
+			payload = json.loads(request.body.decode('utf-8'))
+			# For public posts, process without a specific recipient
+			result = entries_services.process_federated_public_post(payload)
+			if result.get('status') in ('created', 'exists'):
+				return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
+			if result.get('status') == 'ignored':
+				return JsonResponse({'detail': 'ignored'}, status=200)
+			if result.get('status') == 'error':
+				return JsonResponse({'detail': result.get('error', 'unknown error')}, status=400)
+			return JsonResponse({'detail': 'Entry processed'}, status=200)
+		except Exception as e:
+			return JsonResponse({'detail': str(e)}, status=400)
+	return _not_implemented("api_authors_list")
 
 def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
@@ -169,23 +172,27 @@ def api_entry_image(request, entry_fqid):
 	return _not_implemented("api_entry_image")
 
 # Comments & Likes (per-entry serial)
+@csrf_exempt
 def api_entry_comments(request, author_serial, entry_serial):
 	# delegate to entries.api_views EntryCommentsViewSet
 	from entries.api_views import EntryCommentsViewSet
 	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
+@csrf_exempt
 def api_entry_likes(request, author_serial, entry_serial):
 	from entries.api_views import EntryLikesViewSet
 	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
 # ENTRY FQID based endpoints
+@csrf_exempt
 def api_entry_comments_by_fqid(request, entry_fqid):
 	from entries.api_views import EntryCommentsViewSet
 	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, entry_fqid=entry_fqid)
 
+@csrf_exempt
 def api_entry_likes_by_fqid(request, entry_fqid):
 	from entries.api_views import EntryLikesViewSet
 	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
@@ -205,6 +212,7 @@ def api_entry_comment_detail(request, author_serial, entry_serial, comment_fqid)
 	view = EntryCommentsViewSet.as_view({'get': 'list'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
+@csrf_exempt
 def api_entry_comment_likes(request, author_serial, entry_serial, comment_fqid):
 	from entries.api_views import CommentLikesViewSet
 	view = CommentLikesViewSet.as_view({'get': 'list', 'post': 'create'})

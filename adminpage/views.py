@@ -30,13 +30,16 @@ def get_local_host_from_settings() -> str:
 # --------- Dashboard ---------
 
 def dashboard(request):
+    from federation.models import FederatedNode
     total_images = HostedImage.objects.count()
     total_authors = Author.objects.filter(is_active=True).count()
     pending_users = Author.objects.filter(is_approved=False).count()
+    federation_nodes = FederatedNode.objects.filter(is_active=True).count()
     return render(request, 'adminpage/dashboard.html', {
         'total_images': total_images,
         'total_authors': total_authors,
         'pending_users': pending_users,
+        'federation_nodes': federation_nodes,
     })
 
 # --------- Images ---------
