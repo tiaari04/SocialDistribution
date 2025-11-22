@@ -161,24 +161,24 @@ def get_federation_status():
         ]
     }
 
-    def check_basic_auth(request):
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Basic "):
-            return None
+def check_basic_auth(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Basic "):
+        return None
 
-        encoded = auth_header.split(" ")[1]
-        try:
-            decoded = base64.b64decode(encoded).decode()
-            username, password = decoded.split(":", 1)
-        except Exception:
-            return None
+    encoded = auth_header.split(" ")[1]
+    try:
+        decoded = base64.b64decode(encoded).decode()
+        username, password = decoded.split(":", 1)
+    except Exception:
+        return None
 
-        try:
-            return FederatedNode.objects.get(
-                auth_method=FederatedNode.AuthMethod.BASIC,
-                username=username,
-                password=password,
-                is_active=True
-            )
-        except FederatedNode.DoesNotExist:
-            return none
+    try:
+        return FederatedNode.objects.get(
+            auth_method=FederatedNode.AuthMethod.BASIC,
+            username=username,
+            password=password,
+            is_active=True
+        )
+    except FederatedNode.DoesNotExist:
+        return none
