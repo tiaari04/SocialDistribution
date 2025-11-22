@@ -106,7 +106,7 @@ def send_remote_follow_request(actor, obj):
 
     log_entry = FederationLog.objects.create(
         node=node,
-        follow_req_id=data['summary'],
+        entry_fqid=data['summary'],
         request_payload=data,
         status=FederationLog.Status.PENDING
     )
