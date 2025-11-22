@@ -5,16 +5,15 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import FederatedNode, FederationLog
 import logging
+import base64
 
 logger = logging.getLogger(__name__)
 
 
 def send_entry_to_federation(entry):
-    """Send entry to all active federated nodes."""
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
     if not active_nodes.exists():
-        logger.info("No active federated nodes configured")
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
@@ -26,6 +25,9 @@ def send_entry_to_federation(entry):
     }
     
     for node in active_nodes:
+        if node.is_local:
+            continue
+
         log_entry = _send_to_node(node, payload, entry.get("fqid"))
         results["logs"].append(log_entry)
         
@@ -39,8 +41,8 @@ def send_entry_to_federation(entry):
 
 
 def _build_entry_payload(entry):
-    """Build federation payload from entry data."""
     payload = {
+        "type": "post",
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
         "content_type": entry.get("content_type") or "",
@@ -85,7 +87,6 @@ def _build_entry_payload(entry):
 
 
 def _send_to_node(node, payload, entry_fqid):
-    """Send payload to a specific node and log result."""
     log_entry = FederationLog.objects.create(
         node=node,
         entry_fqid=entry_fqid or "unknown",
@@ -94,10 +95,10 @@ def _send_to_node(node, payload, entry_fqid):
     )
     
     try:
-        # Get authentication headers from node configuration
-        headers = node.get_auth_headers()
+        local_node = FederatedNode.objects.get(is_local=True)
+        headers = local_node.get_auth_headers()
+        logger.info(f"headers: {headers}")
         
-        # Send POST request to node's inbox
         response = requests.post(
             node.full_inbox_url,
             json=payload,
@@ -164,3 +165,29 @@ def get_federation_status():
             for node in nodes
         ]
     }
+
+def check_basic_auth(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Basic "):
+        print("here1")
+        return None
+
+    encoded = auth_header.split(" ")[1]
+    try:
+        decoded = base64.b64decode(encoded).decode()
+        username, password = decoded.split(":", 1)
+        print(username, password)
+    except Exception:
+        return None
+
+    try:
+        print("here3")
+        return FederatedNode.objects.get(
+            auth_method=FederatedNode.AuthMethod.BASIC,
+            username=username,
+            password=password,
+            is_active=True,
+            is_local=False
+        )
+    except FederatedNode.DoesNotExist:
+        return None
