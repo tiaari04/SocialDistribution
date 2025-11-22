@@ -7,6 +7,8 @@ import requests
 from django.utils import timezone
 import logging
 
+logger = logging.getLogger(__name__)
+
 def get_follower(author, actor):
     follow_request = FollowRequest.objects.filter(
         actor=actor,
