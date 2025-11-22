@@ -161,6 +161,7 @@ def api_author_inbox(request, author_serial):
 	if request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
 		node = None
 	else:
+		print("here 6")
 		node = check_basic_auth(request)
 		print("basic auth: ", node)
 		if not node:
