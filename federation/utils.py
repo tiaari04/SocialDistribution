@@ -8,13 +8,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-results = {
-    "successful": 0,
-    "failed": 0,
-    "logs": []
-}
-
-
 def send_entry_to_federation(entry):
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
@@ -22,6 +15,12 @@ def send_entry_to_federation(entry):
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
+
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": []
+    }
     
     for node in active_nodes:
         log_entry = _send_to_node(node, payload, entry.get("fqid"))
@@ -45,6 +44,12 @@ def send_like_to_federation(like):
         "id": like.get('fqid'),
         "object_fqid": like.get('object_fqid'),
         "published": like.get('published'),
+    }
+
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": []
     }
 
     try:
@@ -81,6 +86,12 @@ def send_comment_to_federation(comment):
         "likes_count": comment.get('likes_count'),
         "published": comment.get('published'),
         "web": comment.get('web'),
+    }
+
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": []
     }
 
     try:
