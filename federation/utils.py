@@ -88,7 +88,6 @@ def send_like_to_federation(like):
             "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
     }
     payload['author'] = author_data
-
     for node in friend_nodes:
         inbox_url = f"{node}/federation/like/"
         try:
@@ -103,14 +102,6 @@ def send_comment_to_federation(comment):
     if not friend_nodes:
         return
 
-    fqid=payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
-    author=author,
-    entry=entry,
-    content=payload.get('comment') or payload.get('content') or '',
-    content_type=payload.get('contentType') or payload.get('content_type') or entry.ContentType.MARKDOWN,
-    published=payload.get('published') or timezone.now(),
-    web=payload.get('web', ''),
-
     payload = {
         "id": comment.get('fqid'),
         "content": comment.get('content'),
@@ -120,7 +111,7 @@ def send_comment_to_federation(comment):
         "published": comment.get('published'),
         "web": comment.get('web'),
     }
-    
+
     author = get_object_or_404(Author, serial=comment.get("author_id").split("/")[-1])
     author_data = {
             "id": str(author.id),

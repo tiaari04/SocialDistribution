@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
-from entries.models import Entry
+from entries.models import Entry, Like, Comment
 from entries.services import _ensure_author
 
 @csrf_exempt
@@ -124,7 +124,7 @@ def newLike(request): # works for entry likes and comment likes
     if author:
         existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
         if existing:
-            return {'status': 'exists', 'object': existing}
+            return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
 
     like = Like.objects.create(
         fqid=data.get('fqid'),
@@ -134,10 +134,10 @@ def newLike(request): # works for entry likes and comment likes
     )
 
     return JsonResponse({
-        "status": "saved",
+        "status": "created",
         "fqid": like.fqid,
-        "object_fqid": like.object_fqid,
-    }, status=200)
+        "object": like.object_fqid,
+    }, status=201)
 
 @csrf_exempt
 def newComment(request): 

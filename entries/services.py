@@ -3,6 +3,7 @@ from inbox.models import InboxItem, FollowRequest
 from .models import Entry, Comment, Like
 from django.utils import timezone
 from django.forms.models import model_to_dict
+from federation.utils import send_like_to_federation, send_comment_to_federation
 
 def _ensure_author(author_payload: dict) -> Author:
     """Create or get an Author from an incoming payload dict."""
@@ -41,7 +42,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
-
     if typ == 'comment':
         # Build and persist Comment
         author_payload = payload.get('author') or {}
@@ -68,7 +68,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             'fqid', 'content', 'content_type', 'web', 'likes_count'
         ])
         comment_dict['author_id'] = str(author.id) if author else ''
-        comment_dict['entry_id'] = str(entry.id) if entry else ''
+        comment_dict['entry_id'] = entry_fqid
         comment_dict['published'] = comment.published.isoformat()
 
         send_comment_to_federation(comment_dict)
