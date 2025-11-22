@@ -25,6 +25,9 @@ def send_entry_to_federation(entry):
     }
     
     for node in active_nodes:
+        if node.is_local:
+            continue
+
         log_entry = _send_to_node(node, payload, entry.get("fqid"))
         results["logs"].append(log_entry)
         
@@ -92,7 +95,8 @@ def _send_to_node(node, payload, entry_fqid):
     )
     
     try:
-        headers = node.get_auth_headers()
+        local_node = FederatedNode.objects.filter(is_local=True)
+        headers = local.get_auth_headers()
         logger.info(f"headers: {headers}")
         
         response = requests.post(
@@ -182,7 +186,8 @@ def check_basic_auth(request):
             auth_method=FederatedNode.AuthMethod.BASIC,
             username=username,
             password=password,
-            is_active=True
+            is_active=True,
+            is_local=False
         )
     except FederatedNode.DoesNotExist:
-        return none
+        return None
