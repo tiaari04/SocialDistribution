@@ -93,6 +93,7 @@ def _send_to_node(node, payload, entry_fqid):
     
     try:
         headers = node.get_auth_headers()
+        print("headers: ", headers)
         
         response = requests.post(
             node.full_inbox_url,
