@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
+from adminpage.models import HostedImage
 from entries.models import Entry
 
 @csrf_exempt
@@ -101,3 +102,39 @@ def newEntry(request):
         "author_created": author_created,
         "fqid": entry.fqid,
     }, status=200)
+    
+    
+@csrf_exempt
+def newHostedImage(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    image_url = data.get("url")
+    if not image_url:
+        return JsonResponse({"error": "url is required"}, status=400)
+    description = data.get("description", "")
+    created_raw = data.get("created")
+    created_dt = parse_datetime(created_raw) if created_raw else None
+    admin_uploaded = data.get("admin_uploaded", True)
+    img = HostedImage(
+        url=image_url,    
+        description=description,
+        admin_uploaded=admin_uploaded 
+    )
+    img.save()
+    if created_dt and hasattr(img, "created_at"):
+        img.created_at = created_dt
+        img.save(update_fields=["created_at"])
+
+    return JsonResponse(
+        {
+            "status": "saved",
+            "image_id": img.pk,
+        },
+        status=200,
+    )

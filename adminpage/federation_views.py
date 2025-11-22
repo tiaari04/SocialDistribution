@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from adminpage.models import HostedImage
+from federation.utils import send_image_to_federation
 from django.views.decorators.http import require_POST
 from federation.models import FederatedNode, FederationLog
 from federation.utils import get_federation_status
@@ -182,3 +184,31 @@ def logs_list(request):
         'current_status': status,
     }
     return render(request, 'adminpage/federation/logs_list.html', context)
+
+
+def send_image_to_nodes(request, pk):
+    image = get_object_or_404(HostedImage, pk=pk)
+
+    if request.method == "POST":
+        node_ids = request.POST.getlist("nodes")
+        nodes = FederatedNode.objects.filter(
+            id__in=node_ids,
+            is_active=True,
+            is_local=False,
+        )
+
+        results = send_image_to_federation(image, nodes=nodes)
+
+        messages.success(
+            request,
+            f'Sent image to {results["successful"]} node(s), '
+            f'{results["failed"]} failed.'
+        )
+        return redirect("adminpage:images")
+    nodes = FederatedNode.objects.filter(is_active=True, is_local=False)
+
+    context = {
+        "image": image,
+        "nodes": nodes,
+    }
+    return render(request, "adminpage/federation/send_image.html", context)

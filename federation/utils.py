@@ -1,6 +1,7 @@
 import requests
 from authors.models import Author
 from datetime import datetime
+from adminpage.models import HostedImage
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .models import FederatedNode, FederationLog
@@ -191,3 +192,55 @@ def check_basic_auth(request):
         )
     except FederatedNode.DoesNotExist:
         return None
+    
+
+def _build_image_payload(image: HostedImage) -> dict:
+    image_url = ""
+    if getattr(image, "file", None):
+        try:
+            image_url = image.file.url
+        except Exception:
+            image_url = str(image.file)
+
+    return {
+        "type": "hosted_image",
+        "url": image_url,
+        "filename": getattr(image.file, "name", "") if getattr(image, "file", None) else "",
+        "description": getattr(image, "description", "") or "",
+        "created": getattr(image, "created_at", None).isoformat()
+                    if getattr(image, "created_at", None) else "",
+        "admin_uploaded": bool(getattr(image, "admin_uploaded", True)),
+    }
+
+
+def send_image_to_federation(image: HostedImage, nodes=None):
+    if nodes is None:
+        nodes = FederatedNode.objects.filter(is_active=True, is_local=False)
+
+    if not nodes.exists():
+        return {"successful": 0, "failed": 0, "logs": []}
+
+    payload = _build_image_payload(image)
+
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": [],
+    }
+
+    ref_id = f"image:{image.pk}"
+
+    for node in nodes:
+        log_entry = _send_to_node(node, payload, ref_id)
+        results["logs"].append(log_entry)
+
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+
+    logger.info(
+        f"Image federation send complete: "
+        f"{results['successful']} successful, {results['failed']} failed"
+    )
+    return results
