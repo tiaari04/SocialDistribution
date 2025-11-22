@@ -8,6 +8,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+results = {
+    "successful": 0,
+    "failed": 0,
+    "logs": []
+}
+
 
 def send_entry_to_federation(entry):
     active_nodes = FederatedNode.objects.filter(is_active=True)
@@ -16,12 +22,6 @@ def send_entry_to_federation(entry):
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
-    
-    results = {
-        "successful": 0,
-        "failed": 0,
-        "logs": []
-    }
     
     for node in active_nodes:
         log_entry = _send_to_node(node, payload, entry.get("fqid"))
@@ -34,6 +34,79 @@ def send_entry_to_federation(entry):
     
     logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
     return results
+
+def send_like_to_federation(like):
+    active_nodes = FederatedNode.objects.filter(is_active=True)
+    
+    if not active_nodes.exists():
+        return {"successful": 0, "failed": 0, "logs": []}
+
+    payload = {
+        "id": like.get('fqid'),
+        "object_fqid": like.get('object_fqid'),
+        "published": like.get('published'),
+    }
+
+    try:
+        author = get_object_or_404(Author, serial=like.get("author_id").split("/")[-1])
+        author_data = _build_author_payload(author)
+        payload["author"] = author_data
+    except Exception as e:
+        logger.error(f"Error building author data: {e}")
+
+    for node in active_nodes:
+        log_entry = _send_to_node(node, payload, like.get("fqid"))
+        results["logs"].append(log_entry)
+        
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+
+    logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
+    return results
+
+def send_comment_to_federation(comment):
+    active_nodes = FederatedNode.objects.filter(is_active=True)
+    
+    if not active_nodes.exists():
+        return {"successful": 0, "failed": 0, "logs": []}
+
+    payload = {
+        "id": comment.get('fqid'),
+        "content": comment.get('content'),
+        "content_type": comment.get('content_type'),
+        "entry_id": comment.get('entry_id'),
+        "likes_count": comment.get('likes_count'),
+        "published": comment.get('published'),
+        "web": comment.get('web'),
+    }
+
+    try:
+        author = get_object_or_404(Author, serial=comment.get("author_id").split("/")[-1])
+        author_data = _build_author_payload(author)
+        payload["author"] = author_data
+    except Exception as e:
+        logger.error(f"Error building author data: {e}")
+
+    for node in active_nodes:
+        log_entry = _send_to_node(node, payload, comment.get("fqid"))
+        results["logs"].append(log_entry)
+        
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+
+    logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
+    return results
+        # inbox_url = f"{node.base_url}/federation/comment/"
+        # try:
+        #     response = requests.post(inbox_url, json=payload)
+        #     print(f"Comment sent to {inbox_url}: {response.status_code}")
+        #     response.raise_for_status()
+        # except requests.RequestException as e:
+        #     print(f"Failed to send comment to {inbox_url}: {e}")
 
 
 def _build_entry_payload(entry):
@@ -58,22 +131,7 @@ def _build_entry_payload(entry):
     
     try:
         author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
-        author_data = {
-            "id": str(author.id),
-            "serial": author.serial or "",
-            "displayName": author.displayName or "",
-            "github": author.github or "",
-            "host": author.host or "",
-            "is_active": author.is_active if hasattr(author, 'is_active') else True,
-            "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
-            "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
-            "is_local": False,
-            "profileImage": author.profileImage or "",
-            "description": author.description or "",
-            "web": author.web or "",
-            "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
-            "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
-        }
+        author_data = _build_author_payload(author)
         payload["author_id"] = str(author.id)
         payload["author_data"] = author_data
     except Exception as e:
@@ -81,6 +139,25 @@ def _build_entry_payload(entry):
     
     return payload
 
+def _build_author_payload(author):
+    payload = {
+        "id": str(author.id),
+        "serial": author.serial or "",
+        "displayName": author.displayName or "",
+        "github": author.github or "",
+        "host": author.host or "",
+        "is_active": author.is_active if hasattr(author, 'is_active') else True,
+        "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
+        "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
+        "is_local": False,
+        "profileImage": author.profileImage or "",
+        "description": author.description or "",
+        "web": author.web or "",
+        "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
+        "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
+    }
+
+    return payload
 
 def _send_to_node(node, payload, entry_fqid):
     log_entry = FederationLog.objects.create(
@@ -159,84 +236,3 @@ def get_federation_status():
             for node in nodes
         ]
     }
-
-def send_like_to_federation(like):
-    friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
-    if not friend_nodes:
-        return
-
-    payload = {
-        "id": like.get('fqid'),
-        "object_fqid": like.get('object_fqid'),
-        "published": like.get('published'),
-    }
-
-    author = get_object_or_404(Author, serial=like.get("author_id").split("/")[-1])
-    author_data = {
-            "id": str(author.id),
-            "serial": author.serial or "",
-            "displayName": author.displayName or "",
-            "github": author.github or "",
-            "host": author.host or "",
-            "is_active": author.is_active if hasattr(author, 'is_active') else True,
-            "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
-            "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
-            "is_local": False,
-            "profileImage": author.profileImage or "",
-            "description": author.description or "",
-            "web": author.web or "",
-            "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
-            "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
-    }
-    payload['author'] = author_data
-    for node in friend_nodes:
-        inbox_url = f"{node}/federation/like/"
-        try:
-            response = requests.post(inbox_url, json=payload)
-            print(f"Like sent to {inbox_url}: {response.status_code}")
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Failed to send like to {inbox_url}: {e}")
-
-def send_comment_to_federation(comment):
-    friend_nodes = [n.strip() for n in os.getenv("FRIEND_NODES", "").split(",") if n.strip()]
-    if not friend_nodes:
-        return
-
-    payload = {
-        "id": comment.get('fqid'),
-        "content": comment.get('content'),
-        "content_type": comment.get('content_type'),
-        "entry_id": comment.get('entry_id'),
-        "likes_count": comment.get('likes_count'),
-        "published": comment.get('published'),
-        "web": comment.get('web'),
-    }
-
-    author = get_object_or_404(Author, serial=comment.get("author_id").split("/")[-1])
-    author_data = {
-            "id": str(author.id),
-            "serial": author.serial or "",
-            "displayName": author.displayName or "",
-            "github": author.github or "",
-            "host": author.host or "",
-            "is_active": author.is_active if hasattr(author, 'is_active') else True,
-            "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
-            "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
-            "is_local": False,
-            "profileImage": author.profileImage or "",
-            "description": author.description or "",
-            "web": author.web or "",
-            "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
-            "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
-    }
-    payload['author'] = author_data
-
-    for node in friend_nodes:
-        inbox_url = f"{node}/federation/comment/"
-        try:
-            response = requests.post(inbox_url, json=payload)
-            print(f"Comment sent to {inbox_url}: {response.status_code}")
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Failed to send comment to {inbox_url}: {e}")
