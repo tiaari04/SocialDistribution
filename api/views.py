@@ -20,7 +20,7 @@ def _not_implemented(endpoint_name):
 @csrf_exempt
 def api_authors_list(request):
 	if request.method == 'POST':
-		 logger.info(f"req: {request}")
+		logger.info(f"req: {request}")
 		# Handle federation posts - these are PUBLIC posts sent to everyone
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
