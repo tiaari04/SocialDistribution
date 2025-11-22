@@ -126,7 +126,7 @@ def newLike(request): # works for entry likes and comment likes
             return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
 
     like = Like.objects.create(
-        fqid=data.get('fqid'),
+        fqid=data.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
         author=author,
         object_fqid=object_fqid,
         published=data.get('published'),
