@@ -50,8 +50,8 @@ class FederatedNodeAdmin(admin.ModelAdmin):
         rate = obj.success_rate
         color = 'green' if rate >= 90 else 'orange' if rate >= 70 else 'red'
         return format_html(
-            '<span style="color: {};">{:.1f}%</span>',
-            color, rate
+            '<span style="color: {};">{}%</span>',
+            color, round(rate, 1)
         )
     success_rate_display.short_description = 'Success Rate'
 
