@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 
 def send_entry_to_federation(entry):
     """Send entry to all active federated nodes."""
+    logger.info(f"send_entry_to_federation called with entry: {entry.get('fqid', 'no fqid')}")
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
+    logger.info(f"Active federated nodes found: {active_nodes.count()}")
     if not active_nodes.exists():
-        logger.info("No active federated nodes configured")
+        logger.warning("No active federated nodes configured - cannot send to federation")
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
