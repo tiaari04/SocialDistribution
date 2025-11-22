@@ -41,6 +41,7 @@ def send_entry_to_federation(entry):
 def _build_entry_payload(entry):
     """Build federation payload from entry data."""
     payload = {
+        "type": "post",
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
         "content_type": entry.get("content_type") or "",
