@@ -106,6 +106,7 @@ def send_remote_follow_request(actor, obj):
     inbox_url = f"{obj.host}authors/{obj.serial}/inbox/"
 
     base_url = obj.host.removesuffix('/api/')
+    print("baseurl: " + base_url)
     node = FederatedNode.objects.get(base_url=base_url)
 
     log_entry = FederationLog.objects.create(
@@ -116,6 +117,7 @@ def send_remote_follow_request(actor, obj):
     )
     
     try:
+        print("here")
         local_node = FederatedNode.objects.get(is_local=True)
         headers = local_node.get_auth_headers()
         logger.info(f"headers: {headers}")
