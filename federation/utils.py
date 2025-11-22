@@ -43,7 +43,7 @@ def send_like_to_federation(like):
     payload = {
         "id": like.get('fqid'),
         "object_fqid": like.get('object_fqid'),
-        "published": like.get('published'),
+        "published": like.get('published').isoformat() if isinstance(like.get("published"), datetime) else like.get("published") or "",
     }
 
     results = {
@@ -84,7 +84,7 @@ def send_comment_to_federation(comment):
         "content_type": comment.get('content_type'),
         "entry_id": comment.get('entry_id'),
         "likes_count": comment.get('likes_count'),
-        "published": comment.get('published'),
+        "published": comment.get('published').isoformat() if isinstance(comment.get("published"), datetime) else comment.get("published") or "",
         "web": comment.get('web'),
     }
 
