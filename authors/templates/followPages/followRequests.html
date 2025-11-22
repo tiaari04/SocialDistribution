@@ -59,6 +59,8 @@
                     const authorSerial = this.dataset.author;
                     const followerId = this.dataset.follower;
 
+                    print(getCookie('csrftoken'))
+
                     fetch(`/api/authors/${authorSerial}/followers/${followerId}/`, {
                         method: 'PUT',
                         headers: {
