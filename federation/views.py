@@ -9,7 +9,7 @@ from federation.utils import check_basic_auth
 @csrf_exempt
 def newEntry(request):
     node = check_basic_auth(request)
-    print("basic auth: " + node)
+    print("basic auth: ", node)
     if not node:
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
