@@ -7,7 +7,7 @@ from entries import services as entries_services
 from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
-from federation.utils import check_basic_auth
+from federation.utils import check_basic_auth, create_remote_author
 
 
 # followers serializer will use variables to know how to format the data
@@ -21,16 +21,20 @@ def _not_implemented(endpoint_name):
 # Authors
 @csrf_exempt
 def api_authors_list(request):
-	node = check_basic_auth(request)
-	print("basic auth: ", node)
-	if not node:
-		return JsonResponse({"error": "Unauthorized"}, status=401)
-
 	if request.method == 'POST':
-		print(f"req: {request}")
+		# check basic auth
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)
+
 		# Handle federation posts - these are PUBLIC posts sent to everyone
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
+			# Add user to the database if they aren't there already
+			author_data = data.get("author_data")
+			create_user = create_remote_author(author_data)
+
 			# For public posts, process without a specific recipient
 			result = entries_services.process_federated_public_post(payload)
 			if result.get('status') in ('created', 'exists'):
