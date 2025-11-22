@@ -171,23 +171,27 @@ def api_entry_image(request, entry_fqid):
 	return _not_implemented("api_entry_image")
 
 # Comments & Likes (per-entry serial)
+@csrf_exempt
 def api_entry_comments(request, author_serial, entry_serial):
 	# delegate to entries.api_views EntryCommentsViewSet
 	from entries.api_views import EntryCommentsViewSet
 	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
+@csrf_exempt
 def api_entry_likes(request, author_serial, entry_serial):
 	from entries.api_views import EntryLikesViewSet
 	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
 # ENTRY FQID based endpoints
+@csrf_exempt
 def api_entry_comments_by_fqid(request, entry_fqid):
 	from entries.api_views import EntryCommentsViewSet
 	view = EntryCommentsViewSet.as_view({'get': 'list', 'post': 'create'})
 	return view(request, entry_fqid=entry_fqid)
 
+@csrf_exempt
 def api_entry_likes_by_fqid(request, entry_fqid):
 	from entries.api_views import EntryLikesViewSet
 	view = EntryLikesViewSet.as_view({'get': 'list', 'post': 'create'})
@@ -207,6 +211,7 @@ def api_entry_comment_detail(request, author_serial, entry_serial, comment_fqid)
 	view = EntryCommentsViewSet.as_view({'get': 'list'})
 	return view(request, author_serial=author_serial, entry_serial=entry_serial)
 
+@csrf_exempt
 def api_entry_comment_likes(request, author_serial, entry_serial, comment_fqid):
 	from entries.api_views import CommentLikesViewSet
 	view = CommentLikesViewSet.as_view({'get': 'list', 'post': 'create'})
