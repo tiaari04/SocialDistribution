@@ -96,7 +96,7 @@ def _send_to_node(node, payload, entry_fqid):
     
     try:
         local_node = FederatedNode.objects.filter(is_local=True)
-        headers = local.get_auth_headers()
+        headers = local_node.get_auth_headers()
         logger.info(f"headers: {headers}")
         
         response = requests.post(
