@@ -327,11 +327,13 @@
             } else {
               const text = await res.text();
               console.error('Follow request failed', res.status, text);
-              alert("Failed to send follow request.");
+              alert(`Failed to send follow request. (Status: ${res.status}). Please try again.`);
+              applyVisual("Request to Follow");
             }
           } catch (err) {
             console.error(err);
             alert("Network error while sending follow request.");
+            applyVisual("Request to Follow");
           }
 
         } else if (state === "Pending" || state === "Unfollow") {

@@ -64,6 +64,7 @@ def _ensure_author(author_payload: dict) -> Author:
     author_id = author_payload.get('id')
     if not author_id:
         return None
+    author_id = author_id.encode('utf-8').decode('unicode-escape')
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
@@ -184,10 +185,25 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         if existing_request:
             return {'status': 'exists', 'object': existing_request}
 
-        follow_request = FollowRequest.objects.create(
-            actor=actor,
-            author_followed = author_followed
-        )
+        follow_request = None
+        if not author_followed.is_local:
+            from inbox.services import send_remote_follow_request
+            try:
+                send_remote_follow_request(actor, author_followed)
+                follow_request = FollowRequest.objects.create(
+                    actor=actor,
+                    author_followed = author_followed,
+                    state=FollowRequest.State.ACCEPTED
+                ) 
+                follow_request.save()
+            except Exception as e:
+                print("Failed sending follow:", e)
+                
+        else:
+            follow_request = FollowRequest.objects.create(
+                actor=actor,
+                author_followed = author_followed
+            )
         return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}

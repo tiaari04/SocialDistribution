@@ -149,6 +149,15 @@ def api_author_inbox(request, author_serial):
 	if request.method != 'POST':
 		return JsonResponse({'detail': 'Method not allowed'}, status=405)
 
+	author = get_object_or_404(Author, serial=author_serial)
+	if request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
+		node = None
+	else:
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)
+
 	try:
 		payload = json.loads(request.body.decode('utf-8'))
 	except Exception:
