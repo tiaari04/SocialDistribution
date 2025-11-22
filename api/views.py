@@ -158,15 +158,20 @@ def api_author_inbox(request, author_serial):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	if request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
-		node = None
+	if request.user.is_authenticated:
+		try:
+			if str(request.user.author.serial) != str(author_serial):
+				node = None
+			else:
+            	return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
+		except AttributeError:
+        	return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
 	else:
 		print("here 6")
 		node = check_basic_auth(request)
 		print("basic auth: ", node)
 		if not node:
 			return JsonResponse({"error": "Unauthorized"}, status=401)
-
 	try:
 		payload = json.loads(request.body.decode('utf-8'))
 	except Exception:
