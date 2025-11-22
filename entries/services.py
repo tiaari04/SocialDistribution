@@ -25,10 +25,20 @@ def process_federated_public_post(payload: dict) -> dict:
     if not fqid:
         return {'status': 'error', 'error': 'missing_fqid'}
     
-    # Check if entry already exists (idempotent)
+    # Check if entry already exists
     existing_entry = Entry.objects.filter(fqid=fqid).first()
     if existing_entry:
-        return {'status': 'exists', 'object': existing_entry}
+        # Update existing entry
+        existing_entry.title = payload.get('title', existing_entry.title)
+        existing_entry.content = payload.get('content', existing_entry.content)
+        existing_entry.description = payload.get('description', existing_entry.description)
+        existing_entry.content_type = payload.get('content_type', existing_entry.content_type)
+        existing_entry.visibility = payload.get('visibility', existing_entry.visibility)
+        existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.web = payload.get('web', existing_entry.web)
+        existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
+        existing_entry.save()
+        return {'status': 'updated', 'object': existing_entry}
     
     # Create the entry
     entry = Entry.objects.create(
