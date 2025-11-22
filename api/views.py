@@ -8,7 +8,7 @@ from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 from federation.utils import check_basic_auth, create_remote_author
-
+from codecs import decode
 
 # followers serializer will use variables to know how to format the data
 FOLLOWERS = 1
