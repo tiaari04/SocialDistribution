@@ -71,7 +71,8 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -114,7 +115,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
