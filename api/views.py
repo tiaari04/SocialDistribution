@@ -17,7 +17,24 @@ def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
 
 # Authors
+@csrf_exempt
 def api_authors_list(request):
+	if request.method == 'POST':
+		# Handle federation posts
+		try:
+			payload = json.loads(request.body.decode('utf-8'))
+			author_id = payload.get('author_id')
+			if author_id:
+				# Extract author serial from the ID
+				author_serial = author_id.split('/')[-1] if '/' in author_id else author_id
+				result = entries_services.process_inbox_for(author_serial, payload)
+				if result.get('status') in ('created', 'exists'):
+					return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
+				if result.get('status') == 'ignored':
+					return JsonResponse({'detail': 'ignored'}, status=200)
+			return JsonResponse({'detail': 'Entry processed'}, status=200)
+		except Exception as e:
+			return JsonResponse({'detail': str(e)}, status=400)
 	return _not_implemented("api_authors_list")
 
 def api_author_detail(request, author_serial):
@@ -119,6 +136,7 @@ def api_author_follow_requests(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOW_REQS)
 	return JsonResponse(resp, status=status_code)
 
+@csrf_exempt
 def api_author_inbox(request, author_serial):
 	# Accept POSTs from remote nodes to deliver comments/likes/follows
 	if request.method != 'POST':
