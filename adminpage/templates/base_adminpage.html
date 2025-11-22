@@ -117,6 +117,9 @@
       <li class="{% if current == 'images' %}active{% endif %}">
         <a href="{% url 'adminpage:images' %}">Images</a>
       </li>
+      <li class="{% if 'federation' in current %}active{% endif %}">
+        <a href="{% url 'adminpage:federation-dashboard' %}">Federation</a>
+      </li>
     </ul>
     {% endwith %}
   </li>
