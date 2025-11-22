@@ -171,6 +171,7 @@ def check_basic_auth(request):
     try:
         decoded = base64.b64decode(encoded).decode()
         username, password = decoded.split(":", 1)
+        print(username, password)
     except Exception:
         return None
 
