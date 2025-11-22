@@ -120,12 +120,6 @@ def newLike(request): # works for entry likes and comment likes
     if not object_fqid:
         return {'status': 'error', 'error': 'missing_object'}
 
-    # idempotent: if like exists, return existing
-    if author:
-        existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
-        if existing:
-            return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
-
     like = Like.objects.create(
         fqid=data.get('fqid'),
         author=author,
