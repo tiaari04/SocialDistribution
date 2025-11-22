@@ -163,9 +163,9 @@ def api_author_inbox(request, author_serial):
 			if str(request.user.author.serial) != str(author_serial):
 				node = None
 			else:
-            	return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
+				return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
 		except AttributeError:
-        	return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
+		return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
 	else:
 		print("here 6")
 		node = check_basic_auth(request)
