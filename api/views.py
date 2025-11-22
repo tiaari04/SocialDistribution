@@ -22,9 +22,9 @@ def _not_implemented(endpoint_name):
 @csrf_exempt
 def api_authors_list(request):
 	node = check_basic_auth(request)
-    print("basic auth: ", node)
-    if not node:
-        return JsonResponse({"error": "Unauthorized"}, status=401)
+	print("basic auth: ", node)
+	if not node:
+    	return JsonResponse({"error": "Unauthorized"}, status=401)
 
 	if request.method == 'POST':
 		print(f"req: {request}")
