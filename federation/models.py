@@ -32,7 +32,7 @@ class FederatedNode(models.Model):
     is_bidirectional = models.BooleanField(default=True, help_text="Can this node send data to us?")
     
     # Identifying my node
-    is_local = models.BooleanField(default=True, help_text="Checks if this node is for this server")
+    is_local = models.BooleanField(default=False, help_text="Checks if this node is for this server")
 
     # Endpoints (allow customization per node)
     inbox_endpoint = models.CharField(max_length=200, default="/api/authors/", help_text="Endpoint for sending entries")
