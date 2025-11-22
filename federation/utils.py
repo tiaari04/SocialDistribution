@@ -10,13 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 def send_entry_to_federation(entry):
-    """Send entry to all active federated nodes."""
-    logger.info(f"send_entry_to_federation called with entry: {entry.get('fqid', 'no fqid')}")
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
-    logger.info(f"Active federated nodes found: {active_nodes.count()}")
     if not active_nodes.exists():
-        logger.warning("No active federated nodes configured - cannot send to federation")
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
@@ -41,7 +37,6 @@ def send_entry_to_federation(entry):
 
 
 def _build_entry_payload(entry):
-    """Build federation payload from entry data."""
     payload = {
         "type": "post",
         "author_id": entry.get("author_id") or "",
@@ -88,7 +83,6 @@ def _build_entry_payload(entry):
 
 
 def _send_to_node(node, payload, entry_fqid):
-    """Send payload to a specific node and log result."""
     log_entry = FederationLog.objects.create(
         node=node,
         entry_fqid=entry_fqid or "unknown",
@@ -97,10 +91,8 @@ def _send_to_node(node, payload, entry_fqid):
     )
     
     try:
-        # Get authentication headers from node configuration
         headers = node.get_auth_headers()
         
-        # Send POST request to node's inbox
         response = requests.post(
             node.full_inbox_url,
             json=payload,

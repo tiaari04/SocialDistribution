@@ -216,12 +216,10 @@ def entry_create(request, author_serial):
             entry_dict["created"] = entry.created.isoformat() if entry.created else ""
             entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
             
-            logger.info(f"Attempting to send entry {entry.serial} to federation")
             try:
-                result = send_entry_to_federation(entry_dict)
-                logger.info(f"Federation send result: {result}")
+                send_entry_to_federation(entry_dict)
             except Exception as e:
-                logger.error(f"Federation error: {e}", exc_info=True)
+                logger.error(f"Federation error: {e}")
             
             return redirect("entries:stream_home", author_serial=author.serial)
     else:

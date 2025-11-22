@@ -14,7 +14,6 @@
           <button type="submit" class="btn btn-danger">Delete</button>
         </form>
       </li>
-      <li><a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-secondary">Back to List</a></li>
     </ul>
   </li>
 
@@ -34,10 +33,7 @@
               {% endif %}
             </li>
             <li><strong>Base URL:</strong> <a href="{{ node.base_url }}" target="_blank" style="color: #0066cc;">{{ node.base_url }}</a></li>
-            <li><strong>Inbox URL:</strong> <code>{{ node.full_inbox_url }}</code></li>
-            <li><strong>API Version:</strong> {{ node.api_version }}</li>
             <li><strong>Auth Method:</strong> {{ node.get_auth_method_display }}</li>
-            <li><strong>Bidirectional:</strong> {% if node.is_bidirectional %}Yes{% else %}No{% endif %}</li>
           </ul>
         </li>
       </ul>

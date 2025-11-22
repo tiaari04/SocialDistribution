@@ -62,7 +62,14 @@
             </span>
           </td>
           <td style="text-align: center; padding: 12px;">
-            <a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-sm btn-primary">Edit</a>
+            <div class="row gap-2" style="justify-content: center;">
+              <a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-sm btn-primary">Edit</a>
+              <form method="post" action="{% url 'adminpage:federation-node-delete' node.pk %}" style="display: inline;"
+                    onsubmit="return confirm('Are you sure you want to delete {{ node.name }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+              </form>
+            </div>
           </td>
         </tr>
         {% endfor %}
