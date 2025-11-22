@@ -124,7 +124,7 @@ def send_remote_follow_request(actor, obj):
         
         response = requests.post(
             inbox_url,
-            json=payload,
+            json=data,
             headers=headers,
             timeout=30
         )
