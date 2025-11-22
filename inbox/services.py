@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from inbox.models import FollowRequest
+from federation.models import FederationLog, FederatedNode
 from inbox.serializers import serialize_follow_req
 import requests
 
