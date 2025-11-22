@@ -87,7 +87,22 @@ def _build_entry_payload(entry):
     return payload
 
 
-def _send_to_node(node, payload, entry_fqid):
+def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None):
+    """
+    Send a payload to a node.
+
+    If endpoint_suffix is provided, it is appended to full_inbox_url, e.g.:
+
+        node.full_inbox_url = "https://node/api/authors/"
+        endpoint_suffix     = "images/new/"
+
+    => target_url = "https://node/api/authors/images/new/"
+    """
+    # Build target URL
+    target_url = node.full_inbox_url
+    if endpoint_suffix:
+        target_url = target_url.rstrip('/') + '/' + endpoint_suffix.lstrip('/')
+
     log_entry = FederationLog.objects.create(
         node=node,
         entry_fqid=entry_fqid or "unknown",
@@ -101,7 +116,7 @@ def _send_to_node(node, payload, entry_fqid):
         logger.info(f"headers: {headers}")
         
         response = requests.post(
-            node.full_inbox_url,
+            target_url,
             json=payload,
             headers=headers,
             timeout=30
@@ -114,7 +129,7 @@ def _send_to_node(node, payload, entry_fqid):
         if response.status_code in [200, 201]:
             log_entry.status = FederationLog.Status.SUCCESS
             node.record_success()
-            logger.info(f"Successfully sent to {node.name} ({node.full_inbox_url})")
+            logger.info(f"Successfully sent to {node.name} ({target_url})")
         else:
             log_entry.status = FederationLog.Status.FAILURE
             log_entry.error_message = f"HTTP {response.status_code}: {response.text[:500]}"
@@ -139,7 +154,6 @@ def _send_to_node(node, payload, entry_fqid):
         log_entry.save()
     
     return log_entry
-
 
 def get_federation_status():
     """
