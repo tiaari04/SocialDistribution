@@ -32,7 +32,7 @@ def api_authors_list(request):
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
 			# Add user to the database if they aren't there already
-			author_data = data.get("author_data")
+			author_data = payload.get("author_data")
 			create_user = create_remote_author(author_data)
 			print("here5")
 
