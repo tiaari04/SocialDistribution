@@ -4,21 +4,21 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const tsheredoc_1 = require("tsheredoc");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../../lib/pg/util");
 const nls_1 = require("../../../nls");
 class Create extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Create);
         const { app, name } = flags;
-        const { addon: db } = await (0, fetcher_1.getAttachment)(this.heroku, app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, args.database);
         if ((0, util_1.essentialPlan)(db)) {
             throw new Error("You can't create a custom credential on Essential-tier databases.");
         }
         const data = { name };
         core_1.ux.action.start(`Creating credential ${color_1.default.cyan.bold(name)}`);
-        await this.heroku.post(`/postgres/v0/databases/${db.name}/credentials`, { hostname: (0, host_1.default)(), body: data });
+        await this.heroku.post(`/postgres/v0/databases/${db.name}/credentials`, { hostname: heroku_cli_util_1.utils.pg.host(), body: data });
         core_1.ux.action.stop();
         const attachCmd = `heroku addons:attach ${db.name} --credential ${name} -a ${app}`;
         const psqlCmd = `heroku pg:psql ${db.name} -a ${app}`;

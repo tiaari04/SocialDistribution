@@ -2,19 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../../lib/pg/util");
-const host_1 = require("../../../lib/pg/host");
 const nls_1 = require("../../../nls");
 class Index extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Index);
         const { app } = flags;
         const { database } = args;
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, database);
         if ((0, util_1.essentialPlan)(db))
             core_1.ux.error('pg:maintenance isn’t available for Essential-tier databases.');
-        const { body: info } = await this.heroku.get(`/client/v11/databases/${db.id}/maintenance`, { hostname: (0, host_1.default)() });
+        const { body: info } = await this.heroku.get(`/client/v11/databases/${db.id}/maintenance`, { hostname: heroku_cli_util_1.utils.pg.host() });
         core_1.ux.log(info.message);
     }
 }

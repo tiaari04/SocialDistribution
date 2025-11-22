@@ -5,8 +5,7 @@ const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const debug_1 = require("debug");
 const tsheredoc_1 = require("tsheredoc");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const notify_1 = require("../../../lib/notify");
 const http_call_1 = require("@heroku/http-call");
 const nls_1 = require("../../../nls");
@@ -28,7 +27,7 @@ class Wait extends command_1.Command {
             const notFoundMessage = 'Waiting to provision...';
             while (true) {
                 try {
-                    ({ body: status } = await this.heroku.get(`/client/v11/databases/${db.id}/upgrade/wait_status`, { hostname: (0, host_1.default)() }));
+                    ({ body: status } = await this.heroku.get(`/client/v11/databases/${db.id}/upgrade/wait_status`, { hostname: heroku_cli_util_1.utils.pg.host() }));
                 }
                 catch (error) {
                     if (error instanceof http_call_1.HTTPError && (!retries || error.statusCode !== 404)) {
@@ -63,9 +62,15 @@ class Wait extends command_1.Command {
                 await wait(interval * 1000);
             }
         };
+        // This is actually incorrect, if we're only using one db we should make the database arg required and
+        // just use the resolver to get the add-on to be waited on.
+        // This looks similar to other implementations where you also can wait on all databases from the same app.
+        // Maybe it was initially thought to implement this in the future, but it was never implemented.
         let dbs = [];
         if (dbName) {
-            dbs = [await (0, fetcher_1.getAddon)(this.heroku, app, dbName)];
+            const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+            const { addon } = await dbResolver.getAttachment(app, dbName);
+            dbs = [addon];
         }
         else {
             core_1.ux.error((0, tsheredoc_1.default)('You must provide a database. Run `--help` for more information on the command.'));

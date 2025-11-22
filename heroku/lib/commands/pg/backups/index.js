@@ -5,11 +5,11 @@ const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const backups_1 = require("../../../lib/pg/backups");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
 class Index extends command_1.Command {
     async run() {
         const { flags: { app } } = await this.parse(Index);
-        const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: (0, host_1.default)() });
+        const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: heroku_cli_util_2.utils.pg.host() });
         // NOTE that the sort order is descending
         transfers.sort((transferA, transferB) => {
             if (transferA.created_at > transferB.created_at) {

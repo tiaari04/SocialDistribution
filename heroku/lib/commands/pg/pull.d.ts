@@ -1,5 +1,5 @@
 import { Command } from '@heroku-cli/command';
-import { ConnectionDetails } from '../../lib/pg/util';
+import { ConnectionDetails } from '@heroku/heroku-cli-util';
 export default class Pull extends Command {
     static topic: string;
     static description: string;

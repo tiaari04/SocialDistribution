@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyExtensionsMatch = exports.spawnPipe = exports.connArgs = exports.maybeTunnel = exports.prepare = exports.parseExclusions = void 0;
-const psql_1 = require("./psql");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const core_1 = require("@oclif/core");
 const color_1 = require("@heroku-cli/color");
-const bastion_1 = require("./bastion");
 const node_child_process_1 = require("node:child_process");
 const tsheredoc_1 = require("tsheredoc");
 const debug_1 = require("debug");
@@ -16,6 +15,7 @@ const parseExclusions = (rawExcludeList) => {
 };
 exports.parseExclusions = parseExclusions;
 const prepare = async (target) => {
+    const psqlService = new heroku_cli_util_1.utils.pg.PsqlService(target);
     if (target.host === 'localhost' || !target.host) {
         exec(`createdb ${(0, exports.connArgs)(target, true).join(' ')}`);
     }
@@ -26,7 +26,7 @@ const prepare = async (target) => {
         // of --echo-all is set.
         const num = Math.random();
         const emptyMarker = `${num}${num}`;
-        const result = await (0, psql_1.exec)(target, `SELECT CASE count(*) WHEN 0 THEN '${num}' || '${num}' END FROM pg_stat_user_tables`);
+        const result = await psqlService.execQuery(`SELECT CASE count(*) WHEN 0 THEN '${num}' || '${num}' END FROM pg_stat_user_tables`);
         if (!result.includes(emptyMarker))
             core_1.ux.error(`Remote database is not empty. Please create a new database or use ${color_1.color.cmd('heroku pg:reset')}`);
     }
@@ -35,8 +35,8 @@ exports.prepare = prepare;
 const maybeTunnel = async (herokuDb) => {
     var _a;
     let withTunnel = Object.assign({}, herokuDb);
-    const configs = (0, bastion_1.getConfigs)(herokuDb);
-    const tunnel = await (0, bastion_1.sshTunnel)(herokuDb, configs.dbTunnelConfig);
+    const configs = heroku_cli_util_1.utils.pg.psql.getPsqlConfigs(herokuDb);
+    const tunnel = await heroku_cli_util_1.utils.pg.psql.sshTunnel(herokuDb, configs.dbTunnelConfig);
     if (tunnel) {
         const tunnelHost = {
             host: configs.dbTunnelConfig.localHost,
@@ -86,6 +86,8 @@ const spawnPipe = async (pgDump, pgRestore) => {
 };
 exports.spawnPipe = spawnPipe;
 const verifyExtensionsMatch = async function (source, target) {
+    const psqlSource = new heroku_cli_util_1.utils.pg.PsqlService(source);
+    const psqlTarget = new heroku_cli_util_1.utils.pg.PsqlService(target);
     // It's pretty common for local DBs to not have extensions available that
     // are used by the remote app, so take the final precaution of warning if
     // the extensions available in the local database don't match. We don't
@@ -93,8 +95,8 @@ const verifyExtensionsMatch = async function (source, target) {
     // used, though.
     const sql = 'SELECT extname FROM pg_extension ORDER BY extname;';
     const [extensionTarget, extensionSource] = await Promise.all([
-        (0, psql_1.exec)(target, sql),
-        (0, psql_1.exec)(source, sql),
+        psqlTarget.execQuery(sql),
+        psqlSource.execQuery(sql),
     ]);
     const extensions = {
         target: extensionTarget,

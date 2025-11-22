@@ -2,8 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const psql_1 = require("../../lib/pg/psql");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../nls");
 const query = `
 WITH constants AS (
@@ -71,8 +70,10 @@ class Bloat extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Bloat);
         const { app } = flags;
-        const db = await (0, fetcher_1.database)(this.heroku, app, args.database);
-        const output = await (0, psql_1.exec)(db, query);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const db = await dbResolver.getDatabase(app, args.database);
+        const psqlService = new heroku_cli_util_1.utils.pg.PsqlService(db);
+        const output = await psqlService.execQuery(query);
         process.stdout.write(output);
     }
 }

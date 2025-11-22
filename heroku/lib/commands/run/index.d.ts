@@ -13,6 +13,7 @@ export default class Run extends Command {
         'no-tty': import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
         listen: import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
         'no-notify': import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
+        'no-launcher': import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
     };
     run(): Promise<void>;
 }

@@ -4,7 +4,7 @@ exports.numericConverter = exports.booleanConverter = exports.PGSettingsCommand 
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const resolve_1 = require("../addons/resolve");
-const host_1 = require("./host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("./util");
 class PGSettingsCommand extends command_1.Command {
     async run() {
@@ -16,7 +16,7 @@ class PGSettingsCommand extends command_1.Command {
             core_1.ux.error('You can’t perform this operation on Essential-tier databases.');
         if (value) {
             const { body: settings } = await this.heroku.patch(`/postgres/v0/databases/${db.id}/config`, {
-                hostname: (0, host_1.default)(),
+                hostname: heroku_cli_util_1.utils.pg.host(),
                 body: { [this.settingKey]: this.convertValue(value) },
             });
             const setting = settings[this.settingKey];
@@ -24,7 +24,7 @@ class PGSettingsCommand extends command_1.Command {
             core_1.ux.log(this.explain(setting));
         }
         else {
-            const { body: settings } = await this.heroku.get(`/postgres/v0/databases/${db.id}/config`, { hostname: (0, host_1.default)() });
+            const { body: settings } = await this.heroku.get(`/postgres/v0/databases/${db.id}/config`, { hostname: heroku_cli_util_1.utils.pg.host() });
             const setting = settings[this.settingKey];
             core_1.ux.log(`${this.settingKey.replace(/_/g, '-')} is set to ${setting.value} for ${db.name}.`);
             core_1.ux.log(this.explain(setting));

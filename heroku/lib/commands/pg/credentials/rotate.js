@@ -4,15 +4,15 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const confirmCommand_1 = require("../../../lib/confirmCommand");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../../lib/pg/util");
 const nls_1 = require("../../../nls");
 class Rotate extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Rotate);
         const { app, all, confirm, name, force } = flags;
-        const { addon: db } = await (0, fetcher_1.getAttachment)(this.heroku, app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, args.database);
         const warnings = [];
         const cred = name || 'default';
         if (all && name !== undefined) {
@@ -48,7 +48,7 @@ class Rotate extends command_1.Command {
         }
         await (0, confirmCommand_1.default)(app, confirm, `Destructive Action\n${warnings.join('\n')}`);
         const options = {
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_1.utils.pg.host(),
             body: { forced: force !== null && force !== void 0 ? force : undefined },
             headers: {
                 Authorization: `Basic ${Buffer.from(`:${this.heroku.auth}`).toString('base64')}`,

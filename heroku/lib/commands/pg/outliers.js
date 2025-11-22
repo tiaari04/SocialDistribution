@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const psql_1 = require("../../lib/pg/psql");
 const tsheredoc_1 = require("tsheredoc");
 const nls_1 = require("../../nls");
@@ -10,11 +10,13 @@ class Outliers extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Outliers);
         const { app, reset, truncate, num } = flags;
-        const db = await (0, fetcher_1.database)(this.heroku, app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const db = await dbResolver.getDatabase(app, args.database);
+        this.psqlService = new heroku_cli_util_1.utils.pg.PsqlService(db);
         const version = await (0, psql_1.fetchVersion)(db);
-        await this.ensurePGStatStatement(db);
+        await this.ensurePGStatStatement();
         if (reset) {
-            await (0, psql_1.exec)(db, 'SELECT pg_stat_statements_reset();');
+            await this.psqlService.execQuery('SELECT pg_stat_statements_reset();');
             return;
         }
         let limit = 10;
@@ -27,10 +29,10 @@ class Outliers extends command_1.Command {
             }
         }
         const query = this.outliersQuery(version, limit, truncate);
-        const output = await (0, psql_1.exec)(db, query);
+        const output = await this.psqlService.execQuery(query);
         core_1.ux.log(output);
     }
-    async ensurePGStatStatement(db) {
+    async ensurePGStatStatement() {
         const query = (0, tsheredoc_1.default) `
       SELECT exists(
         SELECT 1
@@ -39,7 +41,7 @@ class Outliers extends command_1.Command {
         WHERE e.extname = 'pg_stat_statements' AND n.nspname IN ('public', 'heroku_ext')
       ) AS available;
     `;
-        const output = await (0, psql_1.exec)(db, query);
+        const output = await this.psqlService.execQuery(query);
         if (!output.includes('t')) {
             core_1.ux.error((0, tsheredoc_1.default) `
         pg_stat_statements extension need to be installed first.

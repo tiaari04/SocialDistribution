@@ -2,18 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../../lib/pg/util");
 const confirmCommand_1 = require("../../../lib/confirmCommand");
 const tsheredoc_1 = require("tsheredoc");
-const host_1 = require("../../../lib/pg/host");
 const nls_1 = require("../../../nls");
 class RepairDefault extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(RepairDefault);
         const { app, confirm } = flags;
         const { database } = args;
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, database);
         if ((0, util_1.essentialPlan)(db))
             throw new Error("You can't perform this operation on Essential-tier databases.");
         await (0, confirmCommand_1.default)(app, confirm, (0, tsheredoc_1.default)(`
@@ -22,7 +22,7 @@ class RepairDefault extends command_1.Command {
       This command will also grant the default credential admin option for all additional credentials.
     `));
         core_1.ux.action.start('Resetting permissions and object ownership for default role to factory settings');
-        await this.heroku.post(`/postgres/v0/databases/${db.name}/repair-default`, { hostname: (0, host_1.default)() });
+        await this.heroku.post(`/postgres/v0/databases/${db.name}/repair-default`, { hostname: heroku_cli_util_1.utils.pg.host() });
         core_1.ux.action.stop();
     }
 }

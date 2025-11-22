@@ -42,11 +42,10 @@ export declare type BackupTransfer = {
         message: string;
     }>;
 };
-export declare type AddOnWithRelatedData = Required<Heroku.AddOnAttachment['addon']> & {
-    attachment_names?: string[];
-    links?: Link[];
-    plan: Required<Heroku.AddOn['plan']>;
-};
+export declare type ExtendedAddon = {
+    addon_service: Required<Heroku.AddOnService>;
+    plan: Required<Heroku.Plan>;
+} & Required<Heroku.AddOn>;
 declare type ServiceInfo = 'Status' | 'Fork/Follow' | 'Rollback' | 'Created' | 'Region' | 'Data Encryption' | 'Continuous Protection' | 'Enhanced Certificates' | 'Upgradable Extensions' | 'Plan' | 'HA Status' | 'Behind By' | 'Data Size' | 'Tables' | 'PG Version' | 'Connections' | 'Connection Pooling' | 'Credentials' | 'Restricted Credentials' | 'Mutual TLS' | 'Customer Encryption Key' | 'Following' | 'Forked From' | 'Followers' | 'Forks' | 'Maintenance' | 'Maintenance window' | 'Infrastructure' | 'Warning';
 export declare type PgDatabaseService = {
     addon_id: string;
@@ -129,19 +128,15 @@ export declare type PgUpgradeError = {
         message: string;
     };
 };
-export declare type AddOnWithPlan = Required<Heroku.AddOnAttachment['addon']> & {
-    plan: Required<Heroku.AddOn['plan']>;
-};
-export declare type AddOnAttachmentWithConfigVarsAndPlan = Required<Heroku.AddOnAttachment> & {
-    config_vars: Heroku.AddOn['config_vars'];
-    addon: AddOnWithRelatedData;
-};
 export declare type Link = {
-    attachment_name?: string;
+    id: string;
     created_at: string;
-    message: string;
     name: string;
-    remote?: Link;
+    remote_name: string;
+    remote: {
+        name: string;
+        attachment_name: string;
+    };
 };
 declare type CredentialState = 'enabling' | 'active' | 'revoking' | 'revoked' | 'archived';
 export declare type Credential = {
