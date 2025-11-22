@@ -5,6 +5,7 @@ from federation.models import FederationLog, FederatedNode
 from inbox.serializers import serialize_follow_req
 import requests
 from django.utils import timezone
+import logging
 
 def get_follower(author, actor):
     follow_request = FollowRequest.objects.filter(
