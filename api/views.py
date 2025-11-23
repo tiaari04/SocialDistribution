@@ -223,7 +223,7 @@ def api_author_inbox(request, author_serial):
 	author = get_object_or_404(Author, serial=author_serial)
 	if request.user.is_authenticated:
 		try:
-			if str(request.user.author.serial) != str(author_serial):
+			if str(request.user.author.serial) == str(author_serial):
 				node = None
 			else:
 				return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
