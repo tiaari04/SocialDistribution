@@ -1,5 +1,6 @@
 from authors.models import Author
 from inbox.models import InboxItem, FollowRequest
+from federation.models import FederatedNode
 from .models import Entry, Comment, Like
 from django.utils import timezone
 
@@ -65,6 +66,10 @@ def _ensure_author(author_payload: dict) -> Author:
     if not author_id:
         return None
     author_id = author_id.encode('utf-8').decode('unicode-escape')
+    is_local = host.rstrip('/api') == local_node.base_url
+
+    local_node = FederatedNode.objects.get(is_local=True)
+    host = author_payload.get('host', '')
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
@@ -72,6 +77,7 @@ def _ensure_author(author_payload: dict) -> Author:
             'host': author_payload.get('host', ''),
             'web': author_payload.get('web', ''),
             'profileImage': author_payload.get('profileImage', ''),
+            'is_local': is_local
         }
     )
     return author
