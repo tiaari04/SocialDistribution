@@ -34,6 +34,7 @@ def newEntry(request):
     author_data = data.get("author_data")
     
     if author_data:
+        print(author_data)
         author_created_dt = parse_datetime(author_data.get("created")) if author_data.get("created") else None
         author_updated_dt = parse_datetime(author_data.get("updated")) if author_data.get("updated") else None
         author_defaults = {
@@ -62,6 +63,7 @@ def newEntry(request):
         if author_created_dt or author_updated_dt:
             author.save()
     else:
+        print("didnt find author data")
         if "/" in author_id:
             author_serial = author_id.rstrip("/").split("/")[-1]
         else:
