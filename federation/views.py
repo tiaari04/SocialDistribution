@@ -100,14 +100,12 @@ def newEntry(request):
         entry.created = created
     if updated is not None:
         entry.updated = updated
-    if published is not None or created is not None or updated is not None:
-        entry.save()
-    
+
+    entry.save()
+
     return JsonResponse({
         "status": "saved",
-        "created": created_flag,
-        "author_created": author_created,
-        "fqid": entry.fqid,
+        "created": not exists,
     }, status=200)
     
     

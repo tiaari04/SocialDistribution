@@ -396,7 +396,6 @@ def send_image_to_federation(image: HostedImage, nodes=None):
     ref_id = f"image:{image.pk}"
 
     for node in nodes:
-        # 🔴 Important: tell _send_to_node to use the images endpoint
         log_entry = _send_to_node(
             node=node,
             payload=payload,

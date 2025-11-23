@@ -158,7 +158,6 @@ def github_webhook(request):
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
 
-
     following = FollowRequest.objects.filter(
         actor=current_author, state=FollowRequest.State.ACCEPTED
     ).values_list("author_followed_id", flat=True)
@@ -170,25 +169,57 @@ def stream_home(request, author_serial):
     friends = set(following).intersection(followers)
 
 
-    base_entries = Entry.objects.exclude(visibility=Entry.Visibility.DELETED)
+    local_entries = Entry.objects.filter(is_local=True).exclude(
+        visibility=Entry.Visibility.DELETED
+    )
 
+    local_public = local_entries.filter(
+        visibility=Entry.Visibility.PUBLIC
+    )
 
-    public_entries = base_entries.filter(visibility=Entry.Visibility.PUBLIC)
-    unlisted_entries = base_entries.filter(
+    local_unlisted = local_entries.filter(
         visibility=Entry.Visibility.UNLISTED,
         author_id__in=followers
     )
-    friends_entries = base_entries.filter(
+
+    local_friends = local_entries.filter(
         visibility=Entry.Visibility.FRIENDS,
         author_id__in=friends
     )
-    own_entries = base_entries.filter(author=current_author)
+
+    local_own = local_entries.filter(
+        author=current_author
+    )
+
+    local_visible = (
+        local_public |
+        local_unlisted |
+        local_friends |
+        local_own
+    )
+
+    remote_entries = Entry.objects.filter(is_local=False).exclude(
+        visibility=Entry.Visibility.DELETED
+    )
+
+    remote_public_friends = remote_entries.filter(
+        visibility=Entry.Visibility.PUBLIC,
+        author_id__in=friends
+    )
+
+    remote_friends_only = remote_entries.filter(
+        visibility=Entry.Visibility.FRIENDS,
+        author_id__in=friends
+    )
+
+    remote_visible = (
+        remote_public_friends |
+        remote_friends_only
+    )
 
     entries = (
-        public_entries
-        | unlisted_entries
-        | friends_entries
-        | own_entries
+        local_visible |
+        remote_visible
     ).select_related("author").order_by("-published")
 
     likes = Like.objects.filter(fqid__icontains=current_author.id)
