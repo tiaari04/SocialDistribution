@@ -11,6 +11,7 @@ urlpatterns = [
     path("images/", views.images_list, name="images"),
     path("images/upload/", views.image_upload, name="image-upload"),
     path("images/<int:pk>/delete/", views.image_delete, name="image-delete"),
+    path("images/<int:pk>/send/", federation_views.send_image_to_nodes, name="image-send"),
 
     # Authors (URL PKs!)
     path("authors/", views.authors_list, name="authors"),

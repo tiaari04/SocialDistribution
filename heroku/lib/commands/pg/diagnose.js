@@ -5,8 +5,8 @@ const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("@oclif/core/lib/util");
 const tsheredoc_1 = require("tsheredoc");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const host_1 = require("../../lib/pg/host");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
+const host_1 = require("@heroku/heroku-cli-util/dist/utils/pg/host");
 const util_2 = require("../../lib/pg/util");
 const color_1 = require("@heroku-cli/color");
 const uuid_validate_1 = require("../../lib/utils/uuid-validate");
@@ -82,11 +82,12 @@ class Diagnose extends command_1.Command {
         return base_params;
     }
     async generateReport(database, app) {
-        const attachment = await (0, fetcher_1.getAttachment)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_2.utils.pg.DatabaseResolver(this.heroku);
+        const attachment = await dbResolver.getAttachment(app, database);
         const { addon: db } = attachment;
         const { body: config } = await this.heroku.get(`/apps/${app}/config-vars`);
-        const { url } = (0, util_2.getConnectionDetails)(attachment, config);
-        const dbName = (0, util_2.getConfigVarNameFromAttachment)(attachment, config);
+        const { url } = dbResolver.getConnectionDetails(attachment, config);
+        const dbName = heroku_cli_util_2.utils.pg.psql.getConfigVarNameFromAttachment(attachment, config);
         const body = await this.generateParams(url, db, dbName);
         const { body: report } = await this.heroku.post('/reports', { hostname: PGDIAGNOSE_HOST, body });
         return report;

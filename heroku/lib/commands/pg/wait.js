@@ -4,8 +4,8 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const debug_1 = require("debug");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const fetcher_1 = require("../../lib/pg/fetcher");
-const host_1 = require("../../lib/pg/host");
 const notify_1 = require("../../lib/notify");
 const nls_1 = require("../../nls");
 const wait = (ms) => new Promise(resolve => {
@@ -27,7 +27,7 @@ class Wait extends command_1.Command {
             const notFoundMessage = 'Waiting to provision...';
             while (true) {
                 try {
-                    ({ body: status } = await this.heroku.get(`/client/v11/databases/${db.id}/wait_status`, { hostname: (0, host_1.default)() }));
+                    ({ body: status } = await this.heroku.get(`/client/v11/databases/${db.id}/wait_status`, { hostname: heroku_cli_util_1.utils.pg.host() }));
                 }
                 catch (error) {
                     const httpError = error;
@@ -55,9 +55,11 @@ class Wait extends command_1.Command {
                 await wait(interval * 1000);
             }
         };
-        let dbs = [];
+        let dbs;
         if (dbName) {
-            dbs = [await (0, fetcher_1.getAddon)(this.heroku, app, dbName)];
+            const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+            const { addon } = await dbResolver.getAttachment(app, dbName);
+            dbs = [addon];
         }
         else {
             dbs = await (0, fetcher_1.all)(this.heroku, app);

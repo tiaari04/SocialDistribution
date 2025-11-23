@@ -14,7 +14,7 @@ class RunDetached extends command_1.Command {
         const opts = {
             heroku: this.heroku,
             app: flags.app,
-            command: (0, helpers_1.buildCommand)(argv),
+            command: await (0, helpers_1.buildCommandWithLauncher)(this.heroku, flags.app, argv, flags['no-launcher']),
             size: flags.size,
             type: flags.type,
             env: flags.env,
@@ -50,4 +50,8 @@ RunDetached.flags = {
     size: command_1.flags.string({ char: 's', description: 'dyno size', completion: completions_1.DynoSizeCompletion }),
     tail: command_1.flags.boolean({ char: 't', description: 'continually stream logs' }),
     type: command_1.flags.string({ description: 'process type', completion: completions_1.ProcessTypeCompletion }),
+    'no-launcher': command_1.flags.boolean({
+        description: 'don’t prepend ‘launcher’ before a command',
+        default: false,
+    }),
 };

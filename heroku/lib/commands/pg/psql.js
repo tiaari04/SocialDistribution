@@ -3,17 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const psql_1 = require("../../lib/pg/psql");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../nls");
+const psql_1 = require("../../lib/pg/psql");
 class Psql extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Psql);
         const { app, command, credential, file } = flags;
         const namespace = credential ? `credential:${credential}` : undefined;
         let db;
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
         try {
-            db = await (0, fetcher_1.database)(this.heroku, app, args.database, namespace);
+            db = await dbResolver.getDatabase(app, args.database, namespace);
         }
         catch (error) {
             if (namespace && error instanceof Error && error.message === "Couldn't find that addon.") {
@@ -21,9 +22,10 @@ class Psql extends command_1.Command {
             }
             throw error;
         }
+        const psqlService = new heroku_cli_util_1.utils.pg.PsqlService(db);
         console.error(`--> Connecting to ${color_1.default.yellow(db.attachment.addon.name)}`);
         if (command) {
-            const output = await (0, psql_1.exec)(db, command);
+            const output = await psqlService.execQuery(command);
             process.stdout.write(output);
         }
         else if (file) {

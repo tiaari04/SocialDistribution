@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
+from adminpage.models import HostedImage
 from entries.models import Entry, Like, Comment
 from entries.services import _ensure_author
 
@@ -102,6 +103,62 @@ def newEntry(request):
         "author_created": author_created,
         "fqid": entry.fqid,
     }, status=200)
+    
+    
+@csrf_exempt
+def newHostedImage(request):
+    """
+    Receive a hosted image from another node and store it so it shows up
+    in adminpage/images_list.
+
+    Expects JSON like:
+      {
+        "type": "hosted_image",
+        "file_name": "uploads/images/abcd1234.png",
+        "url": "https://remote-storage/.../abcd1234.png",   # optional
+        "created": "2025-11-23T00:12:34Z",
+        "admin_uploaded": true
+      }
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        print("INBOUND IMAGE PAYLOAD:", data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    file_name = data.get("file_name") or data.get("filename")
+    if not file_name:
+        return JsonResponse(
+            {"error": "file_name is required for hosted_image"}, status=400
+        )
+
+    created_raw = data.get("created")
+    created_dt = parse_datetime(created_raw) if created_raw else None
+    admin_uploaded = data.get("admin_uploaded", True)
+
+    # De-duplicate by file name: if the same image is sent again, just update flags
+    img, created = HostedImage.objects.update_or_create(
+        file=file_name,
+        defaults={
+            "admin_uploaded": admin_uploaded,
+        },
+    )
+
+    if created_dt and hasattr(img, "created_at"):
+        img.created_at = created_dt
+        img.save(update_fields=["created_at"])
+
+    return JsonResponse(
+        {
+            "status": "saved",
+            "created": created,
+            "image_id": img.pk,
+        },
+        status=200,
+    )
 
 @csrf_exempt
 def newLike(request): # works for entry likes and comment likes 

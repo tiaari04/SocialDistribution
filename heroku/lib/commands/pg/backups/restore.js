@@ -6,8 +6,7 @@ const core_1 = require("@oclif/core");
 const tsheredoc_1 = require("tsheredoc");
 const confirmCommand_1 = require("../../../lib/confirmCommand");
 const backups_1 = require("../../../lib/pg/backups");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../../nls");
 function dropboxURL(url) {
     if (url.match(/^https?:\/\/www\.dropbox\.com/) && !url.endsWith('dl=1')) {
@@ -25,7 +24,8 @@ class Restore extends command_1.Command {
         const { flags, args } = await this.parse(Restore);
         const { app, 'wait-interval': waitInterval, extensions, confirm, verbose } = flags;
         const interval = Math.max(3, waitInterval);
-        const { addon: db } = await (0, fetcher_1.getAttachment)(this.heroku, app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, args.database);
         const { name, wait } = (0, backups_1.default)(app, this.heroku);
         let backupURL;
         let backupName = args.backup;
@@ -40,7 +40,7 @@ class Restore extends command_1.Command {
             else {
                 backupApp = app;
             }
-            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${backupApp}/transfers`, { hostname: (0, host_1.default)() });
+            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${backupApp}/transfers`, { hostname: heroku_cli_util_1.utils.pg.host() });
             const backups = transfers.filter(t => t.from_type === 'pg_dump' && t.to_type === 'gof3r');
             let backup;
             if (backupName) {
@@ -76,7 +76,7 @@ class Restore extends command_1.Command {
     Stop a running restore with ${color_1.default.cyan.bold('heroku pg:backups:cancel')}.
     `));
         const { body: restore } = await this.heroku.post(`/client/v11/databases/${db.id}/restores`, {
-            body: { backup_url: backupURL, extensions: this.getSortedExtensions(extensions) }, hostname: (0, host_1.default)(),
+            body: { backup_url: backupURL, extensions: this.getSortedExtensions(extensions) }, hostname: heroku_cli_util_1.utils.pg.host(),
         });
         core_1.ux.action.stop();
         await wait('Restoring', restore.uuid, interval, verbose, db.app.id);

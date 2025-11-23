@@ -43,7 +43,11 @@
         <ul class="grid cols-3 gap-2 p-3">
           <!-- Preview -->
           <li>
-            <ul><li><img class="thumb" src="{{ i.url }}" alt="image"></li></ul>
+            <ul>
+              <li>
+                <img class="thumb" src="{{ i.url }}" alt="image">
+              </li>
+            </ul>
           </li>
 
           <!-- URL -->
@@ -53,10 +57,33 @@
 
           <!-- Actions -->
           <li>
-            <form action="{% url 'adminpage:image-delete' i.id %}" method="post" onsubmit="return confirm('Delete this image?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-danger" style="padding:.375rem .75rem; font-size:.75rem;">Delete</button>
-            </form>
+            <ul class="row gap-2">
+              <li>
+                <a
+                  href="{% url 'adminpage:image-send' i.id %}"
+                  class="btn btn-primary"
+                  style="padding:.375rem .75rem; font-size:.75rem;"
+                >
+                  Send to other nodes
+                </a>
+              </li>
+              <li>
+                <form
+                  action="{% url 'adminpage:image-delete' i.id %}"
+                  method="post"
+                  onsubmit="return confirm('Delete this image?');"
+                >
+                  {% csrf_token %}
+                  <button
+                    type="submit"
+                    class="btn btn-danger"
+                    style="padding:.375rem .75rem; font-size:.75rem;"
+                  >
+                    Delete
+                  </button>
+                </form>
+              </li>
+            </ul>
           </li>
         </ul>
       </li>

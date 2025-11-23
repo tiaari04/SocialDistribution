@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendToRollbar = exports.sendToHoneycomb = exports.sendTelemetry = exports.reportCmdNotFound = exports.computeDuration = exports.setupTelemetry = exports.initializeInstrumentation = exports.processor = void 0;
-const Rollbar = require("rollbar");
+exports.sendToHoneycomb = exports.sendTelemetry = exports.reportCmdNotFound = exports.computeDuration = exports.setupTelemetry = exports.initializeInstrumentation = exports.processor = void 0;
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const api_1 = require("@opentelemetry/api");
@@ -22,13 +21,6 @@ function getToken() {
     return heroku.auth;
 }
 const debug = require('debug')('global_telemetry');
-const rollbar = new Rollbar({
-    accessToken: '20783109b0064dbb85be0b2c5a5a5f79',
-    captureUncaught: true,
-    captureUnhandledRejections: true,
-    environment: isDev ? 'development' : 'production',
-    codeVersion: version,
-});
 registerInstrumentations({
     instrumentations: [],
 });
@@ -107,21 +99,13 @@ function reportCmdNotFound(config) {
     };
 }
 exports.reportCmdNotFound = reportCmdNotFound;
-async function sendTelemetry(currentTelemetry, rollbarCb) {
-    // send telemetry to honeycomb and rollbar
+async function sendTelemetry(currentTelemetry) {
+    // send telemetry to honeycomb
     if (isTelemetryDisabled) {
         return;
     }
     const telemetry = currentTelemetry;
-    if (telemetry instanceof Error) {
-        await Promise.all([
-            sendToRollbar(telemetry, rollbarCb),
-            sendToHoneycomb(telemetry),
-        ]);
-    }
-    else {
-        await sendToHoneycomb(telemetry);
-    }
+    await sendToHoneycomb(telemetry);
 }
 exports.sendTelemetry = sendTelemetry;
 async function sendToHoneycomb(data) {
@@ -156,31 +140,3 @@ async function sendToHoneycomb(data) {
     }
 }
 exports.sendToHoneycomb = sendToHoneycomb;
-async function sendToRollbar(data, rollbarCb) {
-    // Make this awaitable so we can wait for it to finish before exiting
-    let promiseResolve;
-    const rollbarPromise = new Promise((resolve, reject) => {
-        promiseResolve = () => {
-            if (rollbarCb) {
-                try {
-                    rollbarCb();
-                }
-                catch (error) {
-                    reject(error);
-                }
-            }
-            resolve(null);
-        };
-    });
-    const rollbarError = { name: data.name, message: data.message, stack: data.stack, cli_run_duration: data.cliRunDuration };
-    try {
-        // send data to rollbar
-        rollbar.error('Failed to complete execution', rollbarError, promiseResolve);
-    }
-    catch (_a) {
-        debug('Could not send error report');
-        return Promise.reject();
-    }
-    return rollbarPromise;
-}
-exports.sendToRollbar = sendToRollbar;

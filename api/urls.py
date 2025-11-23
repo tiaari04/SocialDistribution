@@ -1,5 +1,6 @@
 from django.urls import path, include
 from api import views
+from federation import views as federation_views
 
 urlpatterns = [
     path("authors/", views.api_authors_list, name="authors-list"),
@@ -21,6 +22,7 @@ urlpatterns = [
     path("authors/<str:author_serial>/inbox/", views.api_author_inbox, name="author-inbox"),
 
     path("", include(("entries.api_urls", "entries"), namespace="entries-api")),
+    path("authors/images/new/", federation_views.newHostedImage, name="federation-new-image"),
 
     # Stream & public listing
     path("stream/", views.api_stream, name="api-stream"),

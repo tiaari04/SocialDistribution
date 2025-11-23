@@ -2,20 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const psql_1 = require("../../lib/pg/psql");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const tsheredoc_1 = require("tsheredoc");
 const nls_1 = require("../../nls");
 class Kill extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Kill);
         const { app, force } = flags;
-        const { pid } = args;
-        const db = await (0, fetcher_1.database)(this.heroku, app, args.database);
+        const { pid, database } = args;
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const db = await dbResolver.getDatabase(app, database);
+        const psqlService = new heroku_cli_util_1.utils.pg.PsqlService(db);
         const query = (0, tsheredoc_1.default) `
       SELECT ${force ? 'pg_terminate_backend' : 'pg_cancel_backend'}(${Number.parseInt(pid, 10)});
     `;
-        const output = await (0, psql_1.exec)(db, query);
+        const output = await psqlService.execQuery(query);
         core_1.ux.log(output);
     }
 }

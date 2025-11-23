@@ -55,7 +55,6 @@ export declare function reportCmdNotFound(config: any): {
     };
     isVersionOrHelp: boolean;
 };
-export declare function sendTelemetry(currentTelemetry: any, rollbarCb?: () => void): Promise<void>;
+export declare function sendTelemetry(currentTelemetry: any): Promise<void>;
 export declare function sendToHoneycomb(data: Telemetry | CLIError): Promise<void>;
-export declare function sendToRollbar(data: CLIError, rollbarCb?: () => void): Promise<unknown>;
 export {};

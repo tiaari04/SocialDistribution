@@ -3,14 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const host_1 = require("../../lib/pg/host");
 const backups_1 = require("../../lib/pg/backups");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const util_1 = require("../../lib/pg/util");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const confirmCommand_1 = require("../../lib/confirmCommand");
 const getAttachmentInfo = async function (heroku, db, app) {
+    const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(heroku);
     if (db.match(/^postgres:\/\//)) {
-        const conn = (0, util_1.parsePostgresConnectionString)(db);
+        const conn = heroku_cli_util_1.utils.pg.DatabaseResolver.parsePostgresConnectionString(db);
         const host = `${conn.host}:${conn.port}`;
         return {
             name: conn.database ? `database ${conn.database} on ${host}` : `database on ${host}`,
@@ -18,7 +17,7 @@ const getAttachmentInfo = async function (heroku, db, app) {
             confirm: conn.database || conn.host,
         };
     }
-    const attachment = await (0, fetcher_1.getAttachment)(heroku, app, db);
+    const attachment = await dbResolver.getAttachment(app, db);
     if (!attachment)
         throw new Error(`${db} not found on ${color_1.default.magenta(app)}`);
     const { body: addon } = await heroku.get(`/addons/${attachment.addon.name}`);
@@ -52,12 +51,12 @@ class Copy extends command_1.Command {
             body: {
                 from_name: source.name, from_url: source.url, to_name: target.name, to_url: target.url,
             },
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_1.utils.pg.host(),
         });
         core_1.ux.action.stop();
         if (source.attachment) {
             const { body: credentials } = await this.heroku.get(`/postgres/v0/databases/${source.attachment.addon.name}/credentials`, {
-                hostname: (0, host_1.default)(),
+                hostname: heroku_cli_util_1.utils.pg.host(),
                 headers: {
                     Authorization: `Basic ${Buffer.from(`:${this.heroku.auth}`).toString('base64')}`,
                 },
