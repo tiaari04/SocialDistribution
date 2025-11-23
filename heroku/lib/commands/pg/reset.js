@@ -4,15 +4,15 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const confirmCommand_1 = require("../../lib/confirmCommand");
-const host_1 = require("../../lib/pg/host");
-const fetcher_1 = require("../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const tsheredoc_1 = require("tsheredoc");
 const nls_1 = require("../../nls");
 class Reset extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Reset);
         const { app, confirm, extensions } = flags;
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, args.database);
         let extensionsArray;
         if (extensions) {
             extensionsArray = extensions.split(',')
@@ -26,7 +26,7 @@ class Reset extends command_1.Command {
     `));
         core_1.ux.action.start(`Resetting ${color_1.default.addon(db.name)}`);
         await this.heroku.put(`/client/v11/databases/${db.id}/reset`, {
-            body: { extensions: extensionsArray }, hostname: (0, host_1.default)(),
+            body: { extensions: extensionsArray }, hostname: heroku_cli_util_1.utils.pg.host(),
         });
         core_1.ux.action.stop();
     }

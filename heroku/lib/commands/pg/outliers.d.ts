@@ -1,5 +1,4 @@
 import { Command } from '@heroku-cli/command';
-import { getConnectionDetails } from '../../lib/pg/util';
 export default class Outliers extends Command {
     static topic: string;
     static description: string;
@@ -13,7 +12,8 @@ export default class Outliers extends Command {
     static args: {
         database: import("@oclif/core/lib/interfaces/parser").Arg<string | undefined, Record<string, unknown>>;
     };
+    private psqlService;
     run(): Promise<void>;
-    protected ensurePGStatStatement(db: ReturnType<typeof getConnectionDetails>): Promise<void>;
+    protected ensurePGStatStatement(): Promise<void>;
     protected outliersQuery(version: string | undefined, limit: number, truncate: boolean): string;
 }

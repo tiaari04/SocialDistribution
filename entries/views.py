@@ -1,4 +1,3 @@
-from signal import pause
 from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
@@ -17,6 +16,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from federation.utils import send_entry_to_federation
 from django.forms.models import model_to_dict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -214,7 +216,10 @@ def entry_create(request, author_serial):
             entry_dict["created"] = entry.created.isoformat() if entry.created else ""
             entry_dict["updated"] = entry.updated.isoformat() if entry.updated else ""
             
-            send_entry_to_federation(entry_dict)
+            try:
+                send_entry_to_federation(entry_dict)
+            except Exception as e:
+                logger.error(f"Federation error: {e}")
             
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
@@ -320,7 +325,10 @@ def entry_edit(request, author_serial, entry_serial):
                 "published": entry.published.isoformat() if entry.published else "",
             }
             
-            send_entry_to_federation(entry_dict)
+            try:
+                send_entry_to_federation(entry_dict)
+            except Exception as e:
+                logger.error(f"Federation error: {e}")
             
             return redirect("entries:stream_home", author_serial=author.serial)
     else:
@@ -357,7 +365,10 @@ def entry_delete(request, author_serial, entry_serial):
             "published": entry.published.isoformat() if entry.published else "",
         }
         
-        send_entry_to_federation(entry_dict)
+        try:
+            send_entry_to_federation(entry_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
         
         return redirect("entries:stream_home", author_serial=author_serial)
     return redirect("entries:entry_edit", author_serial=author_serial, entry_serial=entry_serial)

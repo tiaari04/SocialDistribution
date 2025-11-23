@@ -5,8 +5,7 @@ const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const tsheredoc_1 = require("tsheredoc");
 const resolve_1 = require("../../../lib/addons/resolve");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../../lib/pg/util");
 const nls_1 = require("../../../nls");
 class Create extends command_1.Command {
@@ -19,8 +18,9 @@ class Create extends command_1.Command {
                 throw new Error('Remote database must be heroku-redis or heroku-postgresql');
             return addon;
         };
-        const [db, target] = await Promise.all([
-            (0, fetcher_1.getAddon)(this.heroku, app, args.database),
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const [{ addon: db }, target] = await Promise.all([
+            dbResolver.getAttachment(app, args.database),
             service(args.remote),
         ]);
         if ((0, util_1.essentialPlan)(db))
@@ -33,11 +33,13 @@ class Create extends command_1.Command {
                 target: target.name,
                 as: flags.as,
             },
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_1.utils.pg.host(),
         });
-        if (link.message) {
-            throw new Error(link.message);
-        }
+        // This doesn't exist according to Shogun's link serializer. May it be that the original idea was to use to catch
+        // a Data API error and then show an re-throw the error here?
+        // if (link.message) {
+        //   throw new Error(link.message)
+        // }
         core_1.ux.action.stop(`done, ${color_1.default.cyan(link.name)}`);
     }
 }

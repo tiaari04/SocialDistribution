@@ -13,4 +13,5 @@ export default class Add extends Command {
     };
     static example: string;
     run(): Promise<void>;
+    private getExporterType;
 }

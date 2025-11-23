@@ -4,7 +4,7 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const confirmCommand_1 = require("../../../lib/confirmCommand");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const backups_1 = require("../../../lib/pg/backups");
 class Delete extends command_1.Command {
     async run() {
@@ -18,7 +18,7 @@ class Delete extends command_1.Command {
         if (!num) {
             throw new Error(`Invalid Backup: ${backup_id}`);
         }
-        await this.heroku.delete(`/client/v11/apps/${app}/transfers/${num}`, { hostname: (0, host_1.default)() });
+        await this.heroku.delete(`/client/v11/apps/${app}/transfers/${num}`, { hostname: heroku_cli_util_1.utils.pg.host() });
         core_1.ux.action.stop();
     }
 }

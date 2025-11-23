@@ -2,14 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const fetcher_1 = require("../../lib/pg/fetcher");
-const psql_1 = require("../../lib/pg/psql");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const tsheredoc_1 = require("tsheredoc");
 const nls_1 = require("../../nls");
 class VacuumStats extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(VacuumStats);
-        const db = await (0, fetcher_1.database)(this.heroku, flags.app, args.database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const db = await dbResolver.getDatabase(flags.app, args.database);
+        const psqlService = new heroku_cli_util_1.utils.pg.PsqlService(db);
         const query = (0, tsheredoc_1.default)(`
       WITH table_opts AS (
         SELECT
@@ -50,7 +51,7 @@ class VacuumStats extends command_1.Command {
           INNER JOIN vacuum_settings ON pg_class.oid = vacuum_settings.oid
       ORDER BY 1
     `);
-        const output = await (0, psql_1.exec)(db, query);
+        const output = await psqlService.execQuery(query);
         core_1.ux.log(output);
     }
 }

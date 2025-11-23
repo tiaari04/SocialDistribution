@@ -4,8 +4,7 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const util_1 = require("../../../lib/pg/util");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const url_1 = require("url");
 const tsheredoc_1 = require("tsheredoc");
 const nls_1 = require("../../../nls");
@@ -14,12 +13,13 @@ class Url extends command_1.Command {
         const { flags, args } = await this.parse(Url);
         const { app, name } = flags;
         const { database } = args;
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, database);
         if ((0, util_1.legacyEssentialPlan)(db) && name !== 'default') {
             core_1.ux.error('Legacy Essential-tier databases do not support named credentials.');
         }
         const { body: credInfo } = await this.heroku.get(`/postgres/v0/databases/${db.name}/credentials/${encodeURIComponent(name)}`, {
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_1.utils.pg.host(),
             headers: {
                 Authorization: `Basic ${Buffer.from(`:${this.heroku.auth}`).toString('base64')}`,
             },

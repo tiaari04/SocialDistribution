@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const backups_1 = require("../../../lib/pg/backups");
 const lodash_1 = require("lodash");
 class Url extends command_1.Command {
@@ -18,14 +18,14 @@ class Url extends command_1.Command {
                 throw new Error(`Invalid Backup: ${backup_id}`);
         }
         else {
-            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: (0, host_1.default)() });
+            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: heroku_cli_util_1.utils.pg.host() });
             const lastBackup = (0, lodash_1.sortBy)(transfers.filter(t => t.succeeded && t.to_type === 'gof3r'), 'created_at')
                 .pop();
             if (!lastBackup)
                 throw new Error(`No backups on ${color_1.default.app(app)}. Capture one with ${color_1.default.cyan.bold('heroku pg:backups:capture')}`);
             num = lastBackup.num;
         }
-        const { body: info } = await this.heroku.post(`/client/v11/apps/${app}/transfers/${num}/actions/public-url`, { hostname: (0, host_1.default)() });
+        const { body: info } = await this.heroku.post(`/client/v11/apps/${app}/transfers/${num}/actions/public-url`, { hostname: heroku_cli_util_1.utils.pg.host() });
         core_1.ux.log(info.url);
     }
 }

@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
-const host_1 = require("../../lib/pg/host");
-const fetcher_1 = require("../../lib/pg/fetcher");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
 const util_1 = require("../../lib/pg/util");
 const nls_1 = require("../../nls");
 class Credentials extends command_1.Command {
@@ -12,9 +11,10 @@ class Credentials extends command_1.Command {
         const { flags, args } = await this.parse(Credentials);
         const { app } = flags;
         const { database } = args;
-        const addon = await (0, fetcher_1.getAddon)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_2.utils.pg.DatabaseResolver(this.heroku);
+        const { addon } = await dbResolver.getAttachment(app, database);
         const { body: credentials } = await this.heroku.get(`/postgres/v0/databases/${addon.id}/credentials`, {
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_2.utils.pg.host(),
             headers: {
                 Authorization: `Basic ${Buffer.from(`:${this.heroku.auth}`).toString('base64')}`,
             },

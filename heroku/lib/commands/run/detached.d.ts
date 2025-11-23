@@ -10,6 +10,7 @@ export default class RunDetached extends Command {
         size: import("@oclif/core/lib/interfaces").OptionFlag<string | undefined, import("@oclif/core/lib/interfaces/parser").CustomOptions>;
         tail: import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
         type: import("@oclif/core/lib/interfaces").OptionFlag<string | undefined, import("@oclif/core/lib/interfaces/parser").CustomOptions>;
+        'no-launcher': import("@oclif/core/lib/interfaces").BooleanFlag<boolean>;
     };
     run(): Promise<void>;
 }

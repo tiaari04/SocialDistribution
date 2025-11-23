@@ -1,0 +1,54 @@
+{% extends "base_adminpage.html" %}
+
+{% block title %}Send Image to Nodes{% endblock %}
+
+{% block content %}
+<div class="container column gap-4 p-4">
+  <h1 class="text-xl semibold">Send Image to Other Nodes</h1>
+
+  <div class="row gap-4">
+    <div>
+      {% if image.file %}
+        <img src="{{ image.file.url }}" alt="" style="max-width: 240px; max-height: 240px;">
+      {% endif %}
+    </div>
+    <div>
+      <p><strong>File:</strong> {{ image.file.name }}</p>
+      {% if image.description %}
+        <p><strong>Description:</strong> {{ image.description }}</p>
+      {% endif %}
+      <p><strong>Created:</strong> {{ image.created_at }}</p>
+    </div>
+  </div>
+
+  <form method="post" class="column gap-3 mt-4">
+    {% csrf_token %}
+
+    <h2 class="text-lg semibold">Select nodes to send to:</h2>
+
+    {% if nodes %}
+      <ul class="column gap-2">
+        {% for node in nodes %}
+          <li>
+            <label>
+              <input type="checkbox" name="nodes" value="{{ node.id }}">
+              {{ node.name }} ({{ node.base_url }})
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No active remote nodes configured.</p>
+    {% endif %}
+
+    <div class="row gap-2 mt-3">
+      <button type="submit" class="btn btn-primary">
+        Send
+      </button>
+      <a href="{% url 'adminpage:images' %}" class="btn btn-outline">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

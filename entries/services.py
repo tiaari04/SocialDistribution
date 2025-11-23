@@ -4,6 +4,59 @@ from .models import Entry, Comment, Like
 from django.utils import timezone
 
 
+def process_federated_public_post(payload: dict) -> dict:
+    """Process a public post arriving from federation (no specific recipient needed).
+    
+    Returns a dict with keys: 'status' (created/exists/error) and 'object' (Entry or None).
+    """
+    typ = (payload.get('type') or '').lower()
+    
+    if typ != 'post' and typ != 'entry':
+        return {'status': 'ignored', 'object': None}
+    
+    # Handle incoming federated posts
+    author_payload = payload.get('author_data') or payload.get('author') or {}
+    author = _ensure_author(author_payload)
+    
+    if not author:
+        return {'status': 'error', 'error': 'missing_author'}
+    
+    fqid = payload.get('fqid') or payload.get('id')
+    if not fqid:
+        return {'status': 'error', 'error': 'missing_fqid'}
+    
+    # Check if entry already exists
+    existing_entry = Entry.objects.filter(fqid=fqid).first()
+    if existing_entry:
+        # Update existing entry
+        existing_entry.title = payload.get('title', existing_entry.title)
+        existing_entry.content = payload.get('content', existing_entry.content)
+        existing_entry.description = payload.get('description', existing_entry.description)
+        existing_entry.content_type = payload.get('content_type', existing_entry.content_type)
+        existing_entry.visibility = payload.get('visibility', existing_entry.visibility)
+        existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.web = payload.get('web', existing_entry.web)
+        existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
+        existing_entry.save()
+        return {'status': 'updated', 'object': existing_entry}
+    
+    # Create the entry
+    entry = Entry.objects.create(
+        author=author,
+        serial=payload.get('serial') or fqid.split('/')[-1],
+        fqid=fqid,
+        title=payload.get('title', ''),
+        content=payload.get('content', ''),
+        description=payload.get('description', ''),
+        content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
+        visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
+        image_url=payload.get('image_url', ''),
+        web=payload.get('web', ''),
+        published=payload.get('published') or timezone.now(),
+    )
+    return {'status': 'created', 'object': entry}
+
+
 def _ensure_author(author_payload: dict) -> Author:
     """Create or get an Author from an incoming payload dict."""
     if not author_payload:
@@ -83,6 +136,39 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
         )
         return {'status': 'created', 'object': like}
+
+    if typ == 'post' or typ == 'entry':
+        # Handle incoming federated posts
+        author_payload = payload.get('author_data') or payload.get('author') or {}
+        author = _ensure_author(author_payload)
+        
+        if not author:
+            return {'status': 'error', 'error': 'missing_author'}
+        
+        fqid = payload.get('fqid') or payload.get('id')
+        if not fqid:
+            return {'status': 'error', 'error': 'missing_fqid'}
+        
+        # Check if entry already exists (idempotent)
+        existing_entry = Entry.objects.filter(fqid=fqid).first()
+        if existing_entry:
+            return {'status': 'exists', 'object': existing_entry}
+        
+        # Create the entry
+        entry = Entry.objects.create(
+            author=author,
+            serial=payload.get('serial') or fqid.split('/')[-1],
+            fqid=fqid,
+            title=payload.get('title', ''),
+            content=payload.get('content', ''),
+            description=payload.get('description', ''),
+            content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
+            visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
+            image_url=payload.get('image_url', ''),
+            web=payload.get('web', ''),
+            published=payload.get('published') or timezone.now(),
+        )
+        return {'status': 'created', 'object': entry}
 
     if typ == 'follow':
         actor_payload = payload.get('actor')
