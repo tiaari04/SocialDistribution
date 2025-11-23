@@ -606,7 +606,7 @@
                                 data-author="{{ entry.author.id }}" 
                                 data-endpoint="{% url 'api:author-inbox' author.serial %}" 
                                 class="likeButton">
-                                    {% if entry.fqid in likes %}Liked{% else %}Like{% endif %}
+                                    Like
                                 </button>
                                 <button 
                                 data-fqid="{{ entry.fqid }}" 
