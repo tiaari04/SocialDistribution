@@ -62,11 +62,14 @@ def newEntry(request):
         if author_created_dt or author_updated_dt:
             author.save()
     else:
-        author, author_created = Author.objects.get_or_create(
-            id=author_id,
-            defaults={
-                "serial": author_id.split("/")[-1] if "/" in author_id else author_id,
-            }
+        if "/" in author_id:
+            author_serial = author_id.rstrip("/").split("/")[-1]
+        else:
+            author_serial = author_id
+
+        author, author_created = Author.objects.update_or_create(
+            serial=author_serial,
+            defaults=author_defaults
         )
     
 
