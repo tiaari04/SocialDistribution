@@ -22,7 +22,7 @@ def sync_remote_authors():
 
     for node in active_nodes:
         try:
-            url = f"{node.base_url.rstrip('/')}/authors/"
+            url = f"{node.base_url.rstrip('/')}/api/authors/"
             headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
             logger.info(f"Fetching authors from {node.name} @ {url}")
             response = requests.get(url, headers=headers, timeout=15)
