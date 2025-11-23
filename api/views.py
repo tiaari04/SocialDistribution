@@ -9,6 +9,7 @@ from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 from federation.utils import check_basic_auth
 from authors.models import Author
+from django.utils.dateparse import parse_datetime
 
 
 # followers serializer will use variables to know how to format the data
@@ -22,20 +23,18 @@ def _not_implemented(endpoint_name):
 @csrf_exempt
 def api_authors_list(request):
     node = check_basic_auth(request)
-    print("basic auth: ", node)
     if not node:
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     if request.method == "POST":
-        print(f"req: {request}")
-
         try:
             payload = json.loads(request.body.decode("utf-8"))
         except Exception as e:
             return JsonResponse({"error": f"Invalid JSON: {e}"}, status=400)
 
+
         author_data = payload.get("author_data")
-        author_id = payload.get("author_id")
+        author_id = payload.get("author_id") 
 
         if author_data:
             serial = (
@@ -45,10 +44,10 @@ def api_authors_list(request):
             if not serial:
                 return JsonResponse({"error": "Missing author serial"}, status=400)
 
+
             defaults = {
                 "displayName": author_data.get("displayName", ""),
                 "github": author_data.get("github", ""),
-				"id": author_data.get("id", ""),
                 "host": author_data.get("host", ""),
                 "profileImage": author_data.get("profileImage", ""),
                 "description": author_data.get("description", ""),
@@ -59,29 +58,40 @@ def api_authors_list(request):
                 "is_local": False,
             }
 
-            author_obj, created = Author.objects.update_or_create(
-                serial=serial, defaults=defaults
-            )
+            try:
+                author_obj = Author.objects.get(serial=serial)
+                created = False
+                # Update fields for existing author
+                for field, value in defaults.items():
+                    setattr(author_obj, field, value)
+                print(f"[FED] Author updated: {serial}")
 
-            # Apply created/updated override timestamps if supplied
-            if author_data.get("created"):
-                dt = parse_datetime(author_data["created"])
-                if dt:
-                    author_obj.created = dt
-            if author_data.get("updated"):
-                dt = parse_datetime(author_data["updated"])
-                if dt:
-                    author_obj.updated = dt
+            except Author.DoesNotExist:
+                created = True
+                author_obj = Author(
+                    id=author_id,   
+                    serial=serial,
+                    **defaults
+                )
+                print(f"[FED] Author created with id={author_id}")
+
+            created_dt = parse_datetime(author_data.get("created")) if author_data.get("created") else None
+            updated_dt = parse_datetime(author_data.get("updated")) if author_data.get("updated") else None
+
+            if created_dt:
+                author_obj.created = created_dt
+            if updated_dt:
+                author_obj.updated = updated_dt
 
             author_obj.save()
-            print(f"[FED] Author saved/updated: {author_obj.serial}")
 
         try:
             result = entries_services.process_federated_public_post(payload)
 
             if result.get("status") in ("created", "exists"):
                 return JsonResponse(
-                    {"detail": "ok", "status": result.get("status")}, status=201
+                    {"detail": "ok", "status": result.get("status")},
+                    status=201
                 )
             if result.get("status") == "ignored":
                 return JsonResponse({"detail": "ignored"}, status=200)
