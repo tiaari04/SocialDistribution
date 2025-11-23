@@ -4,6 +4,7 @@ from inbox.models import FollowRequest
 from federation.models import FederationLog, FederatedNode
 from inbox.serializers import serialize_follow_req
 import requests
+from requests.auth import HTTPBasicAuth
 from django.utils import timezone
 import logging
 
@@ -75,17 +76,17 @@ def add_followed_author(author, actor):
         follow_request.save()
         return {"details": "created"}
 
-    
-    follow_request = FollowRequest.objects.create(
-        actor=author,
-        author_followed = actor,
-        state=FollowRequest.State.ACCEPTED
-    ) 
-    follow_request.save()
+    try:
+        send_remote_follow_request(author, actor)
 
-    data = serialize_follow_req(author, actor)
-    url = f"{actor.id}/inbox"
-    resp = requests.post(url, data)
+        follow_request = FollowRequest.objects.create(
+            actor=author,
+            author_followed = actor,
+            state=FollowRequest.State.ACCEPTED
+        ) 
+        follow_request.save()
+    except Exception as e:
+        print("Failed sending follow:", e)
     
     return {"details": "created"}
 
