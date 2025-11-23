@@ -61,7 +61,6 @@ def process_federated_public_post(payload: dict) -> dict:
         image_url=payload.get('image_url', ''),
         is_local=False,
         web=payload.get('web', ''),
-        is_local=False,
         published=payload.get('published') or timezone.now(),
     )
     return {'status': 'created', 'object': entry}
