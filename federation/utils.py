@@ -1,10 +1,9 @@
 import requests
 from authors.models import Author
+from entries.models import Entry
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
-from authors.models import Author
 from adminpage.models import HostedImage
 from .models import FederatedNode, FederationLog
 import logging
@@ -91,7 +90,7 @@ def send_comment_to_federation(comment):
     
     if not active_nodes.exists():
         return {"successful": 0, "failed": 0, "logs": []}
-
+    
     payload = {
         "id": comment.get('fqid'),
         "content": comment.get('content'),
@@ -107,7 +106,7 @@ def send_comment_to_federation(comment):
         "failed": 0,
         "logs": []
     }
-
+    
     try:
         author = get_object_or_404(Author, serial=comment.get("author_id").split("/")[-1])
         author_data = _build_author_payload(author)
@@ -115,9 +114,10 @@ def send_comment_to_federation(comment):
     except Exception as e:
         logger.error(f"Error building author data: {e}")
 
-    for node in active_nodes:
+    entry_obj = get_object_or_404(Entry, fqid=comment.get('entry_id'))
 
-        if node.is_local:
+    for node in active_nodes:
+        if node.is_local or entry_obj.is_local:
             continue
 
         inbox_url = f"{node.base_url}federation/comment/"
@@ -146,6 +146,7 @@ def _build_entry_payload(entry):
         "description": entry.get("description") or "",
         "fqid": entry.get("fqid") or "",
         "image_url": entry.get("image_url") or "",
+        "is_local": False,
         "is_edited": entry.get("is_edited")
         if entry.get("is_edited") is not None
         else False,

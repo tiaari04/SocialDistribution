@@ -132,7 +132,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         try:
             send_comment_to_federation(comment_dict)
         except Exception as e:
-            logger.error(f"Federation error: {e}")
+            print("Failed sending comment:", e)
 
         return {'status': 'created', 'object': comment}
 
@@ -165,7 +165,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         try:
             send_like_to_federation(like_dict)
         except Exception as e:
-            logger.error(f"Federation error: {e}")
+            print("Failed sending like:", e)
 
         return {'status': 'created', 'object': like}
 
