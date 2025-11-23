@@ -238,7 +238,7 @@ def _send_to_node(
         if response.status_code in [200, 201]:
             log_entry.status = FederationLog.Status.SUCCESS
             node.record_success()
-            logger.info(f"Successfully sent to {node.name} ({url})")
+            logger.info(f"Successfully sent to {node.name} ({target_url})")
         else:
             log_entry.status = FederationLog.Status.FAILURE
             log_entry.error_message = (
