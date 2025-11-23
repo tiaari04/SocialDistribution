@@ -34,6 +34,7 @@ def newEntry(request):
     author_data = data.get("author_data")
     
     if author_data:
+        print(author_data)
         author_created_dt = parse_datetime(author_data.get("created")) if author_data.get("created") else None
         author_updated_dt = parse_datetime(author_data.get("updated")) if author_data.get("updated") else None
         author_defaults = {
@@ -43,7 +44,7 @@ def newEntry(request):
             "host": author_data.get("host", ""),
             "is_active": author_data.get("is_active", True),
             "is_admin": author_data.get("is_admin", False),
-            "is_approved": author_data.get("is_approved", False),
+            "is_approved": author_data.get("is_approved", True),
             "is_local": False, 
             "profileImage": author_data.get("profileImage", ""),
             "description": author_data.get("description", ""),
@@ -62,11 +63,15 @@ def newEntry(request):
         if author_created_dt or author_updated_dt:
             author.save()
     else:
-        author, author_created = Author.objects.get_or_create(
-            id=author_id,
-            defaults={
-                "serial": author_id.split("/")[-1] if "/" in author_id else author_id,
-            }
+        print("didnt find author data")
+        if "/" in author_id:
+            author_serial = author_id.rstrip("/").split("/")[-1]
+        else:
+            author_serial = author_id
+
+        author, author_created = Author.objects.update_or_create(
+            serial=author_serial,
+            defaults=author_defaults
         )
     
 
