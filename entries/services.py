@@ -66,10 +66,10 @@ def _ensure_author(author_payload: dict) -> Author:
     if not author_id:
         return None
     author_id = author_id.encode('utf-8').decode('unicode-escape')
-    is_local = host.rstrip('/api') == local_node.base_url
 
     local_node = FederatedNode.objects.get(is_local=True)
     host = author_payload.get('host', '')
+    is_local = host.removesuffix('/api') == local_node.base_url
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
