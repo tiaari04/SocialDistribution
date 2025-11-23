@@ -60,6 +60,7 @@ def _build_entry_payload(entry):
         "description": entry.get("description") or "",
         "fqid": entry.get("fqid") or "",
         "image_url": entry.get("image_url") or "",
+        "is_local": False,
         "is_edited": entry.get("is_edited")
         if entry.get("is_edited") is not None
         else False,
@@ -324,7 +325,6 @@ def send_image_to_federation(image: HostedImage, nodes=None):
     ref_id = f"image:{image.pk}"
 
     for node in nodes:
-        # 🔴 Important: tell _send_to_node to use the images endpoint
         log_entry = _send_to_node(
             node=node,
             payload=payload,

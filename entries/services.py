@@ -38,10 +38,15 @@ def process_federated_public_post(payload: dict) -> dict:
         existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
+        existing_entry.is_local = False 
         existing_entry.save()
         return {'status': 'updated', 'object': existing_entry}
     
     # Create the entry
+    if payload.get('is_edited'):
+        # Cannot create an entry that is already marked as edited
+        return {'status': 'error', 'error': 'cannot_create_edited_entry'}
+    
     entry = Entry.objects.create(
         author=author,
         serial=payload.get('serial') or fqid.split('/')[-1],
@@ -53,6 +58,7 @@ def process_federated_public_post(payload: dict) -> dict:
         visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
         image_url=payload.get('image_url', ''),
         web=payload.get('web', ''),
+        is_local=False,
         published=payload.get('published') or timezone.now(),
     )
     return {'status': 'created', 'object': entry}
