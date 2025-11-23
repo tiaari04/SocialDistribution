@@ -75,37 +75,56 @@ def newEntry(request):
         )
     
 
-    entry, created_flag = Entry.objects.update_or_create(
-        fqid=data.get("fqid"),
-        defaults={
-            "serial": data.get("serial"),
-            "author": author,  
-            "title": data.get("title", ""),
-            "web": data.get("web", ""),
-            "description": data.get("description", ""),
-            "content": data.get("content", ""),
-            "image_url": data.get("image_url"),
-            "content_type": data.get("content_type", Entry.ContentType.PLAIN),
-            "is_edited": data.get("is_edited", False),
-            "likes_count": data.get("likes_count", 0),
-            "visibility": data.get("visibility", Entry.Visibility.PUBLIC),
-        }
-    )
-    
+    fqid = data.get("fqid")
+    if not fqid:
+        return JsonResponse({"error": "fqid required"}, status=400)
+
+    try:
+        entry = Entry.objects.get(fqid=fqid)
+        exists = True
+    except Entry.DoesNotExist:
+        exists = False
+
+    if data.get("is_edited") and not exists:
+        return JsonResponse({
+            "status": "ignored_no_existing_entry",
+            "reason": "update received for entry not present locally",
+        }, status=200)
+
+
+    if not exists:
+        entry = Entry(
+            fqid=fqid,
+            serial=data.get("serial"),
+            author=author,
+        )
+        exists = False
+    else:
+        exists = True
+
+
+    entry.title = data.get("title", entry.title)
+    entry.web = data.get("web", entry.web)
+    entry.description = data.get("description", entry.description)
+    entry.content = data.get("content", entry.content)
+    entry.image_url = data.get("image_url", entry.image_url)
+    entry.content_type = data.get("content_type", entry.content_type)
+    entry.is_edited = data.get("is_edited", entry.is_edited)
+    entry.likes_count = data.get("likes_count", entry.likes_count)
+    entry.visibility = data.get("visibility", entry.visibility)
+
     if published is not None:
         entry.published = published
     if created is not None:
         entry.created = created
     if updated is not None:
         entry.updated = updated
-    if published is not None or created is not None or updated is not None:
-        entry.save()
-    
+
+    entry.save()
+
     return JsonResponse({
         "status": "saved",
-        "created": created_flag,
-        "author_created": author_created,
-        "fqid": entry.fqid,
+        "created": not exists,
     }, status=200)
     
     

@@ -99,7 +99,7 @@ def remove_followed_author(author, actor):
     return follow_request
 
 def send_remote_follow_request(actor, obj):
-    data = serialize_follow_req(actor, obj)
+    data = serialize_follow_req_with_actor(actor, obj)
     inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
 
     base_url = obj.host.rstrip("/")
@@ -163,3 +163,22 @@ def send_remote_follow_request(actor, obj):
         log_entry.save()
     
     return log_entry
+
+def serialize_follow_req_with_actor(actor, obj):
+    data = serialize_follow_req(actor, obj)  
+    data['actor_data'] = {
+        "serial": actor.serial,
+        "displayName": actor.displayName,
+        "github": actor.github,
+        "host": actor.host,
+        "is_active": actor.is_active,
+        "is_admin": actor.is_admin,
+        "is_approved": actor.is_approved,
+        "is_local": False,
+        "profileImage": actor.profileImage,
+        "description": actor.description,
+        "web": actor.web,
+        "created": actor.created.isoformat() if actor.created else None,
+        "updated": actor.updated.isoformat() if actor.updated else None,
+    }
+    return data

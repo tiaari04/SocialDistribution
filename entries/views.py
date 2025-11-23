@@ -118,42 +118,59 @@ def stream_home(request, author_serial):
 
     friends = set(following).intersection(followers)
 
-    local_author_ids = set(
-        Author.objects.filter(
-            host=current_author.host
-        ).values_list("id", flat=True)
+
+    local_entries = Entry.objects.filter(is_local=True).exclude(
+        visibility=Entry.Visibility.DELETED
     )
 
-    base_entries = Entry.objects.exclude(visibility=Entry.Visibility.DELETED)
-
-    local_public_entries = base_entries.filter(
-        visibility=Entry.Visibility.PUBLIC,
-        author_id__in=local_author_ids,
+    local_public = local_entries.filter(
+        visibility=Entry.Visibility.PUBLIC
     )
 
-    remote_public_entries = base_entries.filter(
-        visibility=Entry.Visibility.PUBLIC,
-        author_id__in=friends,
-    ).exclude(author_id__in=local_author_ids)
-
-    unlisted_entries = base_entries.filter(
+    local_unlisted = local_entries.filter(
         visibility=Entry.Visibility.UNLISTED,
         author_id__in=followers
     )
-    friends_entries = base_entries.filter(
+
+    local_friends = local_entries.filter(
         visibility=Entry.Visibility.FRIENDS,
         author_id__in=friends
     )
-    own_entries = base_entries.filter(author=current_author)
+
+    local_own = local_entries.filter(
+        author=current_author
+    )
+
+    local_visible = (
+        local_public |
+        local_unlisted |
+        local_friends |
+        local_own
+    )
+
+    remote_entries = Entry.objects.filter(is_local=False).exclude(
+        visibility=Entry.Visibility.DELETED
+    )
+
+    remote_public_friends = remote_entries.filter(
+        visibility=Entry.Visibility.PUBLIC,
+        author_id__in=friends
+    )
+
+    remote_friends_only = remote_entries.filter(
+        visibility=Entry.Visibility.FRIENDS,
+        author_id__in=friends
+    )
+
+    remote_visible = (
+        remote_public_friends |
+        remote_friends_only
+    )
 
     entries = (
-        local_public_entries |
-        remote_public_entries |
-        unlisted_entries |
-        friends_entries |
-        own_entries
+        local_visible |
+        remote_visible
     ).select_related("author").order_by("-published")
-
 
     return render(request, "stream_home.html", {
         "entries": entries,
