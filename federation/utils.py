@@ -365,12 +365,13 @@ def create_remote_author(author_data):
             "github": author_data.get("github", ""),
             "profileImage": author_data.get("profileImage", ""),
             "web": author_data.get("web", ""),
-            "description": author_data.get("summary", "") or author_data.get("note", ""),
+            "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
             "is_local": False, 
             "is_approved": True,  
             "serial": serial,      
         }
     )
+    print("created: " + author.displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
