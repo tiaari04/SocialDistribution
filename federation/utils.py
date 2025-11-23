@@ -74,7 +74,7 @@ def send_like_to_federation(like):
         if node.is_local:
             continue
 
-        inbox_url = f"{node.base_url}/federation/like/"
+        inbox_url = f"{node.base_url}federation/like/"
         log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
@@ -120,7 +120,7 @@ def send_comment_to_federation(comment):
         if node.is_local:
             continue
 
-        inbox_url = f"{node.base_url}/federation/comment/"
+        inbox_url = f"{node.base_url}federation/comment/"
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
