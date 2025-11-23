@@ -165,7 +165,9 @@ def _build_entry_payload(entry):
     }
     
     try:
-        author = get_object_or_404(Author, serial=entry.get("author_id").split("/")[-1])
+        author_fqid = entry.get("author_id") or ""
+        author_serial = author_fqid.rstrip("/").split("/")[-1]
+        author = get_object_or_404(Author, serial=author_serial)
         author_data = _build_author_payload(author)
         payload["author_id"] = str(author.id)
         payload["author_data"] = author_data
@@ -209,6 +211,7 @@ def _send_to_node(
     """
     # Build target URL
     target_url = node.full_inbox_url
+    print(f"target url: {target_url}")
     if endpoint_suffix:
         target_url = target_url.rstrip("/") + "/" + endpoint_suffix.lstrip("/")
 
