@@ -43,7 +43,7 @@ def newEntry(request):
             "host": author_data.get("host", ""),
             "is_active": author_data.get("is_active", True),
             "is_admin": author_data.get("is_admin", False),
-            "is_approved": author_data.get("is_approved", False),
+            "is_approved": author_data.get("is_approved", True),
             "is_local": False, 
             "profileImage": author_data.get("profileImage", ""),
             "description": author_data.get("description", ""),
