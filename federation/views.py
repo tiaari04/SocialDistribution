@@ -4,7 +4,8 @@ from django.utils.dateparse import parse_datetime
 import json
 from authors.models import Author
 from adminpage.models import HostedImage
-from entries.models import Entry
+from entries.models import Entry, Like, Comment
+from entries.services import _ensure_author
 
 @csrf_exempt
 def newEntry(request):
@@ -75,44 +76,24 @@ def newEntry(request):
         )
     
 
-    fqid = data.get("fqid")
-    if not fqid:
-        return JsonResponse({"error": "fqid required"}, status=400)
-
-    try:
-        entry = Entry.objects.get(fqid=fqid)
-        exists = True
-    except Entry.DoesNotExist:
-        exists = False
-
-    if data.get("is_edited") and not exists:
-        return JsonResponse({
-            "status": "ignored_no_existing_entry",
-            "reason": "update received for entry not present locally",
-        }, status=200)
-
-
-    if not exists:
-        entry = Entry(
-            fqid=fqid,
-            serial=data.get("serial"),
-            author=author,
-        )
-        exists = False
-    else:
-        exists = True
-
-
-    entry.title = data.get("title", entry.title)
-    entry.web = data.get("web", entry.web)
-    entry.description = data.get("description", entry.description)
-    entry.content = data.get("content", entry.content)
-    entry.image_url = data.get("image_url", entry.image_url)
-    entry.content_type = data.get("content_type", entry.content_type)
-    entry.is_edited = data.get("is_edited", entry.is_edited)
-    entry.likes_count = data.get("likes_count", entry.likes_count)
-    entry.visibility = data.get("visibility", entry.visibility)
-
+    entry, created_flag = Entry.objects.update_or_create(
+        fqid=data.get("fqid"),
+        defaults={
+            "serial": data.get("serial"),
+            "author": author,  
+            "title": data.get("title", ""),
+            "web": data.get("web", ""),
+            "description": data.get("description", ""),
+            "content": data.get("content", ""),
+            "image_url": data.get("image_url"),
+            "is_local": data.get("is_local", False),
+            "content_type": data.get("content_type", Entry.ContentType.PLAIN),
+            "is_edited": data.get("is_edited", False),
+            "likes_count": data.get("likes_count", 0),
+            "visibility": data.get("visibility", Entry.Visibility.PUBLIC),
+        }
+    )
+    
     if published is not None:
         entry.published = published
     if created is not None:
@@ -182,3 +163,75 @@ def newHostedImage(request):
         },
         status=200,
     )
+
+@csrf_exempt
+def newLike(request): # works for entry likes and comment likes 
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        print(data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    author_payload = data.get('author') or {}
+    author = _ensure_author(author_payload)
+    object_fqid = data.get('object_fqid')
+    if not object_fqid:
+        return {'status': 'error', 'error': 'missing_object'}
+
+    if author:
+        existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
+        if existing:
+            return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
+
+    like = Like.objects.create(
+        fqid=data.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+        author=author,
+        object_fqid=object_fqid,
+        published=data.get('published'),
+    )
+
+    return JsonResponse({
+        "status": "created",
+        "fqid": like.fqid,
+        "object": like.object_fqid,
+    }, status=201)
+
+@csrf_exempt
+def newComment(request): 
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+    
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        print(data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    author_payload = data.get('author') or {}
+    author = _ensure_author(author_payload)
+    entry_fqid = data.get('entry_id')
+    if not entry_fqid:
+        return {'status': 'error', 'error': 'missing_entry'}
+    try:
+        entry = Entry.objects.get(fqid=entry_fqid)
+    except Entry.DoesNotExist:
+        return {'status': 'error', 'error': 'entry_not_found'}
+
+    comment = Comment.objects.create(
+        fqid=data.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+        author=author,
+        entry=entry,
+        content=data.get('comment') or data.get('content') or '',
+        content_type=data.get('contentType') or data.get('content_type') or entry.ContentType.MARKDOWN,
+        published=data.get('published') or timezone.now(),
+        web=data.get('web', ''),
+    )
+
+    return JsonResponse({
+        "status": "saved",
+        "fqid": comment.fqid,
+        "entry_fqid": entry_fqid,
+    }, status=200)

@@ -38,18 +38,18 @@ def serialize_followers_view(author, typ):
     resp = {'type':resp_type, 'followers':data}
     return resp, 200
 
-def serialize_follow_req(author, obj):
+def serialize_follow_req(actor, obj):
     data = {
         "type": "follow",      
-        "summary": f"{author.displayName} wants to follow {obj.displayName}",
+        "summary": f"{actor.displayName} wants to follow {obj.displayName}",
         "actor":{
             "type":"author",
-            "id":author.id,
-            "host":author.host,
-            "displayName":author.displayName,
-            "github": author.github,
-            "profileImage": author.profileImage,
-            "web": author.web
+            "id":actor.id,
+            "host":actor.host,
+            "displayName":actor.displayName,
+            "github": actor.github,
+            "profileImage": actor.profileImage,
+            "web": actor.web
         },
         "object":{
             "type":"author",

@@ -25,8 +25,6 @@ class Entry(TimeStampedModel):
     image_url = models.URLField(max_length=2000, blank=True, null=True)
     is_local = models.BooleanField(default=True)
 
-
-
     class ContentType(models.TextChoices):
         MARKDOWN = "text/markdown", "text/markdown"
         PLAIN = "text/plain", "text/plain"

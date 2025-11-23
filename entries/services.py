@@ -3,7 +3,8 @@ from inbox.models import InboxItem, FollowRequest
 from federation.models import FederatedNode
 from .models import Entry, Comment, Like
 from django.utils import timezone
-
+from django.forms.models import model_to_dict
+from federation.utils import send_like_to_federation, send_comment_to_federation
 
 def process_federated_public_post(payload: dict) -> dict:
     """Process a public post arriving from federation (no specific recipient needed).
@@ -36,6 +37,7 @@ def process_federated_public_post(payload: dict) -> dict:
         existing_entry.content_type = payload.get('content_type', existing_entry.content_type)
         existing_entry.visibility = payload.get('visibility', existing_entry.visibility)
         existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.is_local = False
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
         existing_entry.is_local = False 
@@ -57,6 +59,7 @@ def process_federated_public_post(payload: dict) -> dict:
         content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
         visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
         image_url=payload.get('image_url', ''),
+        is_local=False,
         web=payload.get('web', ''),
         is_local=False,
         published=payload.get('published') or timezone.now(),
@@ -105,7 +108,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
-
     if typ == 'comment':
         # Build and persist Comment
         author_payload = payload.get('author') or {}
@@ -127,6 +129,19 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
         )
+
+        comment_dict = model_to_dict(comment, fields=[
+            'fqid', 'content', 'content_type', 'web', 'likes_count'
+        ])
+        comment_dict['author_id'] = str(author.id) if author else ''
+        comment_dict['entry_id'] = entry_fqid
+        comment_dict['published'] = comment.published.isoformat()
+
+        try:
+            send_comment_to_federation(comment_dict)
+        except Exception as e:
+            print("Failed sending comment:", e)
+
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
@@ -148,6 +163,18 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             object_fqid=object_fqid,
             published=payload.get('published') or timezone.now(),
         )
+
+        like_dict = model_to_dict(like, fields=[
+            'fqid', 'object_fqid'
+        ])
+        like_dict['author_id'] = str(author.id) if author else ''
+        like_dict['published'] = like.published.isoformat()
+
+        try:
+            send_like_to_federation(like_dict)
+        except Exception as e:
+            print("Failed sending like:", e)
+
         return {'status': 'created', 'object': like}
 
     if typ == 'post' or typ == 'entry':
@@ -196,6 +223,26 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         existing_request = FollowRequest.objects.filter(actor=actor, author_followed=author_followed).first()
         if existing_request:
             return {'status': 'exists', 'object': existing_request}
+            
+        follow_request = None
+        if not author_followed.is_local:
+            from inbox.services import send_remote_follow_request
+            try:
+                send_remote_follow_request(actor, author_followed)
+                follow_request = FollowRequest.objects.create(
+                    actor=actor,
+                    author_followed = author_followed,
+                    state=FollowRequest.State.ACCEPTED
+                ) 
+                follow_request.save()
+            except Exception as e:
+                print("Failed sending follow:", e)
+
+        else:
+            follow_request = FollowRequest.objects.create(
+                actor=actor,
+                author_followed = author_followed
+            )
 
         follow_request = None
         if not author_followed.is_local:
@@ -219,3 +266,4 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
+

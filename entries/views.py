@@ -2,7 +2,7 @@ from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
 from inbox.models import FollowRequest
-from .models import Entry
+from .models import Entry, Like
 from authors.models import Author
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EntryForm
@@ -67,6 +67,31 @@ def github_webhook(request):
                 published=timezone.now(),
                 fqid=fqid
             )
+
+            entry_dict = {
+                "fqid": entry.fqid,
+                "serial": entry.serial,
+                "title": entry.title,
+                "web": entry.web,
+                "description": entry.description,
+                "content": entry.content,
+                "image_url": entry.image_url,
+                "is_local": False,
+                "content_type": entry.content_type,
+                "is_edited": entry.is_edited,
+                "likes_count": entry.likes_count,
+                "visibility": entry.visibility,
+                "created": entry.created.isoformat() if entry.created else "",
+                "updated": entry.updated.isoformat() if entry.updated else "",
+                "author_id": str(entry.author.id) if entry.author else "",
+                "published": entry.published.isoformat() if entry.published else "",
+            }
+            
+            try:
+                send_entry_to_federation(entry_dict)
+            except Exception as e:
+                logger.error(f"Federation error: {e}")
+
             entries_created.append(entry.serial)
 
     elif event == "pull_request":
@@ -99,6 +124,31 @@ def github_webhook(request):
             published=timezone.now(),
             fqid=fqid
         )
+
+        entry_dict = {
+            "fqid": entry.fqid,
+            "serial": entry.serial,
+            "title": entry.title,
+            "web": entry.web,
+            "description": entry.description,
+            "content": entry.content,
+            "image_url": entry.image_url,
+            "is_local": False,
+            "content_type": entry.content_type,
+            "is_edited": entry.is_edited,
+            "likes_count": entry.likes_count,
+            "visibility": entry.visibility,
+            "created": entry.created.isoformat() if entry.created else "",
+            "updated": entry.updated.isoformat() if entry.updated else "",
+            "author_id": str(entry.author.id) if entry.author else "",
+            "published": entry.published.isoformat() if entry.published else "",
+        }
+        
+        try:
+            send_entry_to_federation(entry_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
+
         entries_created.append(entry.serial)
     else:
         return JsonResponse({'status': 'ignored', 'event': event})
@@ -172,9 +222,15 @@ def stream_home(request, author_serial):
         remote_visible
     ).select_related("author").order_by("-published")
 
+    likes = Like.objects.filter(fqid__icontains=current_author.id)
+    like_ids = []
+    for like in likes: 
+        like_ids.append(like.object_fqid)
+
     return render(request, "stream_home.html", {
         "entries": entries,
         "author": current_author,
+        "likes": like_ids,
     })
 
 def public_entries(request):
@@ -346,6 +402,7 @@ def entry_edit(request, author_serial, entry_serial):
                 "description": entry.description,
                 "content": entry.content,
                 "image_url": entry.image_url,
+                "is_local": False,
                 "content_type": entry.content_type,
                 "is_edited": entry.is_edited,
                 "likes_count": entry.likes_count,
@@ -386,6 +443,7 @@ def entry_delete(request, author_serial, entry_serial):
             "description": entry.description,
             "content": entry.content,
             "image_url": entry.image_url,
+            "is_local": False,
             "content_type": entry.content_type,
             "is_edited": entry.is_edited,
             "likes_count": entry.likes_count,

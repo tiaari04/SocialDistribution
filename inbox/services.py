@@ -4,6 +4,7 @@ from inbox.models import FollowRequest
 from federation.models import FederationLog, FederatedNode
 from inbox.serializers import serialize_follow_req
 import requests
+from requests.auth import HTTPBasicAuth
 from django.utils import timezone
 import logging
 
