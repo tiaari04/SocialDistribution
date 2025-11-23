@@ -22,21 +22,27 @@ FOLLOWING = 3
 def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from authors.models import Author
+from django.core.serializers import serialize
+
 @csrf_exempt
 def api_authors_list(request):
-
     if request.method == "POST":
-    
+        # existing POST logic for federation (unchanged)
         node = check_basic_auth(request)
-        print("basic auth: ", node)
         if not node:
-          return JsonResponse({"error": "Unauthorized"}, status=401)
+            return JsonResponse({"error": "Unauthorized"}, status=401)
         
+        import json
+        from django.utils.dateparse import parse_datetime
+        from entries import services as entries_services
+
         try:
             payload = json.loads(request.body.decode("utf-8"))
         except Exception as e:
             return JsonResponse({"error": f"Invalid JSON: {e}"}, status=400)
-
 
         author_data = payload.get("author_data")
         author_id = payload.get("author_id") 
@@ -48,7 +54,6 @@ def api_authors_list(request):
             )
             if not serial:
                 return JsonResponse({"error": "Missing author serial"}, status=400)
-
 
             defaults = {
                 "displayName": author_data.get("displayName", ""),
@@ -66,18 +71,12 @@ def api_authors_list(request):
             try:
                 author_obj = Author.objects.get(serial=serial)
                 created = False
-                # Update fields for existing author
                 for field, value in defaults.items():
                     setattr(author_obj, field, value)
                 print(f"[FED] Author updated: {serial}")
-
             except Author.DoesNotExist:
                 created = True
-                author_obj = Author(
-                    id=author_id,   
-                    serial=serial,
-                    **defaults
-                )
+                author_obj = Author(id=author_id, serial=serial, **defaults)
                 print(f"[FED] Author created with id={author_id}")
 
             created_dt = parse_datetime(author_data.get("created")) if author_data.get("created") else None
@@ -94,26 +93,69 @@ def api_authors_list(request):
             result = entries_services.process_federated_public_post(payload)
 
             if result.get("status") in ("created", "exists"):
-                return JsonResponse(
-                    {"detail": "ok", "status": result.get("status")},
-                    status=201
-                )
+                return JsonResponse({"detail": "ok", "status": result.get("status")}, status=201)
             if result.get("status") == "ignored":
                 return JsonResponse({"detail": "ignored"}, status=200)
             if result.get("status") == "error":
-                return JsonResponse(
-                    {"detail": result.get("error", "unknown error")}, status=400
-                )
+                return JsonResponse({"detail": result.get("error", "unknown error")}, status=400)
 
             return JsonResponse({"detail": "Entry processed"}, status=200)
-
         except Exception as e:
             return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
-    return _not_implemented("api_authors_list")
+    elif request.method == "GET":
+        # Return all authors as JSON
+        authors = Author.objects.all()
+        data = [
+            {
+                "id": str(author.id),
+                "serial": author.serial,
+                "displayName": author.displayName,
+                "github": author.github,
+                "host": author.host,
+                "profileImage": author.profileImage,
+                "description": author.description,
+                "web": author.web,
+                "is_active": author.is_active,
+                "is_admin": author.is_admin,
+                "is_approved": author.is_approved,
+                "is_local": author.is_local,
+                "created": author.created.isoformat() if author.created else None,
+                "updated": author.updated.isoformat() if author.updated else None,
+            }
+            for author in authors
+        ]
+        return JsonResponse({"items": data}, status=200)
 
+    # fallback for other HTTP methods
+    return JsonResponse({"detail": "Method not allowed"}, status=405)
+
+@csrf_exempt
 def api_author_detail(request, author_serial):
-	return _not_implemented("api_author_detail")
+    if request.method == "GET":
+        # Return author detail as JSON
+        try:
+            author = Author.objects.get(serial=author_serial)
+        except Author.DoesNotExist:
+            return JsonResponse({"error": "Author not found"}, status=404)
+
+        data = {
+            "id": str(author.id),
+            "serial": author.serial,
+            "displayName": author.displayName,
+            "github": author.github,
+            "host": author.host,
+            "profileImage": author.profileImage,
+            "description": author.description,
+            "web": author.web,
+            "is_active": author.is_active,
+            "is_admin": author.is_admin,
+            "is_approved": author.is_approved,
+            "is_local": author.is_local,
+            "created": author.created.isoformat() if author.created else None,
+            "updated": author.updated.isoformat() if author.updated else None,
+        }
+        return JsonResponse(data, status=200)
 
 def api_author_followers(request, author_serial):
 	if request.method != "GET":
