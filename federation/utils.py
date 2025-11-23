@@ -11,6 +11,37 @@ import base64
 
 logger = logging.getLogger(__name__)
 
+def sync_remote_authors():
+
+    active_nodes = FederatedNode.objects.filter(is_active=True, is_local=False)
+    synced_authors = []
+
+    if not active_nodes.exists():
+        logger.info("No remote nodes to sync authors from.")
+        return synced_authors
+
+    for node in active_nodes:
+        try:
+            url = f"{node.base_url.rstrip('/')}/authors/"
+            headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
+            logger.info(f"Fetching authors from {node.name} @ {url}")
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+
+            data = response.json()
+            for author_data in data.get("items", []):
+                # Use your existing function to create/update remote author
+                create_remote_author(author_data)
+                synced_authors.append(author_data.get("id"))
+
+        except requests.RequestException as e:
+            logger.warning(f"Failed to fetch authors from {node.name}: {e}")
+        except Exception as e:
+            logger.error(f"Error syncing authors from {node.name}: {e}")
+
+    logger.info(f"Synced {len(synced_authors)} remote authors.")
+    return synced_authors
+
 def send_entry_to_federation(entry):
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
