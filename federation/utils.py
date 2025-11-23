@@ -29,8 +29,8 @@ def sync_remote_authors():
             response.raise_for_status()
 
             data = response.json()
+            print(data)
             for author_data in data.get("items", []):
-                # Use your existing function to create/update remote author
                 create_remote_author(author_data)
                 synced_authors.append(author_data.get("id"))
 
@@ -331,7 +331,6 @@ def get_federation_status():
 def check_basic_auth(request):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Basic "):
-        print("here1")
         return None
 
     encoded = auth_header.split(" ")[1]
@@ -343,7 +342,6 @@ def check_basic_auth(request):
         return None
 
     try:
-        print("here3")
         return FederatedNode.objects.get(
             auth_method=FederatedNode.AuthMethod.BASIC,
             username=username,
@@ -355,7 +353,6 @@ def check_basic_auth(request):
         return None
 
 def create_remote_author(author_data):
-    print("here 4")
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
     serial = author_id.split("/")[-1]
