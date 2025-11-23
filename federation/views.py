@@ -86,6 +86,7 @@ def newEntry(request):
             "description": data.get("description", ""),
             "content": data.get("content", ""),
             "image_url": data.get("image_url"),
+            "is_local": data.get("is_local", False),
             "content_type": data.get("content_type", Entry.ContentType.PLAIN),
             "is_edited": data.get("is_edited", False),
             "likes_count": data.get("likes_count", 0),

@@ -37,6 +37,7 @@ def process_federated_public_post(payload: dict) -> dict:
         existing_entry.content_type = payload.get('content_type', existing_entry.content_type)
         existing_entry.visibility = payload.get('visibility', existing_entry.visibility)
         existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.is_local = payload.get('is_local', existing_entry.is_local)
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
         existing_entry.save()
@@ -53,6 +54,7 @@ def process_federated_public_post(payload: dict) -> dict:
         content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
         visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
         image_url=payload.get('image_url', ''),
+        is_local=payload.get('is_local', False),
         web=payload.get('web', ''),
         published=payload.get('published') or timezone.now(),
     )
