@@ -12,6 +12,7 @@ from codecs import decode
 from federation.utils import check_basic_auth
 from authors.models import Author
 from django.utils.dateparse import parse_datetime
+from authors.models import Author
 
 
 # followers serializer will use variables to know how to format the data
@@ -104,7 +105,6 @@ def api_authors_list(request):
             return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
     elif request.method == "GET":
-        # Return all authors as JSON
         authors = Author.objects.all()
         data = [
             {
@@ -259,9 +259,8 @@ def api_author_follow_requests(request, author_serial):
 def api_author_inbox(request, author_serial):
     if request.method != 'POST':
         return JsonResponse({'detail': 'Method not allowed'}, status=405)
-
-    from authors.models import Author
-    author = get_object_or_404(Author, serial=author_serial)
+		
+    print(json.loads(request.body.decode("utf-8")))
 
     if request.user.is_authenticated:
         try:
