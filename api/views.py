@@ -7,6 +7,8 @@ from entries import services as entries_services
 from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
+from federation.utils import check_basic_auth, create_remote_author
+from codecs import decode
 from federation.utils import check_basic_auth
 from authors.models import Author
 from django.utils.dateparse import parse_datetime
@@ -22,11 +24,14 @@ def _not_implemented(endpoint_name):
 
 @csrf_exempt
 def api_authors_list(request):
-    node = check_basic_auth(request)
-    if not node:
-        return JsonResponse({"error": "Unauthorized"}, status=401)
 
     if request.method == "POST":
+    
+        node = check_basic_auth(request)
+        print("basic auth: ", node)
+        if not node:
+          return JsonResponse({"error": "Unauthorized"}, status=401)
+        
         try:
             payload = json.loads(request.body.decode("utf-8"))
         except Exception as e:
@@ -129,7 +134,8 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -172,7 +178,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -212,6 +219,22 @@ def api_author_inbox(request, author_serial):
 	if request.method != 'POST':
 		return JsonResponse({'detail': 'Method not allowed'}, status=405)
 
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	if request.user.is_authenticated:
+		try:
+			if str(request.user.author.serial) != str(author_serial):
+				node = None
+			else:
+				return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
+		except AttributeError:
+			return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
+	else:
+		print("here 6")
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)
 	try:
 		payload = json.loads(request.body.decode('utf-8'))
 	except Exception:
