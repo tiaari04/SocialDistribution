@@ -7,8 +7,8 @@ from entries import services as entries_services
 from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
-from federation.utils import check_basic_auth
-
+from federation.utils import check_basic_auth, create_remote_author
+from codecs import decode
 
 # followers serializer will use variables to know how to format the data
 FOLLOWERS = 1
@@ -21,16 +21,21 @@ def _not_implemented(endpoint_name):
 # Authors
 @csrf_exempt
 def api_authors_list(request):
-	node = check_basic_auth(request)
-	print("basic auth: ", node)
-	if not node:
-		return JsonResponse({"error": "Unauthorized"}, status=401)
-
 	if request.method == 'POST':
-		print(f"req: {request}")
+		# check basic auth
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)
+
 		# Handle federation posts - these are PUBLIC posts sent to everyone
 		try:
 			payload = json.loads(request.body.decode('utf-8'))
+			# Add user to the database if they aren't there already
+			author_data = payload.get("author_data")
+			create_user = create_remote_author(author_data)
+			print("here5")
+
 			# For public posts, process without a specific recipient
 			result = entries_services.process_federated_public_post(payload)
 			if result.get('status') in ('created', 'exists'):
@@ -66,7 +71,8 @@ def api_author_follower_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -109,7 +115,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 
 	from authors.models import Author
 	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = unquote(foreign_encoded)
+	actor_fqid = decode(foreign_encoded, 'unicode_escape')
+	actor_fqid = unquote(actor_fqid)
 	actor = get_object_or_404(Author, id=actor_fqid)
 		
 	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
@@ -149,6 +156,22 @@ def api_author_inbox(request, author_serial):
 	if request.method != 'POST':
 		return JsonResponse({'detail': 'Method not allowed'}, status=405)
 
+	from authors.models import Author
+	author = get_object_or_404(Author, serial=author_serial)
+	if request.user.is_authenticated:
+		try:
+			if str(request.user.author.serial) != str(author_serial):
+				node = None
+			else:
+				return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
+		except AttributeError:
+			return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
+	else:
+		print("here 6")
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)
 	try:
 		payload = json.loads(request.body.decode('utf-8'))
 	except Exception:

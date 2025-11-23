@@ -249,6 +249,26 @@ def check_basic_auth(request):
     except FederatedNode.DoesNotExist:
         return None
 
+def create_remote_author(author_data):
+    print("here 4")
+    author_id = author_data.get("id")
+    host = author_data.get("host", "").rstrip("/")
+    serial = author_id.split("/")[-1]
+
+    author, created = Author.objects.update_or_create(
+        id=author_id,
+        defaults={
+            "displayName": author_data.get("displayName", ""),
+            "host": host,
+            "github": author_data.get("github", ""),
+            "profileImage": author_data.get("profileImage", ""),
+            "web": author_data.get("web", ""),
+            "description": author_data.get("summary", "") or author_data.get("note", ""),
+            "is_local": False, 
+            "is_approved": True,  
+            "serial": serial,      
+        }
+    )
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
