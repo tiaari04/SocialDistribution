@@ -21,6 +21,7 @@ urlpatterns = [
     path("authors/<str:author_serial>/inbox/", views.api_author_inbox, name="author-inbox"),
 
     path("", include(("entries.api_urls", "entries"), namespace="entries-api")),
+    path("authors/images/new/", federation_views.newHostedImage, name="federation-new-image"),
 
     # Stream & public listing
     path("stream/", views.api_stream, name="api-stream"),
