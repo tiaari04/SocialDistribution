@@ -30,7 +30,8 @@ def sync_remote_authors():
 
             data = response.json()
             print(data)
-            for author_data in data.get("items", []):
+            author_list = data.get("items") or data.get("authors") or []
+            for author_data in author_list:
                 create_remote_author(author_data)
                 synced_authors.append(author_data.get("id"))
 
