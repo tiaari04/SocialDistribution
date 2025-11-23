@@ -560,17 +560,11 @@
                     <li id="post_{{ entry.fqid }}" class="post">
                         <section class="user">
                             <section class="username">
-                                {% if entry.author.is_local %}
                                     <a href="{% url 'authors:detail' entry.author.serial %}">
                                         <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
                                         {{ entry.author.displayName }}
                                     </a>
-                                {% else %}
-                                    <a href="{{ entry.author.id }}" target="_blank" rel="noopener noreferrer">
-                                        <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
-                                        {{ entry.author.displayName }}
-                                    </a>
-                                {% endif %}
+                                
                             </section>
                             <button data-fqid="{{ entry.fqid }}" class="share">
                                 <div class="sharePoint"></div>

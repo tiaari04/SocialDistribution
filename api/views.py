@@ -48,6 +48,7 @@ def api_authors_list(request):
             defaults = {
                 "displayName": author_data.get("displayName", ""),
                 "github": author_data.get("github", ""),
+				"id": author_data.get("id", ""),
                 "host": author_data.get("host", ""),
                 "profileImage": author_data.get("profileImage", ""),
                 "description": author_data.get("description", ""),
