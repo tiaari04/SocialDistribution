@@ -130,8 +130,32 @@ def api_authors_list(request):
     # fallback for other HTTP methods
     return JsonResponse({"detail": "Method not allowed"}, status=405)
 
+@csrf_exempt
 def api_author_detail(request, author_serial):
-	return _not_implemented("api_author_detail")
+    if request.method == "GET":
+        # Return author detail as JSON
+        try:
+            author = Author.objects.get(serial=author_serial)
+        except Author.DoesNotExist:
+            return JsonResponse({"error": "Author not found"}, status=404)
+
+        data = {
+            "id": str(author.id),
+            "serial": author.serial,
+            "displayName": author.displayName,
+            "github": author.github,
+            "host": author.host,
+            "profileImage": author.profileImage,
+            "description": author.description,
+            "web": author.web,
+            "is_active": author.is_active,
+            "is_admin": author.is_admin,
+            "is_approved": author.is_approved,
+            "is_local": author.is_local,
+            "created": author.created.isoformat() if author.created else None,
+            "updated": author.updated.isoformat() if author.updated else None,
+        }
+        return JsonResponse(data, status=200)
 
 def api_author_followers(request, author_serial):
 	if request.method != "GET":
