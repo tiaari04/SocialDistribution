@@ -56,6 +56,8 @@ def node_create(request):
     """Create a new federated node"""
     if request.method == 'POST':
         try:
+            is_local = request.POST.get('is_local') == 'true'
+            
             node = FederatedNode.objects.create(
                 name=request.POST.get('name'),
                 base_url=request.POST.get('base_url'),
@@ -69,6 +71,7 @@ def node_create(request):
                 is_bidirectional=True,  # Allow both ways by default
                 description='',  # Simplified - not needed
                 admin_contact='',  # Simplified - not needed
+                is_local=is_local,
             )
             messages.success(request, f'Node "{node.name}" created successfully!')
             return redirect('adminpage:federation-nodes')
