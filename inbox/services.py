@@ -102,8 +102,13 @@ def send_remote_follow_request(actor, obj):
     data = serialize_follow_req(actor, obj)
     inbox_url = f"{obj.host}/authors/{obj.serial}/inbox/"
 
-    base_url = obj.host.rstrip("/").removesuffix("/api/")
-    print("baseurl: " + base_url)
+    base_url = obj.host.rstrip("/")
+
+    if base_url.endswith("/api"):
+        base_url = base_url[:-4]   # remove /api
+    elif base_url.endswith("/api/"):
+        base_url = base_url[:-5]   # remove /api/
+
     node = FederatedNode.objects.get(base_url=base_url)
 
     log_entry = FederationLog.objects.create(
