@@ -201,19 +201,12 @@ def _send_to_node(
 ):
     """
     Send a payload to a node.
-
-    If endpoint_suffix is provided, it is appended to full_inbox_url, e.g.:
-
-        node.full_inbox_url = "https://node/api/authors/"
-        endpoint_suffix     = "images/new/"
-
-    => target_url = "https://node/api/authors/images/new/"
     """
     # Build target URL
     target_url = node.full_inbox_url
     print(f"target url: {target_url}")
     if endpoint_suffix:
-        target_url = target_url.rstrip("/") + "/" + endpoint_suffix.lstrip("/")
+        target_url = endpoint_suffix
 
     log_entry = FederationLog.objects.create(
         node=node,
@@ -407,7 +400,7 @@ def send_image_to_federation(image: HostedImage, nodes=None):
             node=node,
             payload=payload,
             entry_fqid=ref_id,
-            endpoint_suffix="images/new/",
+            endpoint_suffix=f"{node.base_url}images/new/",
         )
         results["logs"].append(log_entry)
 
