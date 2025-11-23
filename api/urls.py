@@ -1,5 +1,6 @@
 from django.urls import path, include
 from api import views
+from federation import views as federation_views
 
 urlpatterns = [
     path("authors/", views.api_authors_list, name="authors-list"),
