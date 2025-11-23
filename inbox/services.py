@@ -65,28 +65,25 @@ def add_followed_author(author, actor):
 
     if follow_request:
         return {"details": "exists"}
-    
+
     if author.host == actor.host:
         follow_request = FollowRequest.objects.create(
             actor=author,
-            author_followed = actor,
+            author_followed=actor,
             state=FollowRequest.State.REQUESTING,
         )
         follow_request.save()
         return {"details": "created"}
 
-    
     follow_request = FollowRequest.objects.create(
         actor=author,
-        author_followed = actor,
-        state=FollowRequest.State.ACCEPTED
-    ) 
+        author_followed=actor,
+        state=FollowRequest.State.ACCEPTED,
+    )
     follow_request.save()
 
-    data = serialize_follow_req(author, actor)
-    url = f"{actor.id}/inbox"
-    resp = requests.post(url, data)
-    
+    send_remote_follow_request(author, actor)
+
     return {"details": "created"}
 
 def remove_followed_author(author, actor):
