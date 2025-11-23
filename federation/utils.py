@@ -31,7 +31,7 @@ def send_entry_to_federation(entry):
         if node.is_local:
             continue
 
-        # Entries still go to the normal inbox URL
+        # Entries still go to the normal inbox URL (e.g. /api/authors/)
         log_entry = _send_to_node(node, payload, entry.get("fqid"))
         results["logs"].append(log_entry)
 
@@ -116,7 +116,20 @@ def _build_entry_payload(entry):
     return payload
 
 
-def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None):
+def _send_to_node(
+    node, payload, entry_fqid, endpoint_suffix: str | None = None
+):
+    """
+    Send a payload to a node.
+
+    If endpoint_suffix is provided, it is appended to full_inbox_url, e.g.:
+
+        node.full_inbox_url = "https://node/api/authors/"
+        endpoint_suffix     = "images/new/"
+
+    => target_url = "https://node/api/authors/images/new/"
+    """
+    # Build target URL
     target_url = node.full_inbox_url
     if endpoint_suffix:
         target_url = target_url.rstrip("/") + "/" + endpoint_suffix.lstrip("/")
@@ -241,23 +254,20 @@ def _build_image_payload(image: HostedImage) -> dict:
     """
     Build the payload for sending a HostedImage.
 
-    Uses image.url because that's what your images_list.html uses ({{ i.url }}).
+    We send the underlying file name plus the resolved URL for convenience.
     """
-    image_url = getattr(image, "url", "") or ""
-    filename = ""
-    file_field = getattr(image, "file", None)
-    if file_field is not None:
+    file_name = ""
+    if getattr(image, "file", None):
         try:
-            filename = file_field.name
+            file_name = image.file.name or ""
         except Exception:
-            filename = str(file_field)
+            file_name = str(image.file)
 
     return {
         "type": "hosted_image",
-        "url": image_url,
-        "filename": filename,
-        "description": getattr(image, "description", "") or "",
-        "created": getattr(image, "created_at", None).isoformat()
+        "file_name": file_name,        # used by receiver to set HostedImage.file
+        "url": image.url,              # nice to have for debugging / preview
+        "created": image.created_at.isoformat()
         if getattr(image, "created_at", None)
         else "",
         "admin_uploaded": bool(
@@ -267,6 +277,12 @@ def _build_image_payload(image: HostedImage) -> dict:
 
 
 def send_image_to_federation(image: HostedImage, nodes=None):
+    """
+    Send a HostedImage to other nodes.
+
+    This explicitly targets the images endpoint, expected to be
+    /api/authors/images/new/ relative to node.full_inbox_url.
+    """
     if nodes is None:
         nodes = FederatedNode.objects.filter(
             is_active=True, is_local=False
@@ -286,6 +302,7 @@ def send_image_to_federation(image: HostedImage, nodes=None):
     ref_id = f"image:{image.pk}"
 
     for node in nodes:
+        # 🔴 Important: tell _send_to_node to use the images endpoint
         log_entry = _send_to_node(
             node=node,
             payload=payload,
