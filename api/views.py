@@ -8,6 +8,7 @@ from inbox import services as followers_services
 from inbox import serializers as followers_serializers
 from django.contrib.auth.models import User
 from federation.utils import check_basic_auth
+from authors.models import Author
 
 
 # followers serializer will use variables to know how to format the data
@@ -18,31 +19,82 @@ FOLLOWING = 3
 def _not_implemented(endpoint_name):
 	return JsonResponse({"detail": "not implemented", "endpoint": endpoint_name}, status=501)
 
-# Authors
 @csrf_exempt
 def api_authors_list(request):
-	node = check_basic_auth(request)
-	print("basic auth: ", node)
-	if not node:
-		return JsonResponse({"error": "Unauthorized"}, status=401)
+    node = check_basic_auth(request)
+    print("basic auth: ", node)
+    if not node:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
 
-	if request.method == 'POST':
-		print(f"req: {request}")
-		# Handle federation posts - these are PUBLIC posts sent to everyone
-		try:
-			payload = json.loads(request.body.decode('utf-8'))
-			# For public posts, process without a specific recipient
-			result = entries_services.process_federated_public_post(payload)
-			if result.get('status') in ('created', 'exists'):
-				return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
-			if result.get('status') == 'ignored':
-				return JsonResponse({'detail': 'ignored'}, status=200)
-			if result.get('status') == 'error':
-				return JsonResponse({'detail': result.get('error', 'unknown error')}, status=400)
-			return JsonResponse({'detail': 'Entry processed'}, status=200)
-		except Exception as e:
-			return JsonResponse({'detail': str(e)}, status=400)
-	return _not_implemented("api_authors_list")
+    if request.method == "POST":
+        print(f"req: {request}")
+
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+        except Exception as e:
+            return JsonResponse({"error": f"Invalid JSON: {e}"}, status=400)
+
+        author_data = payload.get("author_data")
+        author_id = payload.get("author_id")
+
+        if author_data:
+            serial = (
+                author_data.get("serial")
+                or (author_id.split("/")[-1] if author_id else None)
+            )
+            if not serial:
+                return JsonResponse({"error": "Missing author serial"}, status=400)
+
+            defaults = {
+                "displayName": author_data.get("displayName", ""),
+                "github": author_data.get("github", ""),
+                "host": author_data.get("host", ""),
+                "profileImage": author_data.get("profileImage", ""),
+                "description": author_data.get("description", ""),
+                "web": author_data.get("web", ""),
+                "is_active": author_data.get("is_active", True),
+                "is_admin": author_data.get("is_admin", False),
+                "is_approved": author_data.get("is_approved", True),
+                "is_local": False,
+            }
+
+            author_obj, created = Author.objects.update_or_create(
+                serial=serial, defaults=defaults
+            )
+
+            # Apply created/updated override timestamps if supplied
+            if author_data.get("created"):
+                dt = parse_datetime(author_data["created"])
+                if dt:
+                    author_obj.created = dt
+            if author_data.get("updated"):
+                dt = parse_datetime(author_data["updated"])
+                if dt:
+                    author_obj.updated = dt
+
+            author_obj.save()
+            print(f"[FED] Author saved/updated: {author_obj.serial}")
+
+        try:
+            result = entries_services.process_federated_public_post(payload)
+
+            if result.get("status") in ("created", "exists"):
+                return JsonResponse(
+                    {"detail": "ok", "status": result.get("status")}, status=201
+                )
+            if result.get("status") == "ignored":
+                return JsonResponse({"detail": "ignored"}, status=200)
+            if result.get("status") == "error":
+                return JsonResponse(
+                    {"detail": result.get("error", "unknown error")}, status=400
+                )
+
+            return JsonResponse({"detail": "Entry processed"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
+
+    return _not_implemented("api_authors_list")
 
 def api_author_detail(request, author_serial):
 	return _not_implemented("api_author_detail")
