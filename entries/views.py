@@ -108,7 +108,6 @@ def github_webhook(request):
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
 
-
     following = FollowRequest.objects.filter(
         actor=current_author, state=FollowRequest.State.ACCEPTED
     ).values_list("author_followed_id", flat=True)
@@ -119,11 +118,24 @@ def stream_home(request, author_serial):
 
     friends = set(following).intersection(followers)
 
+    local_author_ids = set(
+        Author.objects.filter(
+            host=current_author.host
+        ).values_list("id", flat=True)
+    )
 
     base_entries = Entry.objects.exclude(visibility=Entry.Visibility.DELETED)
 
+    local_public_entries = base_entries.filter(
+        visibility=Entry.Visibility.PUBLIC,
+        author_id__in=local_author_ids,
+    )
 
-    public_entries = base_entries.filter(visibility=Entry.Visibility.PUBLIC)
+    remote_public_entries = base_entries.filter(
+        visibility=Entry.Visibility.PUBLIC,
+        author_id__in=friends,
+    ).exclude(author_id__in=local_author_ids)
+
     unlisted_entries = base_entries.filter(
         visibility=Entry.Visibility.UNLISTED,
         author_id__in=followers
@@ -135,11 +147,13 @@ def stream_home(request, author_serial):
     own_entries = base_entries.filter(author=current_author)
 
     entries = (
-        public_entries
-        | unlisted_entries
-        | friends_entries
-        | own_entries
+        local_public_entries |
+        remote_public_entries |
+        unlisted_entries |
+        friends_entries |
+        own_entries
     ).select_related("author").order_by("-published")
+
 
     return render(request, "stream_home.html", {
         "entries": entries,
