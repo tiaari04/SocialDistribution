@@ -100,7 +100,7 @@ def remove_followed_author(author, actor):
 
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req(actor, obj)
-    inbox_url = f"{obj.host}/authors/{obj.serial}/inbox/"
+    inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
 
     base_url = obj.host.rstrip("/")
 
