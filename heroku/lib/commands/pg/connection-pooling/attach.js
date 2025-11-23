@@ -3,22 +3,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const host_1 = require("../../../lib/pg/host");
 const tsheredoc_1 = require("tsheredoc");
 const util_1 = require("../../../lib/pg/util");
-const fetcher_1 = require("../../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../../nls");
 class Attach extends command_1.Command {
     async run() {
         const { flags, args } = await this.parse(Attach);
         const { app } = flags;
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, args.database);
-        const { body: addon } = await this.heroku.get(`/addons/${encodeURIComponent(db.name)}`);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, args.database);
         if ((0, util_1.essentialPlan)(db))
             core_1.ux.error('You can’t perform this operation on Essential-tier databases.');
-        core_1.ux.action.start(`Enabling Connection Pooling on ${color_1.default.yellow(addon.name)} to ${color_1.default.magenta(app)}`);
+        core_1.ux.action.start(`Enabling Connection Pooling on ${color_1.default.yellow(db.name)} to ${color_1.default.magenta(app)}`);
         const { body: attachment } = await this.heroku.post(`/client/v11/databases/${encodeURIComponent(db.name)}/connection-pooling`, {
-            body: { name: flags.as, credential: 'default', app: app }, hostname: (0, host_1.default)(),
+            body: { name: flags.as, credential: 'default', app: app }, hostname: heroku_cli_util_1.utils.pg.host(),
         });
         core_1.ux.action.stop();
         core_1.ux.action.start(`Setting ${color_1.default.cyan(attachment.name)} config vars and restarting ${color_1.default.magenta(app)}`);

@@ -4,7 +4,7 @@ const tslib_1 = require("tslib");
 const color_1 = require("@heroku-cli/color");
 const core_1 = require("@oclif/core");
 const tsheredoc_1 = require("tsheredoc");
-const host_1 = require("./host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const bytes = require("bytes");
 function prefix(transfer) {
     if (transfer.from_type === 'pg_dump') {
@@ -46,7 +46,7 @@ class Backups {
                 return Number.parseInt(m[1], 10);
             m = name.match(/^o[ab]\d+$/);
             if (m) {
-                const { body: transfers } = await this.heroku.get(`/client/v11/apps/${this.app}/transfers`, { hostname: (0, host_1.default)() });
+                const { body: transfers } = await this.heroku.get(`/client/v11/apps/${this.app}/transfers`, { hostname: heroku_cli_util_1.utils.pg.host() });
                 const transfer = transfers.find(t => this.name(t) === name);
                 if (transfer)
                     return transfer.num;
@@ -117,7 +117,7 @@ class Backups {
             const url = verbose ? verboseUrl : quietUrl;
             while (failures < 21) {
                 try {
-                    ({ body: backup } = yield tslib_1.__await(this.heroku.get(url, { hostname: (0, host_1.default)() })));
+                    ({ body: backup } = yield tslib_1.__await(this.heroku.get(url, { hostname: heroku_cli_util_1.utils.pg.host() })));
                 }
                 catch (error) {
                     if (failures++ > 20) {
@@ -143,7 +143,7 @@ class Backups {
                         break;
                     }
                     // logs is undefined unless verbose=true is passed
-                    ({ body: backup } = yield tslib_1.__await(this.heroku.get(verboseUrl, { hostname: (0, host_1.default)() })));
+                    ({ body: backup } = yield tslib_1.__await(this.heroku.get(verboseUrl, { hostname: heroku_cli_util_1.utils.pg.host() })));
                     throw new Error((0, tsheredoc_1.default)(`
           An error occurred and the backup did not finish.
 

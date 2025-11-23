@@ -4,7 +4,7 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
 const backups_1 = require("../../../lib/pg/backups");
 const lodash_1 = require("lodash");
 function status(backup) {
@@ -41,7 +41,7 @@ class Info extends command_1.Command {
                     throw new Error(`Invalid ID: ${id}`);
             }
             else {
-                let { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: (0, host_1.default)() });
+                let { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: heroku_cli_util_2.utils.pg.host() });
                 transfers = (0, lodash_1.sortBy)(transfers, 'created_at');
                 const backups = transfers.filter(t => t.from_type === 'pg_dump' && t.to_type === 'gof3r');
                 const lastBackup = backups.pop();
@@ -49,7 +49,7 @@ class Info extends command_1.Command {
                     throw new Error(`No backups. Capture one with ${color_1.default.cyan.bold('heroku pg:backups:capture')}`);
                 backupID = lastBackup.num;
             }
-            const { body: backup } = await this.heroku.get(`/client/v11/apps/${app}/transfers/${backupID}?verbose=true`, { hostname: (0, host_1.default)() });
+            const { body: backup } = await this.heroku.get(`/client/v11/apps/${app}/transfers/${backupID}?verbose=true`, { hostname: heroku_cli_util_2.utils.pg.host() });
             return backup;
         };
         this.displayBackup = (backup, app) => {

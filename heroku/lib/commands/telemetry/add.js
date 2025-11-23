@@ -9,6 +9,13 @@ class Add extends command_1.Command {
         const { flags, args } = await this.parse(Add);
         const { app, headers, space, signals, transport } = flags;
         const { endpoint } = args;
+        // Allow splunk, but do not show splunk in error message until splunk transport is accepted as a feature
+        // When splunk transport is accepted as a feature, and options are added for the transport flag, this section should be removed
+        const publicTransports = ['http', 'grpc'];
+        const validTransports = [...publicTransports, 'splunk'];
+        if (!validTransports.includes(transport)) {
+            throw new Error(`Expected --transport=${transport} to be one of: ${publicTransports.join(', ')}`);
+        }
         let id;
         if (app) {
             const { body: herokuApp } = await this.heroku.get(`/apps/${app}`, {
@@ -29,7 +36,7 @@ class Add extends command_1.Command {
             signals: (0, util_1.validateAndFormatSignals)(signals),
             exporter: {
                 endpoint,
-                type: (transport === 'grpc') ? 'otlp' : 'otlphttp',
+                type: this.getExporterType(transport),
                 headers: JSON.parse(exporterHeaders),
             },
         };
@@ -41,6 +48,16 @@ class Add extends command_1.Command {
         });
         core_1.ux.log(`successfully added drain ${drain.exporter.endpoint}`);
     }
+    getExporterType(transport) {
+        switch (transport) {
+            case 'grpc':
+                return 'otlp';
+            case 'splunk':
+                return 'splunk';
+            default:
+                return 'otlphttp';
+        }
+    }
 }
 exports.default = Add;
 Add.description = 'Add and configure a new telemetry drain. Defaults to collecting all telemetry unless otherwise specified.';
@@ -49,7 +66,8 @@ Add.flags = {
     headers: command_1.flags.string({ description: 'custom headers to configure the drain in json format' }),
     space: command_1.flags.string({ char: 's', description: 'space to add a drain to' }),
     signals: command_1.flags.string({ default: 'all', description: 'comma-delimited list of signals to collect (traces, metrics, logs). Use "all" to collect all signals.' }),
-    transport: command_1.flags.string({ default: 'http', options: ['http', 'grpc'], description: 'transport protocol for the drain' }),
+    // If splunk transport is accepted as a feature, this should have options: ['http', 'grpc', 'splunk']
+    transport: command_1.flags.string({ default: 'http', description: 'transport protocol for the drain' }),
 };
 Add.args = {
     endpoint: core_1.Args.string({ required: true, description: 'drain url' }),

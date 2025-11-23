@@ -1,20 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parsePostgresConnectionString = exports.databaseNameFromUrl = exports.configVarNamesFromValue = exports.bastionKeyPlan = exports.getConnectionDetails = exports.presentCredentialAttachments = exports.formatResponseWithCommands = exports.getConfigVarNameFromAttachment = exports.essentialPlan = exports.legacyEssentialPlan = exports.essentialNumPlan = exports.getConfigVarName = void 0;
+exports.databaseNameFromUrl = exports.configVarNamesFromValue = exports.presentCredentialAttachments = exports.formatResponseWithCommands = exports.essentialPlan = exports.legacyEssentialPlan = exports.essentialNumPlan = void 0;
 const color_1 = require("@heroku-cli/color");
 const core_1 = require("@oclif/core");
-const debug_1 = require("debug");
 const addons_1 = require("../../commands/addons");
 const multisort_1 = require("../utils/multisort");
-const bastion_1 = require("./bastion");
-const process_1 = require("process");
-function getConfigVarName(configVars) {
-    const connStringVars = configVars.filter(cv => (cv.endsWith('_URL')));
-    if (connStringVars.length === 0)
-        throw new Error('Database URL not found for this addon');
-    return connStringVars[0];
-}
-exports.getConfigVarName = getConfigVarName;
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const essentialNumPlan = (addon) => { var _a, _b; return Boolean((_b = (_a = addon === null || addon === void 0 ? void 0 : addon.plan) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.split(':')[1].match(/^essential/)); };
 exports.essentialNumPlan = essentialNumPlan;
 const legacyEssentialPlan = (addon) => { var _a, _b; return Boolean((_b = (_a = addon === null || addon === void 0 ? void 0 : addon.plan) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.split(':')[1].match(/(dev|basic|mini)$/)); };
@@ -23,22 +14,6 @@ function essentialPlan(addon) {
     return (0, exports.essentialNumPlan)(addon) || (0, exports.legacyEssentialPlan)(addon);
 }
 exports.essentialPlan = essentialPlan;
-function getConfigVarNameFromAttachment(attachment, config = {}) {
-    var _a, _b;
-    const configVars = (_b = (_a = attachment.config_vars) === null || _a === void 0 ? void 0 : _a.filter((cv) => {
-        var _a;
-        return (_a = config[cv]) === null || _a === void 0 ? void 0 : _a.startsWith('postgres://');
-    })) !== null && _b !== void 0 ? _b : [];
-    if (configVars.length === 0) {
-        core_1.ux.error(`No config vars found for ${attachment.name}; perhaps they were removed as a side effect of ${color_1.default.cmd('heroku rollback')}? Use ${color_1.default.cmd('heroku addons:attach')} to create a new attachment and then ${color_1.default.cmd('heroku addons:detach')} to remove the current attachment.`);
-    }
-    const configVarName = `${attachment.name}_URL`;
-    if (configVars.includes(configVarName) && configVarName in config) {
-        return configVarName;
-    }
-    return getConfigVarName(configVars);
-}
-exports.getConfigVarNameFromAttachment = getConfigVarNameFromAttachment;
 function formatResponseWithCommands(response) {
     return response.replace(/`(.*?)`/g, (_, word) => color_1.default.cmd(word));
 }
@@ -102,33 +77,6 @@ function presentCredentialAttachments(app, credAttachments, credentials, cred) {
     return [cred, ...attLines, ...rotationLines].join('\n');
 }
 exports.presentCredentialAttachments = presentCredentialAttachments;
-const getConnectionDetails = (attachment, configVars = {}) => {
-    const connStringVar = getConfigVarNameFromAttachment(attachment, configVars);
-    // remove _URL from the end of the config var name
-    const baseName = connStringVar.slice(0, -4);
-    // build the default payload for non-bastion dbs
-    (0, debug_1.default)(`Using "${connStringVar}" to connect to your database…`);
-    const conn = (0, exports.parsePostgresConnectionString)(configVars[connStringVar]);
-    const payload = {
-        user: conn.user,
-        password: conn.password,
-        database: conn.database,
-        host: conn.host,
-        port: conn.port,
-        pathname: conn.pathname,
-        url: conn.url,
-        attachment,
-    };
-    // If bastion creds exist, graft it into the payload
-    const bastion = (0, bastion_1.getBastion)(configVars, baseName);
-    if (bastion) {
-        Object.assign(payload, bastion);
-    }
-    return payload;
-};
-exports.getConnectionDetails = getConnectionDetails;
-const bastionKeyPlan = (a) => Boolean(a.plan.name.match(/private/));
-exports.bastionKeyPlan = bastionKeyPlan;
 const configVarNamesFromValue = (config, value) => {
     const keys = [];
     for (const key of Object.keys(config)) {
@@ -166,22 +114,7 @@ const databaseNameFromUrl = (uri, config) => {
     if (name) {
         return color_1.default.configVar(name.replace(/_URL$/, ''));
     }
-    const conn = (0, exports.parsePostgresConnectionString)(uri);
+    const conn = heroku_cli_util_1.utils.pg.DatabaseResolver.parsePostgresConnectionString(uri);
     return `${conn.host}:${conn.port}${conn.pathname}`;
 };
 exports.databaseNameFromUrl = databaseNameFromUrl;
-const parsePostgresConnectionString = (db) => {
-    const dbPath = db.match(/:\/\//) ? db : `postgres:///${db}`;
-    const url = new URL(dbPath);
-    const { username, password, hostname, pathname, port } = url;
-    return {
-        user: username,
-        password,
-        database: pathname.charAt(0) === '/' ? pathname.slice(1) : pathname,
-        host: hostname,
-        port: port || process_1.env.PGPORT || (hostname && '5432'),
-        pathname,
-        url: dbPath,
-    };
-};
-exports.parsePostgresConnectionString = parsePostgresConnectionString;

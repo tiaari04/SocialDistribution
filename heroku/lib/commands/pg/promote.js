@@ -5,8 +5,8 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const tsheredoc_1 = require("tsheredoc");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const fetcher_1 = require("../../lib/pg/fetcher");
-const host_1 = require("../../lib/pg/host");
 const nls_1 = require("../../nls");
 class Promote extends command_1.Command {
     async run() {
@@ -14,7 +14,8 @@ class Promote extends command_1.Command {
         const { flags, args } = await this.parse(Promote);
         const { force, app } = flags;
         const { database } = args;
-        const attachment = await (0, fetcher_1.getAttachment)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const attachment = await dbResolver.getAttachment(app, database);
         core_1.ux.action.start(`Ensuring an alternate alias for existing ${color_1.default.green('DATABASE_URL')}`);
         const { body: attachments } = await this.heroku.get(`/apps/${app}/addon-attachments`);
         const current = attachments.find(a => a.name === 'DATABASE');
@@ -50,7 +51,7 @@ class Promote extends command_1.Command {
         }
         if (!force) {
             const { body: status } = await this.heroku.get(`/client/v11/databases/${attachment.addon.id}/wait_status`, {
-                hostname: (0, host_1.default)(),
+                hostname: heroku_cli_util_1.utils.pg.host(),
             });
             if (status['waiting?']) {
                 core_1.ux.error((0, tsheredoc_1.default)(`
@@ -95,7 +96,7 @@ class Promote extends command_1.Command {
             core_1.ux.action.stop();
         }
         const { body: promotedDatabaseDetails } = await this.heroku.get(`/client/v11/databases/${attachment.addon.id}`, {
-            hostname: (0, host_1.default)(),
+            hostname: heroku_cli_util_1.utils.pg.host(),
         });
         if (promotedDatabaseDetails.following) {
             const unfollowLeaderCmd = `heroku pg:unfollow ${attachment.addon.name}`;

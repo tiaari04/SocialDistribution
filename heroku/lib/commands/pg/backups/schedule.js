@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const host_1 = require("../../../lib/pg/host");
-const fetcher_1 = require("../../../lib/pg/fetcher");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../../nls");
 const TZ = {
     PST: 'America/Los_Angeles',
@@ -39,10 +38,11 @@ class Schedule extends command_1.Command {
         const { app } = flags;
         const { database } = args;
         const schedule = this.parseDate(flags.at);
-        const attachment = await (0, fetcher_1.getAttachment)(this.heroku, app, database);
-        const db = attachment.addon;
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const attachment = await dbResolver.getAttachment(app, database);
+        const { addon: db, name } = attachment;
         const at = color_1.default.cyan(`${schedule.hour}:00 ${schedule.timezone}`);
-        const pgResponse = await this.heroku.get(`/client/v11/databases/${db.id}`, { hostname: (0, host_1.default)() })
+        const pgResponse = await this.heroku.get(`/client/v11/databases/${db.id}`, { hostname: heroku_cli_util_1.utils.pg.host() })
             .catch((error) => {
             if (error.statusCode !== 404)
                 throw error;
@@ -57,9 +57,9 @@ class Schedule extends command_1.Command {
             }
         }
         core_1.ux.action.start(`Scheduling automatic daily backups of ${color_1.default.yellow(db.name)} at ${at}`);
-        schedule.schedule_name = attachment.name + '_URL';
+        schedule.schedule_name = name + '_URL';
         await this.heroku.post(`/client/v11/databases/${db.id}/transfer-schedules`, {
-            body: schedule, hostname: (0, host_1.default)(),
+            body: schedule, hostname: heroku_cli_util_1.utils.pg.host(),
         });
         core_1.ux.action.stop();
     }

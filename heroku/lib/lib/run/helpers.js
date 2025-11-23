@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildEnvFromFlag = exports.buildCommand = exports.revertSortedArgs = void 0;
+exports.buildCommandWithLauncher = exports.shouldPrependLauncher = exports.buildEnvFromFlag = exports.buildCommand = exports.revertSortedArgs = void 0;
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 const core_1 = require("@oclif/core");
 // this function exists because oclif sorts argv
@@ -56,3 +56,24 @@ function buildEnvFromFlag(flag) {
     return env;
 }
 exports.buildEnvFromFlag = buildEnvFromFlag;
+/**
+ * Determines whether to prepend `launcher` to the command for a given app.
+ * Behavior: Only prepend on CNB stack apps and when not explicitly disabled.
+ */
+async function shouldPrependLauncher(heroku, appName, disableLauncher) {
+    if (disableLauncher)
+        return false;
+    const { body: app } = await heroku.get(`/apps/${appName}`, {
+        headers: { Accept: 'application/vnd.heroku+json; version=3.sdk' },
+    });
+    return (app.stack && app.stack.name) === 'cnb';
+}
+exports.shouldPrependLauncher = shouldPrependLauncher;
+/**
+ * Builds the command string, automatically deciding whether to prepend `launcher`.
+ */
+async function buildCommandWithLauncher(heroku, appName, args, disableLauncher) {
+    const prependLauncher = await shouldPrependLauncher(heroku, appName, disableLauncher);
+    return buildCommand(args, prependLauncher);
+}
+exports.buildCommandWithLauncher = buildCommandWithLauncher;

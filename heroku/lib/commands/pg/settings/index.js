@@ -5,7 +5,7 @@ const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const resolve_1 = require("../../../lib/addons/resolve");
 const util_1 = require("../../../lib/pg/util");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
 const nls_1 = require("../../../nls");
 class Index extends command_1.Command {
     async run() {
@@ -15,7 +15,7 @@ class Index extends command_1.Command {
         const db = await (0, resolve_1.addonResolver)(this.heroku, app, database || 'DATABASE_URL');
         if ((0, util_1.essentialPlan)(db))
             core_1.ux.error('You can’t perform this operation on Essential-tier databases.');
-        const { body: settings } = await this.heroku.get(`/postgres/v0/databases/${db.id}/config`, { hostname: (0, host_1.default)() });
+        const { body: settings } = await this.heroku.get(`/postgres/v0/databases/${db.id}/config`, { hostname: heroku_cli_util_2.utils.pg.host() });
         heroku_cli_util_1.hux.styledHeader(db.name);
         const remapped = {};
         Object.keys(settings).forEach(k => {

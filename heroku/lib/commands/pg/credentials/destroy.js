@@ -4,8 +4,7 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const util_1 = require("../../../lib/pg/util");
-const fetcher_1 = require("../../../lib/pg/fetcher");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const confirmCommand_1 = require("../../../lib/confirmCommand");
 const nls_1 = require("../../../nls");
 class Destroy extends command_1.Command {
@@ -16,7 +15,8 @@ class Destroy extends command_1.Command {
         if (name === 'default') {
             throw new Error('Default credential cannot be destroyed.');
         }
-        const db = await (0, fetcher_1.getAddon)(this.heroku, app, database);
+        const dbResolver = new heroku_cli_util_1.utils.pg.DatabaseResolver(this.heroku);
+        const { addon: db } = await dbResolver.getAttachment(app, database);
         if ((0, util_1.essentialPlan)(db)) {
             throw new Error("You can't destroy the default credential on Essential-tier databases.");
         }
@@ -28,7 +28,7 @@ class Destroy extends command_1.Command {
                 .join(', ')} before destroying.`);
         await (0, confirmCommand_1.default)(app, confirm);
         core_1.ux.action.start(`Destroying credential ${color_1.default.cyan.bold(name)}`);
-        await this.heroku.delete(`/postgres/v0/databases/${db.name}/credentials/${encodeURIComponent(name)}`, { hostname: (0, host_1.default)() });
+        await this.heroku.delete(`/postgres/v0/databases/${db.name}/credentials/${encodeURIComponent(name)}`, { hostname: heroku_cli_util_1.utils.pg.host() });
         core_1.ux.action.stop();
         core_1.ux.log(`The credential has been destroyed within ${db.name}.`);
         core_1.ux.log(`Database objects owned by ${name} will be assigned to the default credential.`);

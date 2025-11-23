@@ -4,10 +4,10 @@ const color_1 = require("@heroku-cli/color");
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
 const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
-const host_1 = require("../../lib/pg/host");
 const fetcher_1 = require("../../lib/pg/fetcher");
 const util_1 = require("../../lib/pg/util");
 const nls_1 = require("../../nls");
+const heroku_cli_util_2 = require("@heroku/heroku-cli-util");
 function displayDB(db, app) {
     var _a, _b, _c, _d, _e;
     if (db.addon.attachment_names) {
@@ -47,7 +47,9 @@ class Info extends command_1.Command {
         let addons;
         const { body: config } = await this.heroku.get(`/apps/${app}/config-vars`);
         if (db) {
-            addons = await Promise.all([(0, fetcher_1.getAddon)(this.heroku, app, db)]);
+            const dbResolver = new heroku_cli_util_2.utils.pg.DatabaseResolver(this.heroku);
+            const { addon } = await dbResolver.getAttachment(app, db);
+            addons = [addon];
         }
         else {
             addons = await (0, fetcher_1.all)(this.heroku, app);
@@ -58,7 +60,7 @@ class Info extends command_1.Command {
         }
         let dbs = await Promise.all(addons.map(async (addon) => {
             const pgResponse = await this.heroku.get(`/client/v11/databases/${addon.id}`, {
-                hostname: (0, host_1.default)(),
+                hostname: heroku_cli_util_2.utils.pg.host(),
             })
                 .catch(error => {
                 if (error.statusCode !== 404)
