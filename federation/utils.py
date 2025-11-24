@@ -369,21 +369,26 @@ def create_remote_author(author_data):
     if serial == '':
         return
 
-    author, created = Author.objects.update_or_create(
-        id=author_id,
-        defaults={
-            "displayName": displayName,
-            "host": host,
-            "github": author_data.get("github", ""),
-            "profileImage": author_data.get("profileImage", ""),
-            "web": author_data.get("web", ""),
-            "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
-            "is_local": False, 
-            "is_approved": True,  
-            "serial": serial,      
-        }
-    )
-    print("created:", displayName)
+    # check for lowercase ids from team gold
+    # id__iexact did not work
+    ids = list(Author.objects.values_list('id', flat=True))
+    ids = [i.lower() for i in ids]
+    if author_id not in ids:
+        author, created = Author.objects.update_or_create(
+            id=author_id,
+            defaults={
+                "displayName": displayName,
+                "host": host,
+                "github": author_data.get("github", ""),
+                "profileImage": author_data.get("profileImage", ""),
+                "web": author_data.get("web", ""),
+                "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
+                "is_local": False, 
+                "is_approved": True,  
+                "serial": serial,      
+            }
+        )
+        print("created:", displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
