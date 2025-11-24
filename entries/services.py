@@ -70,14 +70,23 @@ def _ensure_author(author_payload: dict) -> Author:
     """Create or get an Author from an incoming payload dict."""
     if not author_payload:
         return None
+
     author_id = author_payload.get('id')
     if not author_id:
         return None
-    author_id = author_id.encode('utf-8').decode('unicode-escape')
+
+    # Normalize missing slashes
+    author_id = author_id.rstrip('/').encode('utf-8').decode('unicode-escape')
+    host = author_payload.get('host', '').rstrip('/')
 
     local_node = FederatedNode.objects.get(is_local=True)
-    host = author_payload.get('host', '')
-    is_local = host.removesuffix('/api') == local_node.base_url
+
+    # Support both /api and /api/
+    host_base = host.removesuffix('/api')
+    local_base = local_node.base_url.rstrip('/')
+
+    is_local = (host_base == local_base)
+
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
