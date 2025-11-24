@@ -49,9 +49,8 @@ urlpatterns = [
     #team skyblue
     path("reading", views.api_public_entries, name="api-reading"),
     path("authors/<str:author_serial>/entries/<str:entry_serial>", views.api_author_entry_detail, name="author-entry-detail-no-slash"),
-    path("authors/<str:author_serial>/entries/<str:entry_serial>", views.api_author_entry_detail, name="author-entry-detail-no-slash"),
-    path("authors/<str:author_serial>/entries", views.api_author_entries, name="author-entries"),
+    path("authors/<str:author_serial>/entries", views.api_author_entries, name="author-entries-no-slash"),
+    path("authors/<str:author_serial>", views.api_author_detail, name="author-detail-no-slash"),
 
-    
     path(r'^.*$', federation_catchall),
 ]
