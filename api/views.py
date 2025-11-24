@@ -266,9 +266,9 @@ def api_author_inbox(request, author_serial):
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
-    type = (payload.get("type") or "")
+    playloadType = (payload.get("type") or "")
 
-    if type == "followRequest":
+    if playloadType == "followRequest" or playloadType == "follow":
 
         try:
             return JsonResponse(
@@ -280,7 +280,7 @@ def api_author_inbox(request, author_serial):
             return JsonResponse({"detail": f"Follow request error: {e}"}, status=400)
 
 # entry
-    if type == "":
+    if playloadType == "":
         actor_data = (
             payload.get("actor_data")
             or payload.get("author_data")
