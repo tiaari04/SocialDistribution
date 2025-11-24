@@ -6,6 +6,8 @@ from authors.models import Author
 from adminpage.models import HostedImage
 from entries.models import Entry, Like, Comment
 from entries.services import _ensure_author
+from django.utils import timezone
+
 
 @csrf_exempt
 def newEntry(request):
@@ -111,19 +113,6 @@ def newEntry(request):
     
 @csrf_exempt
 def newHostedImage(request):
-    """
-    Receive a hosted image from another node and store it so it shows up
-    in adminpage/images_list.
-
-    Expects JSON like:
-      {
-        "type": "hosted_image",
-        "file_name": "uploads/images/abcd1234.png",
-        "url": "https://remote-storage/.../abcd1234.png",   # optional
-        "created": "2025-11-23T00:12:34Z",
-        "admin_uploaded": true
-      }
-    """
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
 
@@ -142,8 +131,6 @@ def newHostedImage(request):
     created_raw = data.get("created")
     created_dt = parse_datetime(created_raw) if created_raw else None
     admin_uploaded = data.get("admin_uploaded", True)
-
-    # De-duplicate by file name: if the same image is sent again, just update flags
     img, created = HostedImage.objects.update_or_create(
         file=file_name,
         defaults={

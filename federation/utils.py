@@ -390,8 +390,8 @@ def _build_image_payload(image: HostedImage) -> dict:
 
     return {
         "type": "hosted_image",
-        "file_name": file_name,        # used by receiver to set HostedImage.file
-        "url": image.url,              # nice to have for debugging / preview
+        "file_name": file_name,     
+        "url": image.url,         
         "created": image.created_at.isoformat()
         if getattr(image, "created_at", None)
         else "",
