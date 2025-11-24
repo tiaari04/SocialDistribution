@@ -361,7 +361,7 @@ def create_remote_author(author_data):
     author, created = Author.objects.update_or_create(
         id=author_id,
         defaults={
-            "displayName": author_data.get("displayName", ""),
+            "displayName": author_data.get("displayName") or author_data.get("username") or "",
             "host": host,
             "github": author_data.get("github", ""),
             "profileImage": author_data.get("profileImage", ""),
@@ -372,7 +372,7 @@ def create_remote_author(author_data):
             "serial": serial,      
         }
     )
-    print("created: " + author.displayName)
+    print("created: " + author_data.get("displayName") or author_data.get("username") or "")
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
