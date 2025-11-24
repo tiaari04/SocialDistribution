@@ -265,21 +265,6 @@ def api_author_inbox(request, author_serial):
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
 
-    node = None
-    if request.user.is_authenticated:
-        try:
-            if str(request.user.author.serial) != str(author_serial):
-                node = None
-            else:
-                return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
-        except AttributeError:
-            return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
-    else:
-        node = check_basic_auth(request)
-        if not node:
-            return JsonResponse({"error": "Unauthorized"}, status=401)
-
-
     actor_data = payload.get("actor_data") or payload.get("author_data")
     if actor_data:
         serial = actor_data.get("serial")
