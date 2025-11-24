@@ -193,7 +193,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             
             return {'status': 'created', 'object': like}
         
-        elif direction == 'incoming':
+        elif direction == 'incoming' or direction == "" or not direction:
             print("INCOMING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
