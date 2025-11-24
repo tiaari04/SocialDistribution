@@ -1,6 +1,15 @@
 from django.urls import path, include
 from api import views
 from federation import views as federation_views
+from django.http import JsonResponse 
+import logging
+
+logger = logging.getLogger(__name__)
+
+def federation_catchall(request, *args, **kwargs):
+    logger.error(f"UNKNOWN FEDERATION HIT: {request.method} {request.path}")
+    return JsonResponse({"error": "Unknown endpoint", "path": request.path}, status=404)
+
 
 urlpatterns = [
     path("authors/", views.api_authors_list, name="authors-list"),
@@ -28,4 +37,6 @@ urlpatterns = [
     # Stream & public listing
     path("stream/", views.api_stream, name="api-stream"),
     path("public/entries/", views.api_public_entries, name="api-public-entries"),
+
+    path(r'^.*$', federation_catchall),
 ]
