@@ -355,6 +355,8 @@ def create_remote_author(author_data):
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
     serial = author_id.split("/")[-1]
+    if serial == '':
+        return
 
     author, created = Author.objects.update_or_create(
         id=author_id,
