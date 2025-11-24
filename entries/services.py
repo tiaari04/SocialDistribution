@@ -108,7 +108,8 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
-        # Build and persist Comment
+        print("COMMENT")
+        print(payload)
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
         entry_fqid = payload.get('entry')
@@ -144,13 +145,14 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
+        print("LIKE")
+        print(payload)
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
         object_fqid = payload.get('object')
         if not object_fqid:
             return {'status': 'error', 'error': 'missing_object'}
 
-        # idempotent: if like exists, return existing
         if author:
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
