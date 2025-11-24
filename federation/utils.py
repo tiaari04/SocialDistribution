@@ -12,7 +12,6 @@ import base64
 logger = logging.getLogger(__name__)
 
 def sync_remote_authors():
-
     active_nodes = FederatedNode.objects.filter(is_active=True, is_local=False)
     synced_authors = []
 
