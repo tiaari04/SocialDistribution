@@ -101,79 +101,118 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     except Author.DoesNotExist:
         return {'status': 'error', 'error': 'recipient_not_found'}
 
+    print(payload)
     typ = (payload.get('type') or '').lower()
+    print(typ)
     object_fqid = payload.get('id') or payload.get('object')
 
-    # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
-        # Build and persist Comment
+        direction = payload.get('direction')
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
+
         entry_fqid = payload.get('entry')
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
+
         try:
             entry = Entry.objects.get(fqid=entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
 
+        # Ensure comment has an fqid
+        comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
+
+        # Handle duplicate
+        existing = Comment.objects.filter(fqid=comment_fqid).first()
+        if existing:
+            return {'status': 'exists', 'object': existing}
+
+        # Create comment locally
         comment = Comment.objects.create(
-            fqid=payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+            fqid=comment_fqid,
             author=author,
             entry=entry,
-            content=payload.get('comment') or payload.get('content') or '',
-            content_type=payload.get('contentType') or payload.get('content_type') or entry.ContentType.MARKDOWN,
+            content=payload.get('content') or "",
+            content_type=payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN,
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
         )
+        comment.save()
 
-        comment_dict = model_to_dict(comment, fields=[
-            'fqid', 'content', 'content_type', 'web', 'likes_count'
-        ])
-        comment_dict['author_id'] = str(author.id) if author else ''
-        comment_dict['entry_id'] = entry_fqid
-        comment_dict['published'] = comment.published.isoformat()
+        if direction == 'outgoing':
+            comment_dict = {
+                "fqid": comment.fqid,
+                "entry": entry.fqid,
+                "content": comment.content,
+                "content_type": comment.content_type,
+                "published": comment.published,
+                "web": comment.web,
+                "author_id": str(author.id),
+                "likes_count": comment.likes_count,
+            }
 
-        try:
+            from federation.utils import send_comment_to_federation
             send_comment_to_federation(comment_dict)
-        except Exception as e:
-            print("Failed sending comment:", e)
 
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
-        author_payload = payload.get('author') or {}
-        author = _ensure_author(author_payload)
-        object_fqid = payload.get('object')
-        if not object_fqid:
-            return {'status': 'error', 'error': 'missing_object'}
+        print(payload)
+        direction = payload.get('direction')
+        
+        if direction == 'outgoing':
+            print("OUTGOING")
+            author_payload = payload.get('author') or {}
+            author = _ensure_author(author_payload)
+            object_fqid = payload.get('object')
+            if not object_fqid:
+                return {'status': 'error', 'error': 'missing_object'}
+            
+            if author:
+                existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
+                if existing:
+                    return {'status': 'exists', 'object': existing}
+            
+            like = Like.objects.create(
+                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                author=author,
+                object_fqid=object_fqid,
+                published=payload.get('published') or timezone.now(),
+            )
+            like.save()
+            
+            like_dict = model_to_dict(like, fields=['fqid', 'object_fqid'])
+            like_dict['author_id'] = str(author.id)
+            like_dict['published'] = like.published
+            
+            from federation.utils import send_like_to_federation
+            send_like_to_federation(like_dict)
+            
+            return {'status': 'created', 'object': like}
+        
+        elif direction == 'incoming':
+            print("INCOMING")
+            author_payload = payload.get('author') or {}
+            author = _ensure_author(author_payload)
+            object_fqid = payload.get('object_fqid') 
+            if not object_fqid:
+                return {'status': 'error', 'error': 'missing_object'}
 
-        # idempotent: if like exists, return existing
-        if author:
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
                 return {'status': 'exists', 'object': existing}
 
-        like = Like.objects.create(
-            fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
-            author=author,
-            object_fqid=object_fqid,
-            published=payload.get('published') or timezone.now(),
-        )
+            like = Like.objects.create(
+                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                author=author,
+                object_fqid=object_fqid,
+                published=payload.get('published') or timezone.now(),
+            )
+            like.save()
 
-        like_dict = model_to_dict(like, fields=[
-            'fqid', 'object_fqid'
-        ])
-        like_dict['author_id'] = str(author.id) if author else ''
-        like_dict['published'] = like.published.isoformat()
-
-        try:
-            send_like_to_federation(like_dict)
-        except Exception as e:
-            print("Failed sending like:", e)
-
-        return {'status': 'created', 'object': like}
+            return {'status': 'created', 'object': like}
 
     if typ == 'post' or typ == 'entry':
         # Handle incoming federated posts
@@ -205,6 +244,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             image_url=payload.get('image_url', ''),
             web=payload.get('web', ''),
             published=payload.get('published') or timezone.now(),
+            is_local=False
         )
         return {'status': 'created', 'object': entry}
 
@@ -233,6 +273,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                     state=FollowRequest.State.ACCEPTED
                 ) 
                 follow_request.save()
+                return {'status': 'created', 'object': follow_request}
             except Exception as e:
                 print("Failed sending follow:", e)
 
@@ -241,27 +282,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 actor=actor,
                 author_followed = author_followed
             )
-
-        follow_request = None
-        if not author_followed.is_local:
-            from inbox.services import send_remote_follow_request
-            try:
-                send_remote_follow_request(actor, author_followed)
-                follow_request = FollowRequest.objects.create(
-                    actor=actor,
-                    author_followed = author_followed,
-                    state=FollowRequest.State.ACCEPTED
-                ) 
-                follow_request.save()
-            except Exception as e:
-                print("Failed sending follow:", e)
-                
-        else:
-            follow_request = FollowRequest.objects.create(
-                actor=actor,
-                author_followed = author_followed
-            )
-        return {'status': 'created', 'object': follow_request}
+            return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
 
