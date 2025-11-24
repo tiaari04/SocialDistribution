@@ -85,6 +85,7 @@ def send_like_to_federation(like):
         return {"successful": 0, "failed": 0, "logs": []}
 
     payload = {
+        "type:": "like",
         "id": like.get('fqid'),
         "object_fqid": like.get('object_fqid'),
         "published": like.get('published').isoformat() if isinstance(like.get("published"), datetime) else like.get("published") or "",
@@ -97,7 +98,8 @@ def send_like_to_federation(like):
     }
 
     try:
-        author = get_object_or_404(Author, serial=like.get("author_id").split("/")[-1])
+        serial=like.get("author_id").split("/")[-1]
+        author = get_object_or_404(Author, serial=serial)
         author_data = _build_author_payload(author)
         payload["author"] = author_data
     except Exception as e:
@@ -107,7 +109,8 @@ def send_like_to_federation(like):
         if node.is_local:
             continue
 
-        inbox_url = f"{node.base_url}/federation/like/"
+        #inbox_url = f"{node.base_url}/federation/like/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
         log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
@@ -126,6 +129,7 @@ def send_comment_to_federation(comment):
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = {
+        "type": "comment",
         "id": comment.get('fqid'),
         "content": comment.get('content'),
         "content_type": comment.get('content_type'),
@@ -142,7 +146,8 @@ def send_comment_to_federation(comment):
     }
     
     try:
-        author = get_object_or_404(Author, serial=comment.get("author_id").split("/")[-1])
+        serial = comment.get("author_id").split("/")[-1]
+        author = get_object_or_404(Author, serial=serial)
         author_data = _build_author_payload(author)
         payload["author"] = author_data
     except Exception as e:
@@ -153,8 +158,9 @@ def send_comment_to_federation(comment):
     for node in active_nodes:
         if node.is_local or entry_obj.is_local:
             continue
-
-        inbox_url = f"{node.base_url}federation/comment/"
+        
+        #inbox_url = f"{node.base_url}federation/comment/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
