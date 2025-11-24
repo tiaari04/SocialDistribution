@@ -127,54 +127,55 @@ def send_like_to_federation(like):
 
 def send_comment_to_federation(comment):
     active_nodes = FederatedNode.objects.filter(is_active=True)
-    
+
     if not active_nodes.exists():
         return {"successful": 0, "failed": 0, "logs": []}
-    
+
     payload = {
         "type": "comment",
         "direction": "incoming",
-        "id": comment.get('fqid'),
-        "content": comment.get('content'),
-        "content_type": comment.get('content_type'),
-        "entry_id": comment.get('entry_id'),
-        "likes_count": comment.get('likes_count'),
-        "published": comment.get('published').isoformat() if isinstance(comment.get("published"), datetime) else comment.get("published") or "",
-        "web": comment.get('web'),
+        "id": comment.get("fqid"),
+        "entry": comment.get("entry"),
+        "content": comment.get("content"),
+        "content_type": comment.get("content_type"),
+        "likes_count": comment.get("likes_count"),
+        "published": comment.get("published").isoformat()
+            if hasattr(comment.get("published"), "isoformat")
+            else comment.get("published"),
+        "web": comment.get("web"),
     }
 
-    results = {
-        "successful": 0,
-        "failed": 0,
-        "logs": []
-    }
-    
+    # Add author payload
     try:
         serial = comment.get("author_id").split("/")[-1]
         author = get_object_or_404(Author, serial=serial)
-        author_data = _build_author_payload(author)
-        payload["author"] = author_data
+        payload["author"] = _build_author_payload(author)
     except Exception as e:
         logger.error(f"Error building author data: {e}")
 
-    entry_obj = get_object_or_404(Entry, fqid=comment.get('entry_id'))
+    entry_obj = get_object_or_404(Entry, fqid=comment.get("entry"))
+
+    results = {"successful": 0, "failed": 0, "logs": []}
 
     for node in active_nodes:
+        # Don't send to ourselves
         if node.is_local or entry_obj.is_local:
             continue
-        
-        #inbox_url = f"{node.base_url}federation/comment/"
-        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
+
+        # The inbox of the *recipient entry's author*
+        recipient_serial = entry_obj.author.serial
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox/"
+
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
-        
+
         if log_entry.status == FederationLog.Status.SUCCESS:
             results["successful"] += 1
         else:
             results["failed"] += 1
 
-    logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
     return results
+
 
 
 def _build_entry_payload(entry):

@@ -106,46 +106,53 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     print(typ)
     object_fqid = payload.get('id') or payload.get('object')
 
-    # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
         direction = payload.get('direction')
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
+
         entry_fqid = payload.get('entry')
-        
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
-        
+
         try:
             entry = Entry.objects.get(fqid=entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
 
-        # Check if comment already exists (important for incoming)
+        # Ensure comment has an fqid
         comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
+
+        # Handle duplicate
         existing = Comment.objects.filter(fqid=comment_fqid).first()
         if existing:
             return {'status': 'exists', 'object': existing}
 
-        # Create and save locally
+        # Create comment locally
         comment = Comment.objects.create(
             fqid=comment_fqid,
             author=author,
             entry=entry,
-            content=payload.get('comment') or payload.get('content') or '',
-            content_type=payload.get('contentType') or payload.get('content_type') or entry.ContentType.MARKDOWN,
+            content=payload.get('content') or "",
+            content_type=payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN,
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
         )
         comment.save()
 
         if direction == 'outgoing':
-            # Build dict for federation
-            comment_dict = model_to_dict(comment, fields=[
-                'fqid', 'content', 'content_type', 'entry', 'likes_count', 'published', 'web'
-            ])
-            comment_dict['author_id'] = str(author.id)
+            comment_dict = {
+                "fqid": comment.fqid,
+                "entry": entry.fqid,
+                "content": comment.content,
+                "content_type": comment.content_type,
+                "published": comment.published,
+                "web": comment.web,
+                "author_id": str(author.id),
+                "likes_count": comment.likes_count,
+            }
+
             from federation.utils import send_comment_to_federation
             send_comment_to_federation(comment_dict)
 
