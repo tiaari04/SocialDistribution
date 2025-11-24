@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from inbox.models import FollowRequest
 from federation.models import FederationLog, FederatedNode
-from inbox.serializers import serialize_follow_req
 import requests
 from requests.auth import HTTPBasicAuth
 from django.utils import timezone
@@ -168,7 +167,7 @@ def send_remote_follow_request(actor, obj):
     return log_entry
 
 def serialize_follow_req_with_actor(actor, obj):
-    data = serialize_follow_req(actor, obj)  
+    data = serialize_follow_req(actor, obj) 
     data['actor_data'] = {
         "serial": actor.serial,
         "displayName": actor.displayName,
@@ -185,3 +184,27 @@ def serialize_follow_req_with_actor(actor, obj):
         "updated": actor.updated.isoformat() if actor.updated else None,
     }
     return data
+
+
+def serialize_follow_req(actor, obj):
+    return {
+        "type": "follow",  
+        "summary": f"{actor.displayName} wants to follow {obj.displayName}",
+        "actor": {
+            "id": actor.id if hasattr(actor, "id") else f"{actor.host}/authors/{actor.serial}",
+            "host": actor.host.replace("\\", ""), 
+            "displayName": actor.displayName,
+            "github": actor.github or "",
+            "profileImage": actor.profileImage or "",
+            "web": actor.web or "",
+        },
+        "object": {
+            "type": "author",
+            "id": obj.id if hasattr(obj, "id") else f"{obj.host}/authors/{obj.serial}",
+            "host": obj.host.replace("\\", ""),  
+            "displayName": obj.displayName,
+            "github": obj.github or "",
+            "profileImage": obj.profileImage or "",
+            "web": obj.web or "",
+        }
+    }
