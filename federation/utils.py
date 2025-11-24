@@ -112,7 +112,7 @@ def send_like_to_federation(like):
             continue
 
         #inbox_url = f"{node.base_url}/federation/like/"
-        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox"
         print(inbox_url)
         log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
@@ -164,7 +164,7 @@ def send_comment_to_federation(comment):
 
         # The inbox of the *recipient entry's author*
         recipient_serial = entry_obj.author.serial
-        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox"
 
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
