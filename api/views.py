@@ -261,6 +261,7 @@ def api_author_inbox(request, author_serial):
 
     try:
         payload = json.loads(request.body.decode("utf-8"))
+        print(payload)
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
