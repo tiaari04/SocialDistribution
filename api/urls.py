@@ -35,5 +35,8 @@ urlpatterns = [
     # Stream & public listing
     path("stream/", views.api_stream, name="api-stream"),
     path("public/entries/", views.api_public_entries, name="api-public-entries"),
+
+    #team skyblue
+    path("reading/", views.api_public_entries, name="api-reading"),
     
 ]
