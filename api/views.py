@@ -185,9 +185,8 @@ def api_author_inbox(request, author_serial):
 	if request.method != 'POST':
 		return JsonResponse({'detail': 'Method not allowed'}, status=405)
 
-	from authors.models import Author
 	print(author_serial)
-	author = get_object_or_404(Author, serial=author_serial)
+	
 	"""if request.user.is_authenticated:
 		try:
 			if str(request.user.author.serial) != str(author_serial):

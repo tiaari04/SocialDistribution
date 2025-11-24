@@ -444,7 +444,7 @@ def send_image_to_federation(image: HostedImage, nodes=None):
             node=node,
             payload=payload,
             entry_fqid=ref_id,
-            endpoint_suffix=f"{node.base_url}images/new/",
+            endpoint_suffix=f"{node.base_url.rstrip('/')}/federation/images/new/",
         )
         results["logs"].append(log_entry)
 
