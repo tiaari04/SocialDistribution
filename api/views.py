@@ -265,7 +265,6 @@ def api_author_inbox(request, author_serial):
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
-
     actor_data = payload.get("actor_data") or payload.get("author_data")
     if actor_data:
         serial = actor_data.get("serial")
@@ -296,20 +295,16 @@ def api_author_inbox(request, author_serial):
                 author_obj.updated = updated_dt
             author_obj.save()
 
-    entry_data = payload.get("entry") or payload.get("post")
-    if entry_data:
-        try:
-            result = entries_services.process_federated_public_post(payload)
-            if result.get("status") in ("created", "exists"):
-                return JsonResponse({"detail": "ok", "status": result.get("status")}, status=201)
-            if result.get("status") == "ignored":
-                return JsonResponse({"detail": "ignored"}, status=200)
-            if result.get("status") == "error":
-                return JsonResponse({"detail": result.get("error", "unknown error")}, status=400)
-        except Exception as e:
-            return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
-
-    return JsonResponse({"detail": "ok"}, status=201)
+    try:
+        result = entries_services.process_federated_public_post(payload)
+        if result.get("status") in ("created", "exists"):
+            return JsonResponse({"detail": "ok", "status": result.get("status")}, status=201)
+        if result.get("status") == "ignored":
+            return JsonResponse({"detail": "ignored"}, status=200)
+        if result.get("status") == "error":
+            return JsonResponse({"detail": result.get("error", "unknown error")}, status=400)
+    except Exception as e:
+        return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
 # Entries
 def api_author_entries(request, author_serial):
