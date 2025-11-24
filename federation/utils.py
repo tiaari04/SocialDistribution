@@ -354,6 +354,7 @@ def check_basic_auth(request):
 def create_remote_author(author_data):
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
+    displayName = author_data.get("displayName") or author_data.get("username") or ""
     serial = author_id.split("/")[-1]
     if serial == '':
         return
@@ -361,7 +362,7 @@ def create_remote_author(author_data):
     author, created = Author.objects.update_or_create(
         id=author_id,
         defaults={
-            "displayName": author_data.get("displayName") or author_data.get("username") or "",
+            "displayName": displayName,
             "host": host,
             "github": author_data.get("github", ""),
             "profileImage": author_data.get("profileImage", ""),
@@ -372,7 +373,7 @@ def create_remote_author(author_data):
             "serial": serial,      
         }
     )
-    print("created: " + author_data.get("displayName") or author_data.get("username") or "")
+    print("created:", displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
