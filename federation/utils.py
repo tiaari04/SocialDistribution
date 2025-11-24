@@ -354,7 +354,7 @@ def check_basic_auth(request):
 def create_remote_author(author_data):
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
-    serial = author_id.split("/")[-1]
+    serial = author_data.get("uuid") or author_id.rstrip("/").split("/")[-1]
     if serial == '':
         return
 
