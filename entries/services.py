@@ -130,17 +130,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             web=payload.get('web', ''),
         )
 
-        comment_dict = model_to_dict(comment, fields=[
-            'fqid', 'content', 'content_type', 'web', 'likes_count'
-        ])
-        comment_dict['author_id'] = str(author.id) if author else ''
-        comment_dict['entry_id'] = entry_fqid
-        comment_dict['published'] = comment.published.isoformat()
-
-        try:
-            send_comment_to_federation(comment_dict)
-        except Exception as e:
-            print("Failed sending comment:", e)
+        comment.save()
 
         return {'status': 'created', 'object': comment}
 
@@ -165,17 +155,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
         )
 
-        like_dict = model_to_dict(like, fields=[
-            'fqid', 'object_fqid'
-        ])
-        like_dict['author_id'] = str(author.id) if author else ''
-        like_dict['published'] = like.published.isoformat()
-
-        try:
-            send_like_to_federation(like_dict)
-        except Exception as e:
-            print("Failed sending like:", e)
-
+        like.save()
         return {'status': 'created', 'object': like}
 
     if typ == 'post' or typ == 'entry':
