@@ -19,8 +19,9 @@ urlpatterns = [
     ),
     path("authors/<str:author_serial>/follow_requests/", views.api_author_follow_requests, name="author-follow-requests"),
 
+    path("authors/<str:author_serial>/inbox", views.api_author_inbox, name="author-inbox-no-slash"),
     path("authors/<str:author_serial>/inbox/", views.api_author_inbox, name="author-inbox"),
-    path("author/<str:author_serial>/inbox", views.api_author_inbox, name="author-inbox"),
+
 
     path("", include(("entries.api_urls", "entries"), namespace="entries-api")),
     path("authors/images/new/", federation_views.newHostedImage, name="federation-new-image"),
