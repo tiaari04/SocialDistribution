@@ -51,6 +51,7 @@ urlpatterns = [
     path("authors/<str:author_serial>/entries/<str:entry_serial>", views.api_author_entry_detail, name="author-entry-detail-no-slash"),
     path("authors/<str:author_serial>/entries", views.api_author_entries, name="author-entries-no-slash"),
     path("authors/<str:author_serial>", views.api_author_detail, name="author-detail-no-slash"),
+    path("authors/<str:author_serial>/entries/<str:entry_serial>/images/", views.api_author_entry_image, name="author-entry-image-with-slash"),
 
     path(r'^.*$', federation_catchall),
 ]
