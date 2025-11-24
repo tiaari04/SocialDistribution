@@ -248,7 +248,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         )
         return {'status': 'created', 'object': entry}
 
-    if typ == 'follow':
+    if typ == 'follow' or typ == 'followrequest':
         actor_payload = payload.get('actor')
         object_payload = payload.get('object')
 
