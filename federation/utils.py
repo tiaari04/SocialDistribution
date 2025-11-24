@@ -86,7 +86,7 @@ def send_like_to_federation(like):
         return {"successful": 0, "failed": 0, "logs": []}
 
     payload = {
-        "type:": "like",
+        "type": "like",
         "direction": "incoming",
         "id": like.get('fqid'),
         "object_fqid": like.get('object_fqid'),
