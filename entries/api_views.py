@@ -66,6 +66,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         serializer = CommentSerializer(comment)
 
 # federation code
+        print("SENDING TO FEDERATION")
         comment_dict = model_to_dict(comment, fields=[
             'fqid', 'content', 'content_type', 'entry', 'likes_count', 'published', 'web'
         ])
@@ -118,7 +119,8 @@ class EntryLikesViewSet(viewsets.ViewSet):
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=entry.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
 
-        # federation code 
+        # federation code
+        print("SENDING TO FEDERATION") 
         like_dict = model_to_dict(like, fields=['fqid', 'object_fqid'])
         like_dict['author_id'] = str(req_author.id)
         like_dict['published'] = like.published
