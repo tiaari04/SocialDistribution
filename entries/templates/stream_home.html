@@ -337,6 +337,7 @@
                 async function likeEntry(entryFqid, endpoint) {
                     const payload = {
                         type: "like",
+                        direction: "outgoing",
                         author: currUser,
                         object: entryFqid,
                     };
@@ -450,6 +451,7 @@
                 async function postComment(entryFqid, text) {
                     const payload = {
                         type: "comment",
+                        direction: "outgoing",
                         author: currUser,
                         entry: entryFqid,
                         content: text,
