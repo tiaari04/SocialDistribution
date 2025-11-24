@@ -273,6 +273,7 @@ def api_author_inbox(request, author_serial):
     except Author.DoesNotExist:
         return JsonResponse({"detail": "Recipient does not exist"}, status=404)
 
+    # -------- FOLLOW / FOLLOWREQUEST --------
     if payload_type in ["follow", "followrequest"]:
         try:
             actor_data = payload.get("actor")
@@ -348,8 +349,112 @@ def api_author_inbox(request, author_serial):
 
         except Exception as e:
             return JsonResponse({"detail": f"Follow request error: {e}"}, status=400)
-		
-	# entry
+
+    # -------- COMMENT (local + federated, entry FQID based) --------
+    elif payload_type == "comment":
+        from entries.api_views import EntryCommentsViewSet
+
+        # Upsert actor author (same pattern as follow)
+        actor_data = payload.get("author") or payload.get("actor")
+        if actor_data:
+            actor_id = actor_data.get("id")
+            actor_serial = actor_data.get("serial") or (actor_id.split("/")[-1] if actor_id else None)
+            if actor_serial:
+                defaults = {
+                    "displayName": actor_data.get("displayName", ""),
+                    "github": actor_data.get("github", ""),
+                    "host": actor_data.get("host", ""),
+                    "profileImage": actor_data.get("profileImage", ""),
+                    "description": actor_data.get("description", ""),
+                    "web": actor_data.get("web", actor_data.get("url", "")),
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                    "is_local": False,
+                }
+                author_obj, created = Author.objects.update_or_create(
+                    serial=actor_serial,
+                    defaults=defaults,
+                )
+                # optional timestamps if present
+                created_dt = parse_datetime(actor_data.get("created")) if actor_data.get("created") else None
+                updated_dt = parse_datetime(actor_data.get("updated")) if actor_data.get("updated") else None
+                if created_dt:
+                    author_obj.created = created_dt
+                if updated_dt:
+                    author_obj.updated = updated_dt
+                author_obj.save()
+
+        entry_fqid = payload.get("entry") or payload.get("object")
+        if not entry_fqid:
+            return JsonResponse({"detail": "Missing entry FQID for comment"}, status=400)
+
+        # Delegate to the same DRF viewset used by /api/entries/<fqid>/comments/
+        view = EntryCommentsViewSet.as_view({"get": "list", "post": "create"})
+        return view(request, entry_fqid=entry_fqid)
+
+    # -------- LIKE (entry or comment) --------
+    elif payload_type == "like":
+        from urllib.parse import urlparse
+        from entries.api_views import EntryLikesViewSet, CommentLikesViewSet
+
+        # Upsert actor author (same pattern as comment)
+        actor_data = payload.get("author") or payload.get("actor")
+        if actor_data:
+            actor_id = actor_data.get("id")
+            actor_serial = actor_data.get("serial") or (actor_id.split("/")[-1] if actor_id else None)
+            if actor_serial:
+                defaults = {
+                    "displayName": actor_data.get("displayName", ""),
+                    "github": actor_data.get("github", ""),
+                    "host": actor_data.get("host", ""),
+                    "profileImage": actor_data.get("profileImage", ""),
+                    "description": actor_data.get("description", ""),
+                    "web": actor_data.get("web", actor_data.get("url", "")),
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                    "is_local": False,
+                }
+                Author.objects.update_or_create(
+                    serial=actor_serial,
+                    defaults=defaults,
+                )
+
+        obj_fqid = payload.get("object")
+        if not obj_fqid:
+            return JsonResponse({"detail": "Missing object FQID for like"}, status=400)
+
+        # Comment likes vs entry likes:
+        # comment FQIDs are expected to look like:
+        #   /authors/<author_serial>/entries/<entry_serial>/comments/<comment_serial>
+        parsed = urlparse(obj_fqid)
+        parts = parsed.path.strip("/").split("/")
+
+        if "comments" in parts:
+            # ----- comment like -----
+            try:
+                # Expect: ['authors', '<author_serial>', 'entries', '<entry_serial>', 'comments', '<comment_serial>']
+                if len(parts) < 6 or parts[0] != "authors" or parts[2] != "entries" or parts[4] != "comments":
+                    raise ValueError("Unexpected comment FQID path structure")
+                author_serial_path = parts[1]
+                entry_serial_path = parts[3]
+            except Exception as e:
+                return JsonResponse({"detail": f"Invalid comment FQID: {e}"}, status=400)
+
+            view = CommentLikesViewSet.as_view({"get": "list", "post": "create"})
+            return view(
+                request,
+                author_serial=author_serial_path,
+                entry_serial=entry_serial_path,
+                comment_fqid=obj_fqid,
+            )
+        else:
+            # ----- entry like -----
+            view = EntryLikesViewSet.as_view({"get": "list", "post": "create"})
+            return view(request, entry_fqid=obj_fqid)
+
+    # -------- ENTRY (existing federated post handler) --------
     if payload_type == "":
         actor_data = (
             payload.get("actor_data")
@@ -391,8 +496,10 @@ def api_author_inbox(request, author_serial):
                     defaults=defaults
                 )
 
-                if created_dt: author_obj.created = created_dt
-                if updated_dt: author_obj.updated = updated_dt
+                if created_dt:
+                    author_obj.created = created_dt
+                if updated_dt:
+                    author_obj.updated = updated_dt
                 author_obj.save()
 
         try:
@@ -413,9 +520,8 @@ def api_author_inbox(request, author_serial):
         except Exception as e:
             return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
-
+    # -------- FALLBACK --------
     return JsonResponse({"detail": f"Unsupported payload type '{payload_type}'"}, status=400)
-
 
 # Entries
 def api_author_entries(request, author_serial):
