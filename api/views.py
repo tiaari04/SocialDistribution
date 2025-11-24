@@ -266,7 +266,7 @@ def api_author_inbox(request, author_serial):
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
-    type = (payload.get("type") or "").lower()
+    type = (payload.get("type") or "")
 
     if type == "followRequest":
 
