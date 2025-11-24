@@ -348,6 +348,70 @@ def api_author_inbox(request, author_serial):
 
         except Exception as e:
             return JsonResponse({"detail": f"Follow request error: {e}"}, status=400)
+		
+	# entry
+    if payload_type == "":
+        actor_data = (
+            payload.get("actor_data")
+            or payload.get("author_data")
+            or payload.get("author")
+        )
+
+        if actor_data:
+            serial = (
+                actor_data.get("serial")
+                or (actor_data.get("id").split("/")[-1] if actor_data.get("id") else None)
+            )
+
+            if serial:
+                defaults = {
+                    "displayName": actor_data.get("displayName", ""),
+                    "github": actor_data.get("github", ""),
+                    "host": actor_data.get("host", ""),
+                    "profileImage": actor_data.get("profileImage", ""),
+                    "description": actor_data.get("description", ""),
+                    "web": actor_data.get("web", actor_data.get("url", "")),
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                    "is_local": False,
+                }
+
+                created_dt = (
+                    parse_datetime(actor_data.get("created"))
+                    if actor_data.get("created") else None
+                )
+                updated_dt = (
+                    parse_datetime(actor_data.get("updated"))
+                    if actor_data.get("updated") else None
+                )
+
+                author_obj, created = Author.objects.update_or_create(
+                    serial=serial,
+                    defaults=defaults
+                )
+
+                if created_dt: author_obj.created = created_dt
+                if updated_dt: author_obj.updated = updated_dt
+                author_obj.save()
+
+        try:
+            result = entries_services.process_federated_public_post(payload)
+            status_map = {
+                "created": 201,
+                "exists": 200,
+                "updated": 200,
+                "ignored": 200,
+                "error": 400
+            }
+            status_code = status_map.get(result.get("status"), 400)
+            return JsonResponse(
+                {"detail": "ok", "status": result.get("status")},
+                status=status_code
+            )
+
+        except Exception as e:
+            return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
 
     return JsonResponse({"detail": f"Unsupported payload type '{payload_type}'"}, status=400)
