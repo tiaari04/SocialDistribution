@@ -451,6 +451,7 @@
                 async function postComment(entryFqid, text) {
                     const payload = {
                         type: "comment",
+                        direction: "outgoing",
                         author: currUser,
                         entry: entryFqid,
                         content: text,

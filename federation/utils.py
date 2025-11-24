@@ -79,6 +79,7 @@ def send_entry_to_federation(entry):
     return results
 
 def send_like_to_federation(like):
+    print("SENDING TO FEDERATION")
     active_nodes = FederatedNode.objects.filter(is_active=True)
     
     if not active_nodes.exists():
@@ -112,6 +113,7 @@ def send_like_to_federation(like):
 
         #inbox_url = f"{node.base_url}/federation/like/"
         inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
+        print(inbox_url)
         log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
         
@@ -131,6 +133,7 @@ def send_comment_to_federation(comment):
     
     payload = {
         "type": "comment",
+        "direction": "incoming",
         "id": comment.get('fqid'),
         "content": comment.get('content'),
         "content_type": comment.get('content_type'),

@@ -108,20 +108,28 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     # Persist raw inbox item
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
-        print("COMMENT")
-        print(payload)
+        direction = payload.get('direction')
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
         entry_fqid = payload.get('entry')
+        
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
+        
         try:
             entry = Entry.objects.get(fqid=entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
 
+        # Check if comment already exists (important for incoming)
+        comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
+        existing = Comment.objects.filter(fqid=comment_fqid).first()
+        if existing:
+            return {'status': 'exists', 'object': existing}
+
+        # Create and save locally
         comment = Comment.objects.create(
-            fqid=payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+            fqid=comment_fqid,
             author=author,
             entry=entry,
             content=payload.get('comment') or payload.get('content') or '',
@@ -129,12 +137,21 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
         )
-
         comment.save()
+
+        if direction == 'outgoing':
+            # Build dict for federation
+            comment_dict = model_to_dict(comment, fields=[
+                'fqid', 'content', 'content_type', 'entry', 'likes_count', 'published', 'web'
+            ])
+            comment_dict['author_id'] = str(author.id)
+            from federation.utils import send_comment_to_federation
+            send_comment_to_federation(comment_dict)
 
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
+        print(payload)
         direction = payload.get('direction')
         
         if direction == 'outgoing':
