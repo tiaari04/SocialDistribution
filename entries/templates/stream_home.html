@@ -337,6 +337,7 @@
                 async function likeEntry(entryFqid, endpoint) {
                     const payload = {
                         type: "like",
+                        direction: "outgoing",
                         author: currUser,
                         object: entryFqid,
                     };

@@ -66,7 +66,6 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         serializer = CommentSerializer(comment)
 
 # federation code
-        print("SENDING TO FEDERATION")
         comment_dict = model_to_dict(comment, fields=[
             'fqid', 'content', 'content_type', 'entry', 'likes_count', 'published', 'web'
         ])

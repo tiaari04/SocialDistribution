@@ -135,34 +135,57 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
-        print("LIKE")
-        print(payload)
-        author_payload = payload.get('author') or {}
-        author = _ensure_author(author_payload)
-        object_fqid = payload.get('object')
-        if not object_fqid:
-            return {'status': 'error', 'error': 'missing_object'}
-
-        if author:
+        direction = payload.get('direction')
+        
+        if direction == 'outgoing':
+            author_payload = payload.get('author') or {}
+            author = _ensure_author(author_payload)
+            object_fqid = payload.get('object')
+            if not object_fqid:
+                return {'status': 'error', 'error': 'missing_object'}
+            
+            if author:
+                existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
+                if existing:
+                    return {'status': 'exists', 'object': existing}
+            
+            like = Like.objects.create(
+                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                author=author,
+                object_fqid=object_fqid,
+                published=payload.get('published') or timezone.now(),
+            )
+            like.save()
+            
+            like_dict = model_to_dict(like, fields=['fqid', 'object_fqid'])
+            like_dict['author_id'] = str(author.id)
+            like_dict['published'] = like.published
+            
+            from federation.utils import send_like_to_federation
+            send_like_to_federation(like_dict)
+            
+            return {'status': 'created', 'object': like}
+        
+        elif direction == 'incoming':
+            author_payload = payload.get('author') or {}
+            author = _ensure_author(author_payload)
+            object_fqid = payload.get('object')
+            if not object_fqid:
+                return {'status': 'error', 'error': 'missing_object'}
+            
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
                 return {'status': 'exists', 'object': existing}
-
-        like = Like.objects.create(
-            fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
-            author=author,
-            object_fqid=object_fqid,
-            published=payload.get('published') or timezone.now(),
-        )
-
-        like_dict = model_to_dict(like, fields=[
-            'fqid', 'object_fqid'
-        ])
-        like_dict['author_id'] = str(author.id) if author else ''
-        like_dict['published'] = like.published.isoformat()
-
-        like.save()
-        return {'status': 'created', 'object': like}
+            
+            like = Like.objects.create(
+                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                author=author,
+                object_fqid=object_fqid,
+                published=payload.get('published') or timezone.now(),
+            )
+            like.save()
+            
+            return {'status': 'created', 'object': like}
 
     if typ == 'post' or typ == 'entry':
         # Handle incoming federated posts

@@ -86,6 +86,7 @@ def send_like_to_federation(like):
 
     payload = {
         "type:": "like",
+        "direction": "incoming",
         "id": like.get('fqid'),
         "object_fqid": like.get('object_fqid'),
         "published": like.get('published').isoformat() if isinstance(like.get("published"), datetime) else like.get("published") or "",
