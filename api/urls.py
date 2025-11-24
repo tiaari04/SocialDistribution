@@ -21,6 +21,7 @@ urlpatterns = [
 
     path("authors/<str:author_serial>/inbox", views.api_author_inbox, name="author-inbox-no-slash"),
     path("authors/<str:author_serial>/inbox/", views.api_author_inbox, name="author-inbox"),
+    path("authors/<str:author_serial>/entries/", views.api_author_entries, name="author-entries"),
 
 
     path("", include(("entries.api_urls", "entries"), namespace="entries-api")),

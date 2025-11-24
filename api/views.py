@@ -308,7 +308,24 @@ def api_author_inbox(request, author_serial):
 
 # Entries
 def api_author_entries(request, author_serial):
-	return _not_implemented("api_author_entries")
+	"""GET /api/authors/{author_serial}/entries/ - Returns all entries for an author"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	# Get all non-deleted entries by this author, ordered by published date
+	entries = Entry.objects.filter(author=author).exclude(visibility=Entry.Visibility.DELETED).order_by('-published')
+	
+	serializer = EntrySerializer(entries, many=True)
+	
+	return JsonResponse({
+		'type': 'entries',
+		'items': serializer.data
+	}, status=200)
 
 def api_author_entry_detail(request, author_serial, entry_serial):
 	return _not_implemented("api_author_entry_detail")
