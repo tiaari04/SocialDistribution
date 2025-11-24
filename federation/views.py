@@ -6,6 +6,8 @@ from authors.models import Author
 from adminpage.models import HostedImage
 from entries.models import Entry, Like, Comment
 from entries.services import _ensure_author
+from django.utils import timezone
+
 
 @csrf_exempt
 def newEntry(request):

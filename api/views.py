@@ -268,7 +268,7 @@ def api_author_inbox(request, author_serial):
 
     type = (payload.get("type") or "").lower()
 
-    if type == "followrequest":
+    if type == "followRequest":
 
         try:
             return JsonResponse(
