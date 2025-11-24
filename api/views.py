@@ -30,6 +30,7 @@ from django.core.serializers import serialize
 
 @csrf_exempt
 def api_authors_list(request):
+	'''
     if request.method == "POST":
         # existing POST logic for federation (unchanged)
         node = check_basic_auth(request)
@@ -103,10 +104,10 @@ def api_authors_list(request):
             return JsonResponse({"detail": "Entry processed"}, status=200)
         except Exception as e:
             return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
-
-    elif request.method == "GET":
-        authors = Author.objects.all()
-        data = [
+	'''
+	if request.method == "GET":
+		authors = Author.objects.all()
+		data = [
             {
                 "id": str(author.id),
                 "serial": author.serial,
@@ -125,10 +126,8 @@ def api_authors_list(request):
             }
             for author in authors
         ]
-        return JsonResponse({"items": data}, status=200)
-
-    # fallback for other HTTP methods
-    return JsonResponse({"detail": "Method not allowed"}, status=405)
+		return JsonResponse({"items": data}, status=200)
+	return JsonResponse({"detail": "Method not allowed"}, status=405)
 
 @csrf_exempt
 def api_author_detail(request, author_serial):
@@ -257,11 +256,16 @@ def api_author_follow_requests(request, author_serial):
 
 @csrf_exempt
 def api_author_inbox(request, author_serial):
-    if request.method != 'POST':
-        return JsonResponse({'detail': 'Method not allowed'}, status=405)
-		
-    print(json.loads(request.body.decode("utf-8")))
+    if request.method != "POST":
+        return JsonResponse({"detail": "Method not allowed"}, status=405)
 
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+
+
+    node = None
     if request.user.is_authenticated:
         try:
             if str(request.user.author.serial) != str(author_serial):
@@ -275,40 +279,51 @@ def api_author_inbox(request, author_serial):
         if not node:
             return JsonResponse({"error": "Unauthorized"}, status=401)
 
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return JsonResponse({'detail': 'Invalid JSON'}, status=400)
 
-
-    actor_data = payload.get("actor_data")
+    actor_data = payload.get("actor_data") or payload.get("author_data")
     if actor_data:
-        actor_serial = actor_data.get("serial")
-        if actor_serial:
-            Author.objects.update_or_create(
-                serial=actor_serial,
-                defaults={
-                    "displayName": actor_data.get("displayName", ""),
-                    "github": actor_data.get("github", ""),
-                    "host": actor_data.get("host", ""),
-                    "is_active": actor_data.get("is_active", True),
-                    "is_admin": actor_data.get("is_admin", False),
-                    "is_approved": actor_data.get("is_approved", True),
-                    "is_local": False,
-                    "profileImage": actor_data.get("profileImage", ""),
-                    "description": actor_data.get("description", ""),
-                    "web": actor_data.get("web", ""),
-                    "created": actor_data.get("created"),
-                    "updated": actor_data.get("updated"),
-                },
-            )
+        serial = actor_data.get("serial")
+        if serial:
+            defaults = {
+                "displayName": actor_data.get("displayName", ""),
+                "github": actor_data.get("github", ""),
+                "host": actor_data.get("host", ""),
+                "profileImage": actor_data.get("profileImage", ""),
+                "description": actor_data.get("description", ""),
+                "web": actor_data.get("web", ""),
+                "is_active": actor_data.get("is_active", True),
+                "is_admin": actor_data.get("is_admin", False),
+                "is_approved": actor_data.get("is_approved", True),
+                "is_local": False,
+            }
 
-    result = entries_services.process_inbox_for(author_serial, payload)
-    if result.get('status') in ('created', 'exists'):
-        return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
-    if result.get('status') == 'ignored':
-        return JsonResponse({'detail': 'ignored'}, status=200)
-    return JsonResponse({'detail': 'error', 'error': result.get('error')}, status=400)
+            created_dt = parse_datetime(actor_data.get("created")) if actor_data.get("created") else None
+            updated_dt = parse_datetime(actor_data.get("updated")) if actor_data.get("updated") else None
+
+            author_obj, created = Author.objects.update_or_create(
+                serial=serial,
+                defaults=defaults
+            )
+            if created_dt:
+                author_obj.created = created_dt
+            if updated_dt:
+                author_obj.updated = updated_dt
+            author_obj.save()
+
+    entry_data = payload.get("entry") or payload.get("post")
+    if entry_data:
+        try:
+            result = entries_services.process_federated_public_post(payload)
+            if result.get("status") in ("created", "exists"):
+                return JsonResponse({"detail": "ok", "status": result.get("status")}, status=201)
+            if result.get("status") == "ignored":
+                return JsonResponse({"detail": "ignored"}, status=200)
+            if result.get("status") == "error":
+                return JsonResponse({"detail": result.get("error", "unknown error")}, status=400)
+        except Exception as e:
+            return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
+
+    return JsonResponse({"detail": "ok"}, status=201)
 
 # Entries
 def api_author_entries(request, author_serial):

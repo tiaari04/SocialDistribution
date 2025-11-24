@@ -50,19 +50,22 @@ def send_entry_to_federation(entry):
         return {"successful": 0, "failed": 0, "logs": []}
     
     payload = _build_entry_payload(entry)
+    results = {"successful": 0, "failed": 0, "logs": []}
 
-    results = {
-        "successful": 0,
-        "failed": 0,
-        "logs": []
-    }
-    
+    try:
+        author_fqid = entry.get("author_id") or ""
+        author_serial = author_fqid.rstrip("/").split("/")[-1]
+    except Exception as e:
+        logger.error(f"Could not determine author serial for entry {entry.get('fqid')}: {e}")
+        return results
+
     for node in active_nodes:
         if node.is_local:
             continue
 
-        # Entries still go to the normal inbox URL (e.g. /api/authors/)
-        log_entry = _send_to_node(node, payload, entry.get("fqid"))
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{author_serial}/inbox/"
+        
+        log_entry = _send_to_node(node, payload, entry.get("fqid"), endpoint_suffix=inbox_url)
         results["logs"].append(log_entry)
         
         if log_entry.status == FederationLog.Status.SUCCESS:
@@ -229,13 +232,8 @@ def _build_author_payload(author):
 
     return payload
 
-def _send_to_node(
-    node, payload, entry_fqid, endpoint_suffix: str | None = None
-):
-    """
-    Send a payload to a node.
-    """
-    # Build target URL
+def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None):
+
     target_url = node.full_inbox_url
     print(f"target url: {target_url}")
     if endpoint_suffix:
