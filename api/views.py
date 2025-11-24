@@ -265,9 +265,11 @@ def api_author_inbox(request, author_serial):
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
-    actor_data = payload.get("actor_data") or payload.get("author_data")
+    # Extract author info: try multiple possible keys
+    actor_data = payload.get("actor_data") or payload.get("author_data") or payload.get("author")
     if actor_data:
-        serial = actor_data.get("serial")
+        # serial might be under 'serial' or last part of 'id'
+        serial = actor_data.get("serial") or (actor_data.get("id").split("/")[-1] if actor_data.get("id") else None)
         if serial:
             defaults = {
                 "displayName": actor_data.get("displayName", ""),
@@ -275,7 +277,7 @@ def api_author_inbox(request, author_serial):
                 "host": actor_data.get("host", ""),
                 "profileImage": actor_data.get("profileImage", ""),
                 "description": actor_data.get("description", ""),
-                "web": actor_data.get("web", ""),
+                "web": actor_data.get("web", actor_data.get("url", "")),
                 "is_active": actor_data.get("is_active", True),
                 "is_admin": actor_data.get("is_admin", False),
                 "is_approved": actor_data.get("is_approved", True),
@@ -295,14 +297,12 @@ def api_author_inbox(request, author_serial):
                 author_obj.updated = updated_dt
             author_obj.save()
 
+    # Process entry/post
     try:
         result = entries_services.process_federated_public_post(payload)
-        if result.get("status") in ("created", "exists"):
-            return JsonResponse({"detail": "ok", "status": result.get("status")}, status=201)
-        if result.get("status") == "ignored":
-            return JsonResponse({"detail": "ignored"}, status=200)
-        if result.get("status") == "error":
-            return JsonResponse({"detail": result.get("error", "unknown error")}, status=400)
+        status_map = {"created": 201, "exists": 200, "updated": 200, "ignored": 200, "error": 400}
+        status_code = status_map.get(result.get("status"), 400)
+        return JsonResponse({"detail": "ok", "status": result.get("status")}, status=status_code)
     except Exception as e:
         return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
