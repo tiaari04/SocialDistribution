@@ -25,3 +25,16 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ['fqid', 'author', 'object_fqid', 'published']
         read_only_fields = ['fqid', 'author', 'published']
+
+
+class EntrySerializer(serializers.ModelSerializer):
+    author = AuthorRefSerializer(read_only=True)
+
+    class Meta:
+        model = Entry
+        fields = [
+            'fqid', 'serial', 'title', 'web', 'description', 'content',
+            'image_url', 'content_type', 'author', 'published', 'is_edited',
+            'likes_count', 'visibility'
+        ]
+        read_only_fields = ['fqid', 'author', 'published', 'likes_count']

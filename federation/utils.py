@@ -20,9 +20,13 @@ def sync_remote_authors():
         return synced_authors
 
     for node in active_nodes:
+        headers = {}
         try:
             url = f"{node.base_url.rstrip('/')}/api/authors/"
-            headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
+            if node.name.lower() == "skyblue":
+                headers = {'Content-Type': 'application/json'}
+            else:
+                headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
             logger.info(f"Fetching authors from {node.name} @ {url}")
             response = requests.get(url, headers=headers, timeout=15)
             response.raise_for_status()
@@ -364,7 +368,9 @@ def check_basic_auth(request):
 def create_remote_author(author_data):
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
-    serial = author_id.split("/")[-1]
+    serial = author_data.get("uuid") or author_id.rstrip("/").split("/")[-1]
+    if serial == '':
+        return
 
     author, created = Author.objects.update_or_create(
         id=author_id,

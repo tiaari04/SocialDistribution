@@ -30,7 +30,6 @@ from django.core.serializers import serialize
 
 @csrf_exempt
 def api_authors_list(request):
-	
 	if request.method == "GET":
 		authors = Author.objects.filter(is_local=True)
 		data = [
@@ -216,19 +215,94 @@ def api_author_inbox(request, author_serial):
 
 # Entries
 def api_author_entries(request, author_serial):
-	return _not_implemented("api_author_entries")
+	"""GET /api/authors/{author_serial}/entries/ - Returns all entries for an author"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	# Get all non-deleted entries by this author, ordered by published date
+	entries = Entry.objects.filter(author=author).exclude(visibility=Entry.Visibility.DELETED).order_by('-published')
+	
+	serializer = EntrySerializer(entries, many=True)
+	
+	return JsonResponse({
+		'type': 'entries',
+		'items': serializer.data
+	}, status=200)
 
 def api_author_entry_detail(request, author_serial, entry_serial):
-	return _not_implemented("api_author_entry_detail")
+	"""GET single entry by author_serial and entry_serial"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	entry = get_object_or_404(Entry, author=author, serial=entry_serial)
+	if entry.visibility == Entry.Visibility.DELETED:
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	serializer = EntrySerializer(entry)
+	return JsonResponse(serializer.data, status=200)
 
 def api_author_entry_image(request, author_serial, entry_serial):
-	return _not_implemented("api_author_entry_image")
+	"""GET entry image URL by author_serial and entry_serial"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Entry
+	
+	entry = get_object_or_404(Entry, author=author, serial=entry_serial)
+	if entry.visibility == Entry.Visibility.DELETED:
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	if not entry.image_url:
+		return JsonResponse({'detail': 'No image'}, status=404)
+	
+	return JsonResponse({'image_url': entry.image_url}, status=200)
 
 def api_entry_by_fqid(request, entry_fqid):
-	return _not_implemented("api_entry_by_fqid")
+	"""GET single entry by FQID"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(entry_fqid)
+	
+	entry = get_object_or_404(Entry, fqid=decoded_fqid)
+	if entry.visibility == Entry.Visibility.DELETED:
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	serializer = EntrySerializer(entry)
+	return JsonResponse(serializer.data, status=200)
 
 def api_entry_image(request, entry_fqid):
-	return _not_implemented("api_entry_image")
+	"""GET entry image URL by FQID"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	from entries.models import Entry
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(entry_fqid)
+	
+	entry = get_object_or_404(Entry, fqid=decoded_fqid)
+	if entry.visibility == Entry.Visibility.DELETED:
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	if not entry.image_url:
+		return JsonResponse({'detail': 'No image'}, status=404)
+	
+	return JsonResponse({'image_url': entry.image_url}, status=200)
 
 # Comments & Likes (per-entry serial)
 @csrf_exempt
@@ -259,10 +333,38 @@ def api_entry_likes_by_fqid(request, entry_fqid):
 
 # Liked / Commented lists
 def api_author_liked(request, author_serial):
-	return _not_implemented("api_author_liked")
+	"""GET all things an author has liked"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Like
+	from entries.serializers import LikeSerializer
+	
+	likes = Like.objects.filter(author=author).order_by('-published')
+	serializer = LikeSerializer(likes, many=True)
+	
+	return JsonResponse({
+		'type': 'liked',
+		'items': serializer.data
+	}, status=200)
 
 def api_author_commented(request, author_serial):
-	return _not_implemented("api_author_commented")
+	"""GET all comments by an author"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Comment
+	from entries.serializers import CommentSerializer
+	
+	comments = Comment.objects.filter(author=author).order_by('-published')
+	serializer = CommentSerializer(comments, many=True)
+	
+	return JsonResponse({
+		'type': 'comments',
+		'items': serializer.data
+	}, status=200)
 
 # Comment detail and likes on comment
 def api_entry_comment_detail(request, author_serial, entry_serial, comment_fqid):
@@ -279,30 +381,169 @@ def api_entry_comment_likes(request, author_serial, entry_serial, comment_fqid):
 
 # Global FQID endpoints
 def api_comment_by_fqid(request, comment_fqid):
-	return _not_implemented("api_comment_by_fqid")
+	"""GET single comment by FQID"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	from entries.models import Comment
+	from entries.serializers import CommentSerializer
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(comment_fqid)
+	
+	comment = get_object_or_404(Comment, fqid=decoded_fqid)
+	serializer = CommentSerializer(comment)
+	return JsonResponse(serializer.data, status=200)
 
 def api_like_by_fqid(request, like_fqid):
-	return _not_implemented("api_like_by_fqid")
+	"""GET single like by FQID"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	from entries.models import Like
+	from entries.serializers import LikeSerializer
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(like_fqid)
+	
+	like = get_object_or_404(Like, fqid=decoded_fqid)
+	serializer = LikeSerializer(like)
+	return JsonResponse(serializer.data, status=200)
 
 # Stream & public
 def api_stream(request):
-	return _not_implemented("api_stream")
+	"""GET user's personalized feed/stream"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	# For now, return all public entries (can be enhanced with following/friends logic)
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	entries = Entry.objects.filter(
+		visibility=Entry.Visibility.PUBLIC
+	).exclude(visibility=Entry.Visibility.DELETED).order_by('-published')[:50]
+	
+	serializer = EntrySerializer(entries, many=True)
+	
+	return JsonResponse({
+		'type': 'stream',
+		'items': serializer.data
+	}, status=200)
 
 def api_public_entries(request):
-	return _not_implemented("api_public_entries")
+	"""GET all public entries - used by federation to discover posts"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	from entries.models import Entry
+	from entries.serializers import EntrySerializer
+	
+	# Get all public, non-deleted entries
+	entries = Entry.objects.filter(
+		visibility=Entry.Visibility.PUBLIC
+	).exclude(visibility=Entry.Visibility.DELETED).order_by('-published')
+	
+	serializer = EntrySerializer(entries, many=True)
+	
+	return JsonResponse({
+		'type': 'entries',
+		'items': serializer.data
+	}, status=200)
 
 # Additional stubs for FQID/serial lookups
 def api_author_by_fqid(request, author_fqid):
-	return _not_implemented("api_author_by_fqid")
+	"""GET author by FQID"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(author_fqid)
+	
+	author = get_object_or_404(Author, id=decoded_fqid)
+	
+	return JsonResponse({
+		'type': 'author',
+		'id': author.id,
+		'serial': author.serial,
+		'displayName': author.displayName,
+		'host': author.host,
+		'web': author.web,
+		'profileImage': author.profileImage
+	}, status=200)
 
 def api_author_by_fqid_liked(request, author_fqid):
-	return _not_implemented("api_author_by_fqid_liked")
+	"""GET what an author (by FQID) has liked"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(author_fqid)
+	
+	author = get_object_or_404(Author, id=decoded_fqid)
+	from entries.models import Like
+	from entries.serializers import LikeSerializer
+	
+	likes = Like.objects.filter(author=author).order_by('-published')
+	serializer = LikeSerializer(likes, many=True)
+	
+	return JsonResponse({
+		'type': 'liked',
+		'items': serializer.data
+	}, status=200)
 
 def api_author_by_fqid_commented(request, author_fqid):
-	return _not_implemented("api_author_by_fqid_commented")
+	"""GET what an author (by FQID) has commented"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	# Decode FQID if needed
+	decoded_fqid = unquote(author_fqid)
+	
+	author = get_object_or_404(Author, id=decoded_fqid)
+	from entries.models import Comment
+	from entries.serializers import CommentSerializer
+	
+	comments = Comment.objects.filter(author=author).order_by('-published')
+	serializer = CommentSerializer(comments, many=True)
+	
+	return JsonResponse({
+		'type': 'comments',
+		'items': serializer.data
+	}, status=200)
 
 def api_author_liked_detail(request, author_serial, like_serial):
-	return _not_implemented("api_author_liked_detail")
+	"""GET specific like by author and like identifier"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Like
+	from entries.serializers import LikeSerializer
+	
+	# Try to find like by serial pattern in FQID
+	likes = Like.objects.filter(author=author, fqid__contains=like_serial)
+	if not likes.exists():
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	like = likes.first()
+	serializer = LikeSerializer(like)
+	return JsonResponse(serializer.data, status=200)
 
 def api_author_commented_detail(request, author_serial, comment_serial):
-	return _not_implemented("api_author_commented_detail")
+	"""GET specific comment by author and comment identifier"""
+	if request.method != 'GET':
+		return JsonResponse({'detail': 'Method not allowed'}, status=405)
+	
+	author = get_object_or_404(Author, serial=author_serial)
+	from entries.models import Comment
+	from entries.serializers import CommentSerializer
+	
+	# Try to find comment by serial pattern in FQID
+	comments = Comment.objects.filter(author=author, fqid__contains=comment_serial)
+	if not comments.exists():
+		return JsonResponse({'detail': 'Not found'}, status=404)
+	
+	comment = comments.first()
+	serializer = CommentSerializer(comment)
+	return JsonResponse(serializer.data, status=200)

@@ -5,50 +5,49 @@ from .models import Entry, Comment, Like
 from django.utils import timezone
 from django.forms.models import model_to_dict
 from federation.utils import send_like_to_federation, send_comment_to_federation
+from django.utils.dateparse import parse_datetime
+
 
 def process_federated_public_post(payload: dict) -> dict:
-    """Process a public post arriving from federation (no specific recipient needed).
-    
-    Returns a dict with keys: 'status' (created/exists/error) and 'object' (Entry or None).
-    """
     typ = (payload.get('type') or '').lower()
     
-    if typ != 'post' and typ != 'entry':
+    if typ not in ('post', 'entry'):
         return {'status': 'ignored', 'object': None}
     
-    # Handle incoming federated posts
+    # Ensure author exists
     author_payload = payload.get('author_data') or payload.get('author') or {}
     author = _ensure_author(author_payload)
-    
     if not author:
         return {'status': 'error', 'error': 'missing_author'}
-    
+
+    # fqid can come from 'fqid' or 'id'
     fqid = payload.get('fqid') or payload.get('id')
     if not fqid:
         return {'status': 'error', 'error': 'missing_fqid'}
-    
-    # Check if entry already exists
+
+    # Check if entry exists
     existing_entry = Entry.objects.filter(fqid=fqid).first()
+    content_type = payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN
+    visibility = payload.get('visibility', Entry.Visibility.PUBLIC)
+    
     if existing_entry:
         # Update existing entry
         existing_entry.title = payload.get('title', existing_entry.title)
         existing_entry.content = payload.get('content', existing_entry.content)
         existing_entry.description = payload.get('description', existing_entry.description)
-        existing_entry.content_type = payload.get('content_type', existing_entry.content_type)
-        existing_entry.visibility = payload.get('visibility', existing_entry.visibility)
+        existing_entry.content_type = content_type
+        existing_entry.visibility = visibility
         existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
         existing_entry.is_local = False
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
-        existing_entry.is_local = False 
         existing_entry.save()
         return {'status': 'updated', 'object': existing_entry}
-    
-    # Create the entry
+
     if payload.get('is_edited'):
-        # Cannot create an entry that is already marked as edited
         return {'status': 'error', 'error': 'cannot_create_edited_entry'}
-    
+
+    # Create new entry
     entry = Entry.objects.create(
         author=author,
         serial=payload.get('serial') or fqid.split('/')[-1],
@@ -56,15 +55,15 @@ def process_federated_public_post(payload: dict) -> dict:
         title=payload.get('title', ''),
         content=payload.get('content', ''),
         description=payload.get('description', ''),
-        content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
-        visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
+        content_type=content_type,
+        visibility=visibility,
         image_url=payload.get('image_url', ''),
         is_local=False,
         web=payload.get('web', ''),
-        published=payload.get('published') or timezone.now(),
+        published=parse_datetime(payload.get('published')) if payload.get('published') else timezone.now(),
     )
-    return {'status': 'created', 'object': entry}
 
+    return {'status': 'created', 'object': entry}
 
 def _ensure_author(author_payload: dict) -> Author:
     """Create or get an Author from an incoming payload dict."""
@@ -290,14 +289,20 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             else:
                 follow_request = FollowRequest.objects.create(
                     actor=actor,
-                    author_followed = author_followed
-                )
+                    author_followed = author_followed,
+                    state=FollowRequest.State.ACCEPTED
+                ) 
+                follow_request.save()
+                return {'status': 'created', 'object': follow_request}
+            except Exception as e:
+                print("Failed sending follow:", e)
+
         else:
             follow_request = FollowRequest.objects.create(
-                    actor=actor,
-                    author_followed = author_followed
-                )
-
+                actor=actor,
+                author_followed = author_followed
+            )
+            return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
 

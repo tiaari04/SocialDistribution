@@ -17,7 +17,7 @@ LOGIN_URL = "/login/"
 SECRET_KEY = 'django-insecure-du**gb#&9&=ouwz+5&wt4*h(n5fqxmk(i9ve2r(c#74+rhvda!'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
-
+APPEND_SLASH = False
 
 INSTALLED_APPS = [
     'django.contrib.admin',
