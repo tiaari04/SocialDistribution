@@ -134,7 +134,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             fqid=comment_fqid,
             author=author,
             entry=entry,
-            content=payload.get('content') or "",
+            content=payload.get('content') or payload.get('comment') or "",
             content_type=payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN,
             published=payload.get('published') or timezone.now(),
             web=payload.get('web', ''),
