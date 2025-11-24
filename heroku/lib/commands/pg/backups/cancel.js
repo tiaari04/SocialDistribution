@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = require("@heroku-cli/command");
 const core_1 = require("@oclif/core");
-const host_1 = require("../../../lib/pg/host");
+const heroku_cli_util_1 = require("@heroku/heroku-cli-util");
 const backups_1 = require("../../../lib/pg/backups");
 class Cancel extends command_1.Command {
     async run() {
@@ -16,15 +16,15 @@ class Cancel extends command_1.Command {
             if (!num) {
                 core_1.ux.error(`Invalid Backup: ${backup_id}`);
             }
-            ({ body: transfer } = await this.heroku.get(`/client/v11/apps/${app}/transfers/${num}`, { hostname: (0, host_1.default)() }));
+            ({ body: transfer } = await this.heroku.get(`/client/v11/apps/${app}/transfers/${num}`, { hostname: heroku_cli_util_1.utils.pg.host() }));
         }
         else {
-            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: (0, host_1.default)() });
+            const { body: transfers } = await this.heroku.get(`/client/v11/apps/${app}/transfers`, { hostname: heroku_cli_util_1.utils.pg.host() });
             transfer = this.sortByCreatedAtDesc(transfers).find(t => !t.finished_at);
         }
         if (transfer) {
             core_1.ux.action.start(`Cancelling ${pgbackups.name(transfer)}`);
-            this.heroku.post(`/client/v11/apps/${app}/transfers/${transfer.uuid}/actions/cancel`, { hostname: (0, host_1.default)() });
+            this.heroku.post(`/client/v11/apps/${app}/transfers/${transfer.uuid}/actions/cancel`, { hostname: heroku_cli_util_1.utils.pg.host() });
             core_1.ux.action.stop();
         }
         else {

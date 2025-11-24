@@ -1,0 +1,116 @@
+{% extends "base_adminpage.html" %}
+{% block title %}Federation Logs{% endblock %}
+
+{% block content %}
+<ul class="container gap-6">
+  <li class="row align-center p-4" style="justify-content: space-between;">
+    <h1 class="text-xl semibold text-primary">Federation Logs</h1>
+    <a href="{% url 'adminpage:federation-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+  </li>
+
+  <!-- Filters -->
+  <li class="card p-4">
+    <form method="get" class="row gap-4" style="align-items: flex-end;">
+      <div style="flex: 1;">
+        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Filter by Node</label>
+        <select name="node" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">All Nodes</option>
+          {% for n in nodes %}
+          <option value="{{ n.pk }}" {% if current_node == n.pk|stringformat:"s" %}selected{% endif %}>{{ n.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1;">
+        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Filter by Status</label>
+        <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">All Statuses</option>
+          {% for value, label in statuses %}
+          <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+        <a href="{% url 'adminpage:federation-logs' %}" class="btn btn-secondary">Clear</a>
+      </div>
+    </form>
+  </li>
+
+  <!-- Logs Table -->
+  <li class="card">
+    {% if logs %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+      <thead style="background: #f8f9fa;">
+        <tr>
+          <th style="text-align: center; padding: 12px; width: 80px;">Status</th>
+          <th style="text-align: left; padding: 12px;">Node</th>
+          <th style="text-align: left; padding: 12px;">Entry FQID</th>
+          <th style="text-align: center; padding: 12px; width: 100px;">Response</th>
+          <th style="text-align: left; padding: 12px; width: 180px;">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr style="border-bottom: 1px solid #dee2e6;">
+          <td style="text-align: center; padding: 12px;">
+            {% if log.status == 'success' %}
+              <span style="color: green; font-size: 1.5rem;" title="Success">●</span>
+            {% elif log.status == 'failure' %}
+              <span style="color: red; font-size: 1.5rem;" title="Failure">●</span>
+            {% else %}
+              <span style="color: orange; font-size: 1.5rem;" title="Pending">●</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px;">
+            <a href="{% url 'adminpage:federation-node-detail' log.node.pk %}" style="color: #0066cc;">
+              {{ log.node.name }}
+            </a>
+          </td>
+          <td style="padding: 12px;">
+            <div title="{{ log.entry_fqid }}">{{ log.entry_fqid|truncatechars:50 }}</div>
+            {% if log.error_message %}
+            <div style="margin-top: 4px; padding: 4px 8px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.8125rem;">
+              <strong>Error:</strong> {{ log.error_message|truncatechars:120 }}
+            </div>
+            {% endif %}
+          </td>
+          <td style="text-align: center; padding: 12px;">
+            {% if log.response_status_code %}
+              <span style="padding: 4px 8px; background: {% if log.response_status_code < 300 %}#d4edda; color: #155724{% else %}#f8d7da; color: #721c24{% endif %}; border-radius: 3px; font-weight: 500;">
+                {{ log.response_status_code }}
+              </span>
+            {% else %}
+              <span style="color: #999;">-</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px;">
+            <div>{{ log.created|date:"M d, Y" }}</div>
+            <div style="color: #666;">{{ log.created|date:"H:i:s" }}</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center;">
+      <p class="text-muted">No logs found matching your criteria.</p>
+    </div>
+    {% endif %}
+  </li>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <li class="row gap-2 p-4" style="justify-content: center; align-items: center;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+         class="btn btn-secondary">Previous</a>
+    {% endif %}
+    <span style="padding: 8px 16px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+         class="btn btn-secondary">Next</a>
+    {% endif %}
+  </li>
+  {% endif %}
+</ul>
+{% endblock %}

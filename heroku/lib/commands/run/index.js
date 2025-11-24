@@ -11,12 +11,13 @@ class Run extends command_1.Command {
     async run() {
         const { argv, flags } = await this.parse(Run);
         const command = (0, helpers_1.revertSortedArgs)(process.argv, argv);
+        const builtCommand = await (0, helpers_1.buildCommandWithLauncher)(this.heroku, flags.app, command, flags['no-launcher']);
         const opts = {
             'exit-code': flags['exit-code'],
             'no-tty': flags['no-tty'],
             app: flags.app,
             attach: true,
-            command: (0, helpers_1.buildCommand)(command),
+            command: builtCommand,
             env: flags.env,
             heroku: this.heroku,
             listen: flags.listen,
@@ -45,7 +46,7 @@ class Run extends command_1.Command {
     }
 }
 exports.default = Run;
-Run.description = 'run a one-off process inside a heroku dyno\nShows a notification if the dyno takes more than 20 seconds to start.';
+Run.description = 'run a one-off process inside a heroku dyno\nShows a notification if the dyno takes more than 20 seconds to start.\nHeroku automatically prepends ‘launcher’ to the command on CNB apps (use --no-launcher to disable).';
 Run.examples = [
     '$ heroku run bash',
     '$ heroku run -s standard-2x -- myscript.sh -a arg1 -s arg2',
@@ -62,4 +63,8 @@ Run.flags = {
     'no-tty': command_1.flags.boolean({ description: 'force the command to not run in a tty' }),
     listen: command_1.flags.boolean({ description: 'listen on a local port', hidden: true }),
     'no-notify': command_1.flags.boolean({ description: 'disables notification when dyno is up (alternatively use HEROKU_NOTIFICATIONS=0)' }),
+    'no-launcher': command_1.flags.boolean({
+        description: 'don’t prepend ‘launcher’ before a command',
+        default: false,
+    }),
 };

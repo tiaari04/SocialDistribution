@@ -86,7 +86,7 @@ def signup_view(request):
                 web=form.cleaned_data.get('web', ''),
                 description=form.cleaned_data.get('description', ''),
                 is_local=True,
-                serial=serial,
+                serial=serial.lower(),
             )
 
             # do not log in until validated

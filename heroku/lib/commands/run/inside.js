@@ -12,14 +12,9 @@ class RunInside extends command_1.Command {
         const { args, argv, flags } = await this.parse(RunInside);
         const { dyno_name: dynoName } = args;
         const { app: appName, 'exit-code': exitCode, listen, 'no-launcher': noLauncher } = flags;
-        const prependLauncher = !noLauncher;
-        const { body: app } = await this.heroku.get(`/apps/${appName}`, {
-            headers: { Accept: 'application/vnd.heroku+json; version=3.sdk' },
-        });
-        const appStackIsCnb = app.stack.name === 'cnb';
         const opts = {
             app: appName,
-            command: (0, helpers_1.buildCommand)(argv.slice(1), appStackIsCnb && prependLauncher),
+            command: await (0, helpers_1.buildCommandWithLauncher)(this.heroku, appName, argv.slice(1), noLauncher),
             dyno: dynoName,
             'exit-code': exitCode,
             heroku: this.heroku,

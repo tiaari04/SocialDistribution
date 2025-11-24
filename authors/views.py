@@ -10,6 +10,11 @@ from entries.models import Entry
 
 @login_required
 def author_list(request):
+    from federation.utils import sync_remote_authors
+    try:
+        sync_remote_authors()
+    except Exception as e:
+        print("Author sync failed:", e)
     authors = Author.objects.all()
     return render(request, "authors/authorList.html", {"authors": authors})
 
