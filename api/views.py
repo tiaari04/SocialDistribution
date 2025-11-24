@@ -13,7 +13,6 @@ from federation.utils import check_basic_auth
 from authors.models import Author
 from django.utils.dateparse import parse_datetime
 from authors.models import Author
-from authors.models import FollowRequest 
 
 
 # followers serializer will use variables to know how to format the data
@@ -272,62 +271,6 @@ def api_author_inbox(request, author_serial):
     if type == "followrequest":
 
         try:
-            actor = payload.get("actor") or payload.get("actor_data")
-            obj = payload.get("object") or payload.get("object_data") or payload.get("author")
-
-            if not actor or not obj:
-                return JsonResponse({"detail": "Missing actor or object in followRequest"}, status=400)
-
-            actor_serial = (
-                actor.get("serial")
-                or (actor.get("id").rstrip("/").split("/")[-1] if actor.get("id") else None)
-            )
-            object_serial = (
-                obj.get("serial")
-                or (obj.get("id").rstrip("/").split("/")[-1] if obj.get("id") else None)
-            )
-
-            if not actor_serial or not object_serial:
-                return JsonResponse({"detail": "Invalid actor/object serial"}, status=400)
-
-            actor_author, _created = Author.objects.get_or_create(
-                serial=actor_serial,
-                defaults={
-                    "displayName": actor.get("displayName", ""),
-                    "github": actor.get("github", ""),
-                    "host": actor.get("host", ""),
-                    "profileImage": actor.get("profileImage", ""),
-                    "description": actor.get("description", ""),
-                    "web": actor.get("web", actor.get("url", "")),
-                    "is_local": False,
-                    "is_active": True,
-                    "is_admin": False,
-                    "is_approved": True,
-                }
-            )
-
-            object_author, _created = Author.objects.get_or_create(
-                serial=object_serial,
-                defaults={
-                    "displayName": obj.get("displayName", ""),
-                    "github": obj.get("github", ""),
-                    "host": obj.get("host", ""),
-                    "profileImage": obj.get("profileImage", ""),
-                    "description": obj.get("description", ""),
-                    "web": obj.get("web", obj.get("url", "")),
-                    "is_local": False,
-                    "is_active": True,
-                    "is_admin": False,
-                    "is_approved": True,
-                }
-            )
-
-
-            fr, created = FollowRequest.objects.get_or_create(
-                actor=actor_author,
-                object=object_author
-            )
-
             return JsonResponse(
                 {"detail": "follow request processed", "created": created},
                 status=201 if created else 200
