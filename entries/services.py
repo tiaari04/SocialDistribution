@@ -264,24 +264,31 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'exists', 'object': existing_request}
             
         follow_request = None
-        if not author_followed.is_local:
-            from inbox.services import send_remote_follow_request
-            try:
-                send_remote_follow_request(actor, author_followed)
+        if actor.is_local:
+            if not author_followed.is_local:
+                from inbox.services import send_remote_follow_request
+                try:
+                    send_remote_follow_request(actor, author_followed)
+                    follow_request = FollowRequest.objects.create(
+                        actor=actor,
+                        author_followed = author_followed,
+                        state=FollowRequest.State.ACCEPTED
+                    ) 
+                    follow_request.save()
+                except Exception as e:
+                    print("Failed sending follow:", e)
+
+            else:
                 follow_request = FollowRequest.objects.create(
                     actor=actor,
-                    author_followed = author_followed,
-                    state=FollowRequest.State.ACCEPTED
-                ) 
-                follow_request.save()
-            except Exception as e:
-                print("Failed sending follow:", e)
-
+                    author_followed = author_followed
+                )
         else:
             follow_request = FollowRequest.objects.create(
-                actor=actor,
-                author_followed = author_followed
-            )
+                    actor=actor,
+                    author_followed = author_followed
+                )
+
 
     return {'status': 'ignored', 'object': None}
 
