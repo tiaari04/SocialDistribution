@@ -292,7 +292,7 @@ def api_author_inbox(request, author_serial):
             if not actor_serial or not object_serial:
                 return JsonResponse({"detail": "Invalid actor/object IDs"}, status=400)
 
-            # Upsert ACTOR author
+            # Upsert ACTOR author (remote user who wants to follow)
             actor_defaults = {
                 "displayName": actor_data.get("displayName", ""),
                 "github": actor_data.get("github", ""),
@@ -306,9 +306,10 @@ def api_author_inbox(request, author_serial):
             }
             actor_obj, _ = Author.objects.update_or_create(
                 serial=actor_serial,
-                defaults=actor_defaults
+                defaults=actor_defaults,
             )
 
+            # Optional: upsert the "object" author (their view of us)
             object_defaults = {
                 "displayName": object_data.get("displayName", ""),
                 "github": object_data.get("github", ""),
@@ -320,31 +321,35 @@ def api_author_inbox(request, author_serial):
                 "is_approved": True,
                 "is_local": False,
             }
-            object_obj, _ = Author.objects.update_or_create(
+            Author.objects.update_or_create(
                 serial=object_serial,
-                defaults=object_defaults
+                defaults=object_defaults,
             )
 
             fr, created = FollowRequest.objects.get_or_create(
                 actor=actor_obj,
-                author_followed=object_obj,
-                defaults={"state": FollowRequest.State.REQUESTING}
+                author_followed=recipient,
+                defaults={"state": FollowRequest.State.REQUESTING},
             )
 
-            # Log raw inbox item
-            InboxItem.objects.create(
-                recipient=recipient,
-                type="follow",
-                object_fqid=object_id,
-                payload=payload
-            )
+            # Log raw inbox item, but don't let logging errors break the request
+            try:
+                InboxItem.objects.create(
+                    recipient=recipient,
+                    type="follow",
+                    object_fqid=object_id,
+                    payload=payload,
+                )
+            except Exception as log_err:
+                # You can print or log this if you want
+                print(f"[INBOX] Failed to log InboxItem: {log_err}")
 
             return JsonResponse(
                 {
                     "detail": "follow request processed",
-                    "created": created
+                    "created": created,
                 },
-                status=201 if created else 200
+                status=201 if created else 200,
             )
 
         except Exception as e:
