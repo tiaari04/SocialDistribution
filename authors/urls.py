@@ -11,4 +11,6 @@ urlpatterns = [
     path("<str:author_serial>/followers/", views.author_followers_page, name="followers"),
     path("<str:author_serial>/following/", views.author_following_page, name="following"),
     path("<str:author_serial>/follow-requests/", views.follow_requests_page, name="follow-requests"),
+
+    path("<str:author_serial>", views.author_detail, name="detail-no-slash"), 
 ]
