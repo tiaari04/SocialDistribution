@@ -10,6 +10,8 @@ from django.db import transaction
 from django.utils import timezone
 from .utils import resolve_author_from_request
 from authors.models import Author
+from django.forms.models import model_to_dict
+
 
 
 class SmallPage(PageNumberPagination):
@@ -62,6 +64,15 @@ class EntryCommentsViewSet(viewsets.ViewSet):
             web=data.get('web', ''),
         )
         serializer = CommentSerializer(comment)
+
+# federation code
+        comment_dict = model_to_dict(comment, fields=[
+            'fqid', 'content', 'content_type', 'entry', 'likes_count', 'published', 'web'
+        ])
+        comment_dict['author_id'] = str(req_author.id)
+        from federation.utils import send_comment_to_federation
+        send_comment_to_federation(comment_dict)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -106,6 +117,16 @@ class EntryLikesViewSet(viewsets.ViewSet):
         liked_fqid = request.data.get('id') or f"{entry.fqid}#like-{timezone.now().timestamp()}"
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=entry.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
+
+        # federation code
+        print("SENDING TO FEDERATION") 
+        like_dict = model_to_dict(like, fields=['fqid', 'object_fqid'])
+        like_dict['author_id'] = str(req_author.id)
+        like_dict['published'] = like.published
+
+        from federation.utils import send_like_to_federation
+        send_like_to_federation(like_dict)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

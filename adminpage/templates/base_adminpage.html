@@ -120,6 +120,9 @@
       <li class="{% if 'federation' in current %}active{% endif %}">
         <a href="{% url 'adminpage:federation-dashboard' %}">Federation</a>
       </li>
+      <li class="{% if current == 'stream_home' %}active{% endif %}">
+        <a href="{% url 'entries:stream_home' request.user.author.serial %}">Stream</a>
+      </li>
     </ul>
     {% endwith %}
   </li>
