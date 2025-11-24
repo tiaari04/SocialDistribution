@@ -37,6 +37,6 @@ urlpatterns = [
     path("public/entries/", views.api_public_entries, name="api-public-entries"),
 
     #team skyblue
-    path("reading/", views.api_public_entries, name="api-reading"),
+    path("reading", views.api_public_entries, name="api-reading"),
     
 ]
