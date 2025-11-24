@@ -206,6 +206,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             image_url=payload.get('image_url', ''),
             web=payload.get('web', ''),
             published=payload.get('published') or timezone.now(),
+            is_local=False
         )
         return {'status': 'created', 'object': entry}
 
