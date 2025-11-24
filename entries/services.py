@@ -102,6 +102,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     except Author.DoesNotExist:
         return {'status': 'error', 'error': 'recipient_not_found'}
 
+    print(payload)
     typ = (payload.get('type') or '').lower()
     print(typ)
     object_fqid = payload.get('id') or payload.get('object')
