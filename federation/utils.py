@@ -62,7 +62,7 @@ def send_entry_to_federation(entry):
         if node.is_local:
             continue
 
-        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{author_serial}/inbox/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{author_serial}/inbox"
         
         log_entry = _send_to_node(node, payload, entry.get("fqid"), endpoint_suffix=inbox_url)
         results["logs"].append(log_entry)
