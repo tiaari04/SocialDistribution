@@ -294,8 +294,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 ) 
                 follow_request.save()
                 return {'status': 'created', 'object': follow_request}
-            except Exception as e:
-                print("Failed sending follow:", e)
 
         else:
             follow_request = FollowRequest.objects.create(
