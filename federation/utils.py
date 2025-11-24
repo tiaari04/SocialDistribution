@@ -370,7 +370,7 @@ def create_remote_author(author_data):
         return
 
     author, created = Author.objects.update_or_create(
-        id=author_id,
+        id.lower()=author_id.lower(),
         defaults={
             "displayName": displayName,
             "host": host,
