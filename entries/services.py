@@ -196,7 +196,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             print("INCOMING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object_fqid') 
+            object_fqid = payload.get('object_fqid') or payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
 
