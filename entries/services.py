@@ -103,6 +103,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'error', 'error': 'recipient_not_found'}
 
     typ = (payload.get('type') or '').lower()
+    print(typ)
     object_fqid = payload.get('id') or payload.get('object')
 
     # Persist raw inbox item

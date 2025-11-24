@@ -205,7 +205,8 @@ def api_author_inbox(request, author_serial):
 		payload = json.loads(request.body.decode('utf-8'))
 	except Exception:
 		return JsonResponse({'detail': 'Invalid JSON'}, status=400)
-
+	
+	print("REACHED ENDPOINT")
 	result = entries_services.process_inbox_for(author_serial, payload)
 	if result.get('status') in ('created', 'exists'):
 		return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
