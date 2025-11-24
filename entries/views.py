@@ -286,7 +286,7 @@ def entry_create(request, author_serial):
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
             elif 'image_file' in request.FILES:
                 uploaded_file = request.FILES['image_file']
-                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
+                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=False)
                 hosted.save()
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
             
@@ -386,7 +386,7 @@ def entry_edit(request, author_serial, entry_serial):
                 # 3) Otherwise, if a new file was uploaded, use it
                 elif 'image_file' in request.FILES:
                     uploaded_file = request.FILES['image_file']
-                    hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
+                    hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=False)
                     hosted.save()
                     entry.image_url = request.build_absolute_uri(hosted.file.url)
 

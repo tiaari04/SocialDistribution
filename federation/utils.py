@@ -20,9 +20,13 @@ def sync_remote_authors():
         return synced_authors
 
     for node in active_nodes:
+        headers = {}
         try:
             url = f"{node.base_url.rstrip('/')}/api/authors/"
-            headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
+            if node.name.lower() == "skyblue":
+                headers = {'Content-Type': 'application/json'}
+            else:
+                headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
             logger.info(f"Fetching authors from {node.name} @ {url}")
             response = requests.get(url, headers=headers, timeout=15)
             response.raise_for_status()
@@ -441,7 +445,7 @@ def send_image_to_federation(image: HostedImage, nodes=None):
             node=node,
             payload=payload,
             entry_fqid=ref_id,
-            endpoint_suffix=f"{node.base_url}images/new/",
+            endpoint_suffix=f"{node.base_url.rstrip('/')}/federation/images/new/",
         )
         results["logs"].append(log_entry)
 

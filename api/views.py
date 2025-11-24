@@ -186,9 +186,8 @@ def api_author_inbox(request, author_serial):
 	if request.method != 'POST':
 		return JsonResponse({'detail': 'Method not allowed'}, status=405)
 
-	from authors.models import Author
 	print(author_serial)
-	author = get_object_or_404(Author, serial=author_serial)
+	
 	"""if request.user.is_authenticated:
 		try:
 			if str(request.user.author.serial) != str(author_serial):
@@ -214,6 +213,7 @@ def api_author_inbox(request, author_serial):
 	if result.get('status') == 'ignored':
 		return JsonResponse({'detail': 'ignored'}, status=200)
 	return JsonResponse({'detail': 'error', 'error': result.get('error')}, status=400)
+
 # Entries
 def api_author_entries(request, author_serial):
 	"""GET /api/authors/{author_serial}/entries/ - Returns all entries for an author"""
