@@ -136,8 +136,8 @@ def send_comment_to_federation(comment):
         "direction": "incoming",
         "id": comment.get("fqid"),
         "entry": comment.get("entry"),
-        "content": comment.get("content"),
-        "content_type": comment.get("content_type"),
+        "content": comment.get("content") or comment.get('comment'),
+        "content_type": comment.get("content_type") or comment.get('contentType'),
         "likes_count": comment.get("likes_count"),
         "published": comment.get("published").isoformat()
             if hasattr(comment.get("published"), "isoformat")
@@ -226,7 +226,7 @@ def _build_author_payload(author):
     payload = {
         "id": str(author.id),
         "serial": author.serial or "",
-        "displayName": author.displayName or "",
+        "displayName": author.displayName or author.username or "",
         "github": author.github or "",
         "host": author.host or "",
         "is_active": author.is_active if hasattr(author, 'is_active') else True,
