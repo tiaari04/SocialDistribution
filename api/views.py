@@ -13,6 +13,7 @@ from federation.utils import check_basic_auth
 from authors.models import Author
 from django.utils.dateparse import parse_datetime
 from authors.models import Author
+from authors.models import FollowRequest 
 
 
 # followers serializer will use variables to know how to format the data
@@ -259,52 +260,145 @@ def api_author_inbox(request, author_serial):
     if request.method != "POST":
         return JsonResponse({"detail": "Method not allowed"}, status=405)
 
+
     try:
         payload = json.loads(request.body.decode("utf-8"))
         print(payload)
     except Exception:
         return JsonResponse({"detail": "Invalid JSON"}, status=400)
 
-    # Extract author info: try multiple possible keys
-    actor_data = payload.get("actor_data") or payload.get("author_data") or payload.get("author")
-    if actor_data:
-        # serial might be under 'serial' or last part of 'id'
-        serial = actor_data.get("serial") or (actor_data.get("id").split("/")[-1] if actor_data.get("id") else None)
-        if serial:
-            defaults = {
-                "displayName": actor_data.get("displayName", ""),
-                "github": actor_data.get("github", ""),
-                "host": actor_data.get("host", ""),
-                "profileImage": actor_data.get("profileImage", ""),
-                "description": actor_data.get("description", ""),
-                "web": actor_data.get("web", actor_data.get("url", "")),
-                "is_active": actor_data.get("is_active", True),
-                "is_admin": actor_data.get("is_admin", False),
-                "is_approved": actor_data.get("is_approved", True),
-                "is_local": False,
-            }
+    type = (payload.get("type") or "").lower()
 
-            created_dt = parse_datetime(actor_data.get("created")) if actor_data.get("created") else None
-            updated_dt = parse_datetime(actor_data.get("updated")) if actor_data.get("updated") else None
+    if type == "followrequest":
 
-            author_obj, created = Author.objects.update_or_create(
-                serial=serial,
-                defaults=defaults
+        try:
+            actor = payload.get("actor") or payload.get("actor_data")
+            obj = payload.get("object") or payload.get("object_data") or payload.get("author")
+
+            if not actor or not obj:
+                return JsonResponse({"detail": "Missing actor or object in followRequest"}, status=400)
+
+            actor_serial = (
+                actor.get("serial")
+                or (actor.get("id").rstrip("/").split("/")[-1] if actor.get("id") else None)
             )
-            if created_dt:
-                author_obj.created = created_dt
-            if updated_dt:
-                author_obj.updated = updated_dt
-            author_obj.save()
+            object_serial = (
+                obj.get("serial")
+                or (obj.get("id").rstrip("/").split("/")[-1] if obj.get("id") else None)
+            )
 
-    # Process entry/post
-    try:
-        result = entries_services.process_federated_public_post(payload)
-        status_map = {"created": 201, "exists": 200, "updated": 200, "ignored": 200, "error": 400}
-        status_code = status_map.get(result.get("status"), 400)
-        return JsonResponse({"detail": "ok", "status": result.get("status")}, status=status_code)
-    except Exception as e:
-        return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
+            if not actor_serial or not object_serial:
+                return JsonResponse({"detail": "Invalid actor/object serial"}, status=400)
+
+            actor_author, _created = Author.objects.get_or_create(
+                serial=actor_serial,
+                defaults={
+                    "displayName": actor.get("displayName", ""),
+                    "github": actor.get("github", ""),
+                    "host": actor.get("host", ""),
+                    "profileImage": actor.get("profileImage", ""),
+                    "description": actor.get("description", ""),
+                    "web": actor.get("web", actor.get("url", "")),
+                    "is_local": False,
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                }
+            )
+
+            object_author, _created = Author.objects.get_or_create(
+                serial=object_serial,
+                defaults={
+                    "displayName": obj.get("displayName", ""),
+                    "github": obj.get("github", ""),
+                    "host": obj.get("host", ""),
+                    "profileImage": obj.get("profileImage", ""),
+                    "description": obj.get("description", ""),
+                    "web": obj.get("web", obj.get("url", "")),
+                    "is_local": False,
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                }
+            )
+
+
+            fr, created = FollowRequest.objects.get_or_create(
+                actor=actor_author,
+                object=object_author
+            )
+
+            return JsonResponse(
+                {"detail": "follow request processed", "created": created},
+                status=201 if created else 200
+            )
+
+        except Exception as e:
+            return JsonResponse({"detail": f"Follow request error: {e}"}, status=400)
+
+# entry
+    if type == "":
+        actor_data = (
+            payload.get("actor_data")
+            or payload.get("author_data")
+            or payload.get("author")
+        )
+
+        if actor_data:
+            serial = (
+                actor_data.get("serial")
+                or (actor_data.get("id").split("/")[-1] if actor_data.get("id") else None)
+            )
+
+            if serial:
+                defaults = {
+                    "displayName": actor_data.get("displayName", ""),
+                    "github": actor_data.get("github", ""),
+                    "host": actor_data.get("host", ""),
+                    "profileImage": actor_data.get("profileImage", ""),
+                    "description": actor_data.get("description", ""),
+                    "web": actor_data.get("web", actor_data.get("url", "")),
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_approved": True,
+                    "is_local": False,
+                }
+
+                created_dt = (
+                    parse_datetime(actor_data.get("created"))
+                    if actor_data.get("created") else None
+                )
+                updated_dt = (
+                    parse_datetime(actor_data.get("updated"))
+                    if actor_data.get("updated") else None
+                )
+
+                author_obj, created = Author.objects.update_or_create(
+                    serial=serial,
+                    defaults=defaults
+                )
+
+                if created_dt: author_obj.created = created_dt
+                if updated_dt: author_obj.updated = updated_dt
+                author_obj.save()
+
+        try:
+            result = entries_services.process_federated_public_post(payload)
+            status_map = {
+                "created": 201,
+                "exists": 200,
+                "updated": 200,
+                "ignored": 200,
+                "error": 400
+            }
+            status_code = status_map.get(result.get("status"), 400)
+            return JsonResponse(
+                {"detail": "ok", "status": result.get("status")},
+                status=status_code
+            )
+
+        except Exception as e:
+            return JsonResponse({"detail": f"Entry processing error: {e}"}, status=400)
 
 # Entries
 def api_author_entries(request, author_serial):
