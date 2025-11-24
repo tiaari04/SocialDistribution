@@ -155,6 +155,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         direction = payload.get('direction')
         
         if direction == 'outgoing':
+            print("OUTGOING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
             object_fqid = payload.get('object')
@@ -184,16 +185,17 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'created', 'object': like}
         
         elif direction == 'incoming':
+            print("INCOMING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object')
+            object_fqid = payload.get('object_fqid') 
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
-            
+
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
                 return {'status': 'exists', 'object': existing}
-            
+
             like = Like.objects.create(
                 fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
                 author=author,
@@ -201,7 +203,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 published=payload.get('published') or timezone.now(),
             )
             like.save()
-            
+
             return {'status': 'created', 'object': like}
 
     if typ == 'post' or typ == 'entry':
