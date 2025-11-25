@@ -469,6 +469,7 @@
                 async function likeComment(entryFqid, commentFqid) {
                     const payload = {
                         type: "like",
+                        direction: "outgoing",
                         author: currUser,
                         object: commentFqid,
                     }
