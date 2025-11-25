@@ -101,6 +101,9 @@ def remove_followed_author(author, actor):
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req_with_actor(actor, obj)
     data["type"] = "followRequest"
+    # team gold checks for type "follow"
+    if "golden" in obj.host: 
+        data["type"] = "follow"
     inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
     print(obj.host)
     print(data)
