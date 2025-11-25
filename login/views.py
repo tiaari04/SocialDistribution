@@ -76,7 +76,7 @@ def signup_view(request):
                 profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
             # Create Author instance
-            serial = uuid.uuid4()
+            serial = str(uuid.uuid4())
             author = Author.objects.create(
                 id=f"{domain}/authors/{serial}",
                 user=user,
