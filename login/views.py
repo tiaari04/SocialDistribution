@@ -24,6 +24,7 @@ from .forms import CustomSignupForm
 from django.utils.crypto import get_random_string
 from adminpage.models import HostedImage
 import os
+import uuid
 
 def login_view(request):
     if request.method == "POST":
@@ -75,7 +76,7 @@ def signup_view(request):
                 profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
             # Create Author instance
-            serial = get_random_string(12)
+            serial = uuid.uuid4()
             author = Author.objects.create(
                 id=f"{domain}/authors/{serial}",
                 user=user,
@@ -86,7 +87,7 @@ def signup_view(request):
                 web=form.cleaned_data.get('web', ''),
                 description=form.cleaned_data.get('description', ''),
                 is_local=True,
-                serial=serial.lower(),
+                serial=serial,
             )
 
             # do not log in until validated

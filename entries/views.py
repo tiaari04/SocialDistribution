@@ -112,7 +112,7 @@ def github_webhook(request):
 
         content = (f"{author_name} {action} a pull request in {repo}: {title}")
 
-        serial = uuid.uuid4().hex[:12]
+        serial = uuid.uuid4()
         fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
 
         entry = Entry.objects.create(
@@ -275,7 +275,7 @@ def entry_create(request, author_serial):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.author = author
-            entry.serial = uuid.uuid4().hex[:12]
+            entry.serial = uuid.uuid4()
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
