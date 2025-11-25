@@ -101,12 +101,8 @@ def remove_followed_author(author, actor):
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req_with_actor(actor, obj)
     data["type"] = "followRequest"
-    # team gold checks for type "follow"
-    if "golden" in obj.host: 
-        data["type"] = "follow"
     inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
     print(obj.host)
-    print(data)
 
     base_url = obj.host.rstrip("/")
 
@@ -129,6 +125,12 @@ def send_remote_follow_request(actor, obj):
         print(local_node.name)
         print("do we ever get here???????")
         headers = local_node.get_auth_headers()
+        # team golden checks for type "follow" and "referer" in header
+        if "golden" in obj.host: 
+            data["type"] = "follow"
+            headers["Referer"] = "https://golden-node3-9618067f65b0.herokuapp.com"
+            print(data)
+            print(headers)
         logger.info(f"headers: {headers}")
         
         response = requests.post(
