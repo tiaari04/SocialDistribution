@@ -130,6 +130,7 @@ def send_like_to_federation(like):
     return results
 
 def send_comment_to_federation(comment):
+    print('SENDING COMMENT TO FEDERATION')
     active_nodes = FederatedNode.objects.filter(is_active=True)
 
     if not active_nodes.exists():
@@ -169,7 +170,7 @@ def send_comment_to_federation(comment):
         # The inbox of the *recipient entry's author*
         recipient_serial = entry_obj.author.serial
         inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox/"
-
+        print(inbox_url)
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
 
@@ -373,21 +374,26 @@ def create_remote_author(author_data):
     if serial == '':
         return
 
-    author, created = Author.objects.update_or_create(
-        id=author_id,
-        defaults={
-            "displayName": displayName,
-            "host": host,
-            "github": author_data.get("github", ""),
-            "profileImage": author_data.get("profileImage", ""),
-            "web": author_data.get("web", ""),
-            "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
-            "is_local": False, 
-            "is_approved": True,  
-            "serial": serial,      
-        }
-    )
-    print("created:", displayName)
+    # if author_id is one of our local authors
+    # skip updating or creating since other nodes shouldn't be able to edit our authors 
+    # since gold is modifying our profile images and sending them back wrong
+    ids = list(Author.objects.filter(is_local=True).values_list('id', flat=True))
+    if author_id not in ids: 
+        author, created = Author.objects.update_or_create(
+            id=author_id,
+            defaults={
+                "displayName": displayName,
+                "host": host,
+                "github": author_data.get("github", ""),
+                "profileImage": author_data.get("profileImage", ""),
+                "web": author_data.get("web", ""),
+                "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
+                "is_local": False, 
+                "is_approved": True,  
+                "serial": serial,      
+            }
+        )
+        print("created:", displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
