@@ -1,28 +1,19 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.core.files.storage import default_storage
 from django.conf import settings
 from .forms import CustomSignupForm
-from authors.models import Author
 from django.utils.crypto import get_random_string
 from django.contrib.sites.models import Site
 from django.urls import reverse
-from adminpage.models import HostedImage
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.urls import reverse
-from authors.models import Author
-
-
-from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate, login
-from django.urls import reverse
-from authors.models import Author
 from django.contrib.sites.models import Site
 from .forms import CustomSignupForm
 from django.utils.crypto import get_random_string
+
+from authors.models import Author
+from federation.models import FederatedNode
 from adminpage.models import HostedImage
+
 import os
 import uuid
 
@@ -62,7 +53,12 @@ def signup_view(request):
 
             current_site = Site.objects.get_current()
 
-            domain = os.getenv("NODE_ID", "")
+            domain = ''
+            try:
+                local_node = FederatedNode.objects.get(is_local=True)
+                domain = local_node.base_url.rstrip('/')
+            except Exception as e:
+                print("Error getting domain: ", e)
 
             profile_url = ""
             uploaded_file = form.cleaned_data.get("profileImageFile")
