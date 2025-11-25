@@ -103,6 +103,7 @@ def send_remote_follow_request(actor, obj):
     data["type"] = "followRequest"
     inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
     print(obj.host)
+    print(data)
 
     base_url = obj.host.rstrip("/")
 
