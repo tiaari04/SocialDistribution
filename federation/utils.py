@@ -269,6 +269,7 @@ def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None)
         logger.info(
             f"Sending federation payload to {node.name} @ {target_url}"
         )
+        print('sending payload:', payload)
 
         response = requests.post(
             target_url,
