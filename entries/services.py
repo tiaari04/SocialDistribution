@@ -234,27 +234,26 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         fqid = payload.get('fqid') or payload.get('id')
         if not fqid:
             return {'status': 'error', 'error': 'missing_fqid'}
-        
-        # Check if entry already exists (idempotent)
-        existing_entry = Entry.objects.filter(fqid=fqid).first()
-        if existing_entry:
-            return {'status': 'exists', 'object': existing_entry}
-        
-        # Create the entry
-        entry = Entry.objects.create(
-            author=author,
-            serial=payload.get('serial') or fqid.split('/')[-1],
+     
+        # Update or create the entry
+        entry, created = Entry.objects.update_or_create(
             fqid=fqid,
-            title=payload.get('title', ''),
-            content=payload.get('content', ''),
-            description=payload.get('description', ''),
-            content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
-            visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
-            image_url=payload.get('image_url', ''),
-            web=payload.get('web', ''),
-            published=payload.get('published') or timezone.now(),
-            is_local=False
+            defaults={
+                "author": author,
+                "serial": payload.get('serial') or fqid.split('/')[-1],
+                "title"=payload.get('title', ''),
+                "content"=payload.get('content', ''),
+                "description"=payload.get('description', ''),
+                "content_type"=payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
+                "visibility"=payload.get('visibility', Entry.Visibility.PUBLIC),
+                "image_url"=payload.get('image_url', ''),
+                "web"=payload.get('web', ''),
+                "published"=payload.get('published') or timezone.now(),
+                "is_local"=False,
+            }            
         )
+        entry.is_edited = not created
+        entry.save()
         return {'status': 'created', 'object': entry}
 
     if typ == 'follow' or typ == 'followrequest' or typ == 'followRequest':
@@ -276,6 +275,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             if not author_followed.is_local:
                 from inbox.services import send_remote_follow_request
                 try:
+                    print('sending remote follow req')
                     send_remote_follow_request(actor, author_followed)
                     follow_request = FollowRequest.objects.create(
                         actor=actor,
