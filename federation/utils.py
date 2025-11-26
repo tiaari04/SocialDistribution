@@ -142,6 +142,7 @@ def send_comment_to_federation(comment):
         "id": comment.get("fqid"),
         "entry": comment.get("entry"),
         "content": comment.get("content"),
+        "comment": comment.get("content"),
         "content_type": comment.get("content_type"),
         "likes_count": comment.get("likes_count"),
         "published": comment.get("published").isoformat()
