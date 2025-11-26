@@ -241,15 +241,15 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             defaults={
                 "author": author,
                 "serial": payload.get('serial') or fqid.split('/')[-1],
-                "title"=payload.get('title', ''),
-                "content"=payload.get('content', ''),
-                "description"=payload.get('description', ''),
-                "content_type"=payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
-                "visibility"=payload.get('visibility', Entry.Visibility.PUBLIC),
-                "image_url"=payload.get('image_url', ''),
-                "web"=payload.get('web', ''),
-                "published"=payload.get('published') or timezone.now(),
-                "is_local"=False,
+                "title": payload.get('title', ''),
+                "content": payload.get('content', ''),
+                "description": payload.get('description', ''),
+                "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
+                "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
+                "image_url": payload.get('image_url', ''),
+                "web": payload.get('web', ''),
+                "published": payload.get('published') or timezone.now(),
+                "is_local": False,
             }            
         )
         entry.is_edited = not created
