@@ -593,7 +593,7 @@
                                 {{ entry.description }}
                             </h3>
                             <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
-                                {{ entry.content }}
+                                {{ entry.content|striptags }}
                             </p>
 
                             {% if entry.image_url %}
