@@ -113,6 +113,7 @@ def send_remote_follow_request(actor, obj):
 
     inbox_url = base_url + f"/api/authors/{obj.serial}/inbox/"
     print('target url:', inbox_url)
+    print(data)
     
     node = FederatedNode.objects.get(base_url=base_url)
 
