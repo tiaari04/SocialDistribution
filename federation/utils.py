@@ -186,7 +186,7 @@ def send_comment_to_federation(comment):
 
 def _build_entry_payload(entry):
     payload = {
-        "type": "post",
+        "type": "entry",
         "author_id": entry.get("author_id") or "",
         "content": entry.get("content") or "",
         "content_type": entry.get("content_type") or "",
