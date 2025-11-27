@@ -86,6 +86,7 @@ def _ensure_author(author_payload: dict) -> Author:
 
     is_local = (host_base == local_base)
     serial = author_payload.get("uuid") or author_id.rstrip("/").split("/")[-1]
+    is_approved = not is_local
 
     # get newest list of authors before checking that they exist
     sync_remote_authors()
@@ -100,6 +101,7 @@ def _ensure_author(author_payload: dict) -> Author:
             'profileImage': author_payload.get('profileImage', ''),
             'description': author_payload.get("summary", "") or author_payload.get("note", "") or author_payload.get("bio", ""),
             'is_local': is_local,
+            'is_approved': is_approved,
             'serial': serial,  
         }
     )
