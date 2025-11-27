@@ -98,7 +98,7 @@ def _ensure_author(author_payload: dict) -> Author:
             'web': author_payload.get('web', ''),
             'github': author_payload.get("github", ""),
             'profileImage': author_payload.get('profileImage', ''),
-            'description': author_payload.get("summary", "") or author_payload.get("note", "") or author_data.get("bio", ""),
+            'description': author_payload.get("summary", "") or author_payload.get("note", "") or author_payload.get("bio", ""),
             'is_local': is_local,
             'serial': serial,  
         }
