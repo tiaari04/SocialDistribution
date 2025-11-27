@@ -2,7 +2,7 @@ from django.forms import model_to_dict
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseForbidden
 from adminpage.models import HostedImage
 from inbox.models import FollowRequest
-from .models import Entry
+from .models import Entry, Like
 from authors.models import Author
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import EntryForm
@@ -55,7 +55,7 @@ def github_webhook(request):
 
             content = (f"{author_name} pushed to {repo}: {message}")
 
-            serial = uuid.uuid4().hex[:12]
+            serial = str(uuid.uuid4())
             fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
 
             entry = Entry.objects.create(
@@ -67,6 +67,31 @@ def github_webhook(request):
                 published=timezone.now(),
                 fqid=fqid
             )
+
+            entry_dict = {
+                "fqid": entry.fqid,
+                "serial": entry.serial,
+                "title": entry.title,
+                "web": entry.web,
+                "description": entry.description,
+                "content": entry.content,
+                "image_url": entry.image_url,
+                "is_local": False,
+                "content_type": entry.content_type,
+                "is_edited": entry.is_edited,
+                "likes_count": entry.likes_count,
+                "visibility": entry.visibility,
+                "created": entry.created.isoformat() if entry.created else "",
+                "updated": entry.updated.isoformat() if entry.updated else "",
+                "author_id": str(entry.author.id) if entry.author else "",
+                "published": entry.published.isoformat() if entry.published else "",
+            }
+            
+            try:
+                send_entry_to_federation(entry_dict)
+            except Exception as e:
+                logger.error(f"Federation error: {e}")
+
             entries_created.append(entry.serial)
 
     elif event == "pull_request":
@@ -87,7 +112,7 @@ def github_webhook(request):
 
         content = (f"{author_name} {action} a pull request in {repo}: {title}")
 
-        serial = uuid.uuid4().hex[:12]
+        serial = str(uuid.uuid4())
         fqid = f"{request.build_absolute_uri('/')[:-1]}/authors/{author.serial}/entries/{serial}"
 
         entry = Entry.objects.create(
@@ -99,6 +124,31 @@ def github_webhook(request):
             published=timezone.now(),
             fqid=fqid
         )
+
+        entry_dict = {
+            "fqid": entry.fqid,
+            "serial": entry.serial,
+            "title": entry.title,
+            "web": entry.web,
+            "description": entry.description,
+            "content": entry.content,
+            "image_url": entry.image_url,
+            "is_local": False,
+            "content_type": entry.content_type,
+            "is_edited": entry.is_edited,
+            "likes_count": entry.likes_count,
+            "visibility": entry.visibility,
+            "created": entry.created.isoformat() if entry.created else "",
+            "updated": entry.updated.isoformat() if entry.updated else "",
+            "author_id": str(entry.author.id) if entry.author else "",
+            "published": entry.published.isoformat() if entry.published else "",
+        }
+        
+        try:
+            send_entry_to_federation(entry_dict)
+        except Exception as e:
+            logger.error(f"Federation error: {e}")
+
         entries_created.append(entry.serial)
     else:
         return JsonResponse({'status': 'ignored', 'event': event})
@@ -107,7 +157,6 @@ def github_webhook(request):
 
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
-
 
     following = FollowRequest.objects.filter(
         actor=current_author, state=FollowRequest.State.ACCEPTED
@@ -120,30 +169,68 @@ def stream_home(request, author_serial):
     friends = set(following).intersection(followers)
 
 
-    base_entries = Entry.objects.exclude(visibility=Entry.Visibility.DELETED)
+    local_entries = Entry.objects.filter(is_local=True).exclude(
+        visibility=Entry.Visibility.DELETED
+    )
 
+    local_public = local_entries.filter(
+        visibility=Entry.Visibility.PUBLIC
+    )
 
-    public_entries = base_entries.filter(visibility=Entry.Visibility.PUBLIC)
-    unlisted_entries = base_entries.filter(
+    local_unlisted = local_entries.filter(
         visibility=Entry.Visibility.UNLISTED,
         author_id__in=followers
     )
-    friends_entries = base_entries.filter(
+
+    local_friends = local_entries.filter(
         visibility=Entry.Visibility.FRIENDS,
         author_id__in=friends
     )
-    own_entries = base_entries.filter(author=current_author)
+
+    local_own = local_entries.filter(
+        author=current_author
+    )
+
+    local_visible = (
+        local_public |
+        local_unlisted |
+        local_friends |
+        local_own
+    )
+
+    remote_entries = Entry.objects.filter(is_local=False).exclude(
+        visibility=Entry.Visibility.DELETED
+    )
+
+    remote_public_friends = remote_entries.filter(
+        visibility=Entry.Visibility.PUBLIC,
+        author_id__in=friends
+    )
+
+    remote_friends_only = remote_entries.filter(
+        visibility=Entry.Visibility.FRIENDS,
+        author_id__in=friends
+    )
+
+    remote_visible = (
+        remote_public_friends |
+        remote_friends_only
+    )
 
     entries = (
-        public_entries
-        | unlisted_entries
-        | friends_entries
-        | own_entries
+        local_visible |
+        remote_visible
     ).select_related("author").order_by("-published")
+
+    likes = Like.objects.filter(fqid__icontains=current_author.id)
+    like_ids = []
+    for like in likes: 
+        like_ids.append(like.object_fqid)
 
     return render(request, "stream_home.html", {
         "entries": entries,
         "author": current_author,
+        "likes": like_ids,
     })
 
 def public_entries(request):
@@ -188,7 +275,7 @@ def entry_create(request, author_serial):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.author = author
-            entry.serial = uuid.uuid4().hex[:12]
+            entry.serial = str(uuid.uuid4())
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
             entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
@@ -199,7 +286,7 @@ def entry_create(request, author_serial):
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
             elif 'image_file' in request.FILES:
                 uploaded_file = request.FILES['image_file']
-                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
+                hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=False)
                 hosted.save()
                 entry.image_url = request.build_absolute_uri(hosted.file.url)
             
@@ -299,7 +386,7 @@ def entry_edit(request, author_serial, entry_serial):
                 # 3) Otherwise, if a new file was uploaded, use it
                 elif 'image_file' in request.FILES:
                     uploaded_file = request.FILES['image_file']
-                    hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=True)
+                    hosted = HostedImage(file=uploaded_file, uploaded_by=request.user, admin_uploaded=False)
                     hosted.save()
                     entry.image_url = request.build_absolute_uri(hosted.file.url)
 
@@ -315,6 +402,7 @@ def entry_edit(request, author_serial, entry_serial):
                 "description": entry.description,
                 "content": entry.content,
                 "image_url": entry.image_url,
+                "is_local": False,
                 "content_type": entry.content_type,
                 "is_edited": entry.is_edited,
                 "likes_count": entry.likes_count,
@@ -355,6 +443,7 @@ def entry_delete(request, author_serial, entry_serial):
             "description": entry.description,
             "content": entry.content,
             "image_url": entry.image_url,
+            "is_local": False,
             "content_type": entry.content_type,
             "is_edited": entry.is_edited,
             "likes_count": entry.likes_count,

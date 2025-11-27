@@ -4,6 +4,7 @@
     <head>
         <title>Red Social Dist | Home</title>
         <meta charset="UTF-8">
+        <meta name="csrf-token" content="{{ csrf_token }}">
         <style>
             body {
                 overflow: auto;
@@ -310,30 +311,21 @@
                 })
             })
         </script>
-        <!-- Get cookies -->
-        <script>
-            'use strict';
-            // following function from Stack Overflow, https://stackoverflow.com/questions/62416617/add-csrf-in-fetch-js-for-django. 2025-10-20
-            function getCookie(name) {
-                var cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    var cookies = document.cookie.split(';');
-                    for (var i = 0; i < cookies.length; i++) {
-                        var cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-        </script>
         <!-- User session info -->
         <script>
             'use strict';
             const userName = '{{ author.displayName }}';
             const userFqid = '{{ author.id }}';
+            const currUser = {
+                type: "author",
+                id: userFqid || "",
+                host: '{{ author.host }}' || "",
+                displayName: '{{ author.displayName }}' || "",
+                github: '{{ author.github }}' || "",
+                profileImage: '{{ author.profileImage }}' || "",
+                web: '{{ author.web }}' || ""
+            };
+            const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
         </script>
         <!-- Handle like functionality -->
         <script>
@@ -342,12 +334,18 @@
                 const likeButtons = document.querySelectorAll('.likeButton');
 
                 // like functions 
-                async function likeEntry(entryFqid) {
-                    const eEncoded = encodeURIComponent(entryFqid);
-                    const res = await fetch(`/api/entries/${eEncoded}/likes/`, {
+                async function likeEntry(entryFqid, endpoint) {
+                    const payload = {
+                        type: "like",
+                        direction: "outgoing",
+                        author: currUser,
+                        object: entryFqid,
+                    };
+
+                    const res = await fetch(endpoint, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the post
-                        body: JSON.stringify({}),
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the post
+                        body: JSON.stringify(payload),
                     }) .then(() => window.location.reload());
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
@@ -355,7 +353,7 @@
                 
                 likeButtons.forEach(button => {
                     button.addEventListener('click', () => {
-                        likeEntry(button.dataset.fqid);
+                        likeEntry(button.dataset.fqid, button.dataset.endpoint);
                     });
                 });
             })
@@ -436,6 +434,7 @@
                 let authorSerial = null;
                 let entrySerial = null;
                 let entryFqid = null;
+                let endpoint = null;
 
                 // comment panel functions 
                 async function getComments(entryFqid) {
@@ -450,23 +449,35 @@
                 }
 
                 async function postComment(entryFqid, text) {
-                    const eEncoded = encodeURIComponent(entryFqid);
-                    const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
+                    const payload = {
+                        type: "comment",
+                        direction: "outgoing",
+                        author: currUser,
+                        entry: entryFqid,
+                        content: text,
+                    }
+
+                    const res = await fetch(endpoint, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that sent the comment
-                        body: JSON.stringify({ comment: text }),
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that sent the comment
+                        body: JSON.stringify(payload),
                     })
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
                 }
 
                 async function likeComment(entryFqid, commentFqid) {
-                    const eEncoded = encodeURIComponent(entryFqid);
-                    const cEncoded = encodeURIComponent(commentFqid);
-                    const res = await fetch(`/api/entries/${eEncoded}/comments/${cEncoded}/likes/`, {
+                    const payload = {
+                        type: "like",
+                        direction: "outgoing",
+                        author: currUser,
+                        object: commentFqid,
+                    }
+
+                    const res = await fetch(endpoint, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": getCookie("csrftoken") }, //author that liked the comment
-                        body: JSON.stringify({}),
+                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the comment
+                        body: JSON.stringify(payload),
                     }) .then(() => openComments(entryFqid));
                     if (!res.ok) throw new Error(await res.text());
                     return res.json();
@@ -485,7 +496,7 @@
                             clone.id = comment.fqid;
                             clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
                             clone.querySelector('.commentText').textContent = comment.content; 
-                            clone.querySelector('.commentLikes').textContent = `${comment.likes_count} likes`; 
+                            clone.querySelector('.commentLikes').textContent = `${comment.likes_count} ${comment.likes_count === 1 ? "like" : "likes"}`; 
 
                             const likeButton = clone.querySelector('.likeButton');
                             likeButton.addEventListener('click', async () => {
@@ -523,6 +534,7 @@
                     button.addEventListener('click', () => {
                         // store entryFqid for handling adding comments
                         entryFqid = button.dataset.fqid;
+                        endpoint = button.dataset.endpoint;
                         openComments(button.dataset.fqid);
                     });
                 });
@@ -546,6 +558,9 @@
         <header>
             <h3>CMPUT404</h3>
             <a href="{% url 'authors:list' %}">All Authors</a>
+            {% if request.user.is_authenticated and request.user.author.is_admin %}
+                <a href="{% url 'adminpage:dashboard' %}">Admin</a>
+            {% endif %}
             {% if request.user.is_authenticated %}
                 <a href="{% url 'authors:detail' author.serial %}">
                     <img class='profilePhoto' src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
@@ -560,19 +575,12 @@
                     <li id="post_{{ entry.fqid }}" class="post">
                         <section class="user">
                             <section class="username">
-                                {% if entry.author.is_local %}
-                                    <a href="{% url 'authors:detail' entry.author.serial %}">
-                                        <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
-                                        {{ entry.author.displayName }}
-                                    </a>
-                                {% else %}
-                                    <a href="{{ entry.author.id }}" target="_blank" rel="noopener noreferrer">
-                                        <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
-                                        {{ entry.author.displayName }}
-                                    </a>
-                                {% endif %}
+                                <a href="{% url 'authors:detail' entry.author.serial %}">
+                                    <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
+                                    {{ entry.author.displayName }}
+                                </a>
                             </section>
-                            <button data-fqid="{{ entry.fqid }}" class="share">
+                            <button data-fqid="{{ entry.fqid }}/" class="share">
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>
@@ -585,7 +593,7 @@
                                 {{ entry.description }}
                             </h3>
                             <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
-                                {{ entry.content }}
+                                {{ entry.content|striptags }}
                             </p>
 
                             {% if entry.image_url %}
@@ -596,13 +604,21 @@
                         </section> 
 
                         <section class="reactions">
-                            <p>{{ entry.likes_count }} likes</p>
+                            <p>{{ entry.likes_count }} {% if entry.likes_count == 1 %}like{% else %}likes{% endif %}</p>
                             {% if request.user.is_authenticated %}
                             <div>
-                                <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="likeButton">
+                                <button 
+                                data-fqid="{{ entry.fqid }}" 
+                                data-author="{{ entry.author.id }}" 
+                                data-endpoint="{% url 'api:author-inbox' author.serial %}" 
+                                class="likeButton">
                                     Like
                                 </button>
-                                <button data-fqid="{{ entry.fqid }}" data-author="{{ entry.author.id }}" class="commentButton">
+                                <button 
+                                data-fqid="{{ entry.fqid }}" 
+                                data-author="{{ entry.author.id }}" 
+                                data-endpoint="{% url 'api:author-inbox' author.serial %}"
+                                class="commentButton">
                                     Comment
                                 </button>
 

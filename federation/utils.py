@@ -1,40 +1,76 @@
 import requests
+from authors.models import Author
+from entries.models import Entry
 from datetime import datetime
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from adminpage.models import HostedImage
+from .models import FederatedNode, FederationLog
 import logging
 import base64
 
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-
-from authors.models import Author
-from adminpage.models import HostedImage
-from .models import FederatedNode, FederationLog
-
 logger = logging.getLogger(__name__)
 
+def sync_remote_authors():
+    active_nodes = FederatedNode.objects.filter(is_active=True, is_local=False)
+    synced_authors = []
+
+    if not active_nodes.exists():
+        logger.info("No remote nodes to sync authors from.")
+        return synced_authors
+
+    for node in active_nodes:
+        headers = {}
+        try:
+            url = f"{node.base_url.rstrip('/')}/api/authors/"
+            if node.name.lower() == "skyblue":
+                headers = {'Content-Type': 'application/json'}
+            else:
+                headers = node.get_auth_headers() if hasattr(node, "get_auth_headers") else {}
+            logger.info(f"Fetching authors from {node.name} @ {url}")
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+
+            data = response.json()
+            print(data)
+            author_list = data.get("items") or data.get("authors") or []
+            for author_data in author_list:
+                create_remote_author(author_data)
+                synced_authors.append(author_data.get("id"))
+
+        except requests.RequestException as e:
+            logger.warning(f"Failed to fetch authors from {node.name}: {e}")
+        except Exception as e:
+            logger.error(f"Error syncing authors from {node.name}: {e}")
+
+    logger.info(f"Synced {len(synced_authors)} remote authors.")
+    return synced_authors
 
 def send_entry_to_federation(entry):
     active_nodes = FederatedNode.objects.filter(is_active=True)
-
+    
     if not active_nodes.exists():
         return {"successful": 0, "failed": 0, "logs": []}
-
+    
     payload = _build_entry_payload(entry)
+    results = {"successful": 0, "failed": 0, "logs": []}
 
-    results = {
-        "successful": 0,
-        "failed": 0,
-        "logs": [],
-    }
+    try:
+        author_fqid = entry.get("author_id") or ""
+        author_serial = author_fqid.rstrip("/").split("/")[-1]
+    except Exception as e:
+        logger.error(f"Could not determine author serial for entry {entry.get('fqid')}: {e}")
+        return results
 
     for node in active_nodes:
         if node.is_local:
             continue
 
-        # Entries still go to the normal inbox URL (e.g. /api/authors/)
-        log_entry = _send_to_node(node, payload, entry.get("fqid"))
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{author_serial}/inbox/"
+        
+        log_entry = _send_to_node(node, payload, entry.get("fqid"), endpoint_suffix=inbox_url)
         results["logs"].append(log_entry)
-
+        
         if log_entry.status == FederationLog.Status.SUCCESS:
             results["successful"] += 1
         else:
@@ -45,6 +81,107 @@ def send_entry_to_federation(entry):
         f"{results['successful']} successful, {results['failed']} failed"
     )
     return results
+
+def send_like_to_federation(like):
+    print("SENDING TO FEDERATION")
+    active_nodes = FederatedNode.objects.filter(is_active=True)
+    
+    if not active_nodes.exists():
+        return {"successful": 0, "failed": 0, "logs": []}
+
+    payload = {
+        "type": "like",
+        "direction": "incoming",
+        "id": like.get('fqid'),
+        "object_fqid": like.get('object_fqid'),
+        "published": like.get('published').isoformat() if isinstance(like.get("published"), datetime) else like.get("published") or "",
+    }
+
+    results = {
+        "successful": 0,
+        "failed": 0,
+        "logs": []
+    }
+
+    try:
+        serial=like.get("author_id").split("/")[-1]
+        author = get_object_or_404(Author, serial=serial)
+        author_data = _build_author_payload(author)
+        payload["author"] = author_data
+    except Exception as e:
+        logger.error(f"Error building author data: {e}")
+
+    for node in active_nodes:
+        if node.is_local:
+            continue
+
+        #inbox_url = f"{node.base_url}/federation/like/"
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{serial}/inbox/"
+        print(inbox_url)
+        log_entry = _send_to_node(node, payload, like.get("fqid"), inbox_url)
+        results["logs"].append(log_entry)
+        
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+
+    logger.info(f"Federation send complete: {results['successful']} successful, {results['failed']} failed")
+    return results
+
+def send_comment_to_federation(comment):
+    print('SENDING COMMENT TO FEDERATION')
+    active_nodes = FederatedNode.objects.filter(is_active=True)
+
+    if not active_nodes.exists():
+        return {"successful": 0, "failed": 0, "logs": []}
+
+    payload = {
+        "type": "comment",
+        "direction": "incoming",
+        "id": comment.get("fqid"),
+        "entry": comment.get("entry"),
+        "content": comment.get("content"),
+        "comment": comment.get("content"),
+        "content_type": comment.get("content_type"),
+        "likes_count": comment.get("likes_count"),
+        "published": comment.get("published").isoformat()
+            if hasattr(comment.get("published"), "isoformat")
+            else comment.get("published"),
+        "web": comment.get("web"),
+    }
+
+    # Add author payload
+    try:
+        serial = comment.get("author_id").split("/")[-1]
+        author = get_object_or_404(Author, serial=serial)
+        payload["author"] = _build_author_payload(author)
+    except Exception as e:
+        logger.error(f"Error building author data: {e}")
+
+    entry_obj = get_object_or_404(Entry, fqid=comment.get("entry"))
+
+    results = {"successful": 0, "failed": 0, "logs": []}
+
+    for node in active_nodes:
+        # Don't send to ourselves
+        if node.is_local or entry_obj.is_local:
+            continue
+
+        # The inbox of the *recipient entry's author*
+        recipient_serial = entry_obj.author.serial
+        inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox/"
+        print(inbox_url)
+        log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
+        results["logs"].append(log_entry)
+
+        if log_entry.status == FederationLog.Status.SUCCESS:
+            results["successful"] += 1
+        else:
+            results["failed"] += 1
+
+    return results
+
 
 
 def _build_entry_payload(entry):
@@ -60,6 +197,7 @@ def _build_entry_payload(entry):
         "description": entry.get("description") or "",
         "fqid": entry.get("fqid") or "",
         "image_url": entry.get("image_url") or "",
+        "is_local": False,
         "is_edited": entry.get("is_edited")
         if entry.get("is_edited") is not None
         else False,
@@ -77,70 +215,53 @@ def _build_entry_payload(entry):
         "visibility": entry.get("visibility") or "",
         "web": entry.get("web") or "",
     }
-
+    
     try:
-        author = get_object_or_404(
-            Author, serial=entry.get("author_id").split("/")[-1]
-        )
-        author_data = {
-            "id": str(author.id),
-            "serial": author.serial or "",
-            "displayName": author.displayName or "",
-            "github": author.github or "",
-            "host": author.host or "",
-            "is_active": author.is_active
-            if hasattr(author, "is_active")
-            else True,
-            "is_admin": author.is_admin
-            if hasattr(author, "is_admin")
-            else False,
-            "is_approved": author.is_approved
-            if hasattr(author, "is_approved")
-            else True,
-            "is_local": False,
-            "profileImage": author.profileImage or "",
-            "description": author.description or "",
-            "web": author.web or "",
-            "created": author.created.isoformat()
-            if hasattr(author, "created") and author.created
-            else "",
-            "updated": author.updated.isoformat()
-            if hasattr(author, "updated") and author.updated
-            else "",
-        }
+        author_fqid = entry.get("author_id") or ""
+        author_serial = author_fqid.rstrip("/").split("/")[-1]
+        author = get_object_or_404(Author, serial=author_serial)
+        author_data = _build_author_payload(author)
         payload["author_id"] = str(author.id)
         payload["author_data"] = author_data
     except Exception as e:
         logger.error(f"Error building author data: {e}")
+    
+    return payload
+
+def _build_author_payload(author):
+    payload = {
+        "id": str(author.id),
+        "serial": author.serial or "",
+        "displayName": author.displayName or "",
+        "github": author.github or "",
+        "host": author.host or "",
+        "is_active": author.is_active if hasattr(author, 'is_active') else True,
+        "is_admin": author.is_admin if hasattr(author, 'is_admin') else False,
+        "is_approved": author.is_approved if hasattr(author, 'is_approved') else True,
+        "is_local": False,
+        "profileImage": author.profileImage or "",
+        "description": author.description or "",
+        "web": author.web or "",
+        "created": author.created.isoformat() if hasattr(author, 'created') and author.created else "",
+        "updated": author.updated.isoformat() if hasattr(author, 'updated') and author.updated else "",
+    }
 
     return payload
 
+def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None):
 
-def _send_to_node(
-    node, payload, entry_fqid, endpoint_suffix: str | None = None
-):
-    """
-    Send a payload to a node.
-
-    If endpoint_suffix is provided, it is appended to full_inbox_url, e.g.:
-
-        node.full_inbox_url = "https://node/api/authors/"
-        endpoint_suffix     = "images/new/"
-
-    => target_url = "https://node/api/authors/images/new/"
-    """
-    # Build target URL
     target_url = node.full_inbox_url
+    print(f"target url: {target_url}")
     if endpoint_suffix:
-        target_url = target_url.rstrip("/") + "/" + endpoint_suffix.lstrip("/")
+        target_url = endpoint_suffix
 
     log_entry = FederationLog.objects.create(
         node=node,
         entry_fqid=entry_fqid or "unknown",
         request_payload=payload,
-        status=FederationLog.Status.PENDING,
+        status=FederationLog.Status.PENDING
     )
-
+    
     try:
         local_node = FederatedNode.objects.get(is_local=True)
         headers = local_node.get_auth_headers()
@@ -148,18 +269,19 @@ def _send_to_node(
         logger.info(
             f"Sending federation payload to {node.name} @ {target_url}"
         )
+        print('sending payload:', payload)
 
         response = requests.post(
             target_url,
             json=payload,
             headers=headers,
-            timeout=30,
+            timeout=30
         )
-
+        
         log_entry.response_status_code = response.status_code
         log_entry.response_body = response.text[:5000]
         log_entry.completed = timezone.now()
-
+        
         if response.status_code in [200, 201]:
             log_entry.status = FederationLog.Status.SUCCESS
             node.record_success()
@@ -180,7 +302,7 @@ def _send_to_node(
         log_entry.completed = timezone.now()
         node.record_failure()
         logger.error(f"Error sending to {node.name}: {e}")
-
+    
     except Exception as e:
         log_entry.status = FederationLog.Status.FAILURE
         log_entry.error_message = (
@@ -189,22 +311,22 @@ def _send_to_node(
         log_entry.completed = timezone.now()
         node.record_failure()
         logger.exception(f"Unexpected error sending to {node.name}")
-
+    
     finally:
         log_entry.save()
-
+    
     return log_entry
 
 
 def get_federation_status():
     """
     Get a summary of federation node statuses.
-
+    
     Returns:
         dict: Summary of all nodes and their health
     """
     nodes = FederatedNode.objects.all()
-
+    
     return {
         "total_nodes": nodes.count(),
         "active_nodes": nodes.filter(is_active=True).count(),
@@ -219,14 +341,12 @@ def get_federation_status():
                 "last_successful_send": node.last_successful_send,
             }
             for node in nodes
-        ],
+        ]
     }
-
 
 def check_basic_auth(request):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Basic "):
-        print("here1")
         return None
 
     encoded = auth_header.split(" ")[1]
@@ -238,17 +358,44 @@ def check_basic_auth(request):
         return None
 
     try:
-        print("here3")
         return FederatedNode.objects.get(
             auth_method=FederatedNode.AuthMethod.BASIC,
             username=username,
             password=password,
             is_active=True,
-            is_local=False,
+            is_local=False
         )
     except FederatedNode.DoesNotExist:
         return None
 
+def create_remote_author(author_data):
+    author_id = author_data.get("id")
+    host = author_data.get("host", "").rstrip("/")
+    displayName = author_data.get("displayName") or author_data.get("username") or ""
+    serial = author_data.get("uuid") or author_id.rstrip("/").split("/")[-1]
+    if serial == '':
+        return
+
+    # if author_id is one of our local authors
+    # skip updating or creating since other nodes shouldn't be able to edit our authors 
+    # since gold is modifying our profile images and sending them back wrong
+    ids = list(Author.objects.filter(is_local=True).values_list('id', flat=True))
+    if author_id not in ids: 
+        author, created = Author.objects.update_or_create(
+            id=author_id,
+            defaults={
+                "displayName": displayName,
+                "host": host,
+                "github": author_data.get("github", ""),
+                "profileImage": author_data.get("profileImage", ""),
+                "web": author_data.get("web", ""),
+                "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
+                "is_local": False, 
+                "is_approved": True,  
+                "serial": serial,      
+            }
+        )
+        print("created:", displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
@@ -265,8 +412,8 @@ def _build_image_payload(image: HostedImage) -> dict:
 
     return {
         "type": "hosted_image",
-        "file_name": file_name,        # used by receiver to set HostedImage.file
-        "url": image.url,              # nice to have for debugging / preview
+        "file_name": file_name,     
+        "url": image.url,         
         "created": image.created_at.isoformat()
         if getattr(image, "created_at", None)
         else "",
@@ -302,12 +449,11 @@ def send_image_to_federation(image: HostedImage, nodes=None):
     ref_id = f"image:{image.pk}"
 
     for node in nodes:
-        # 🔴 Important: tell _send_to_node to use the images endpoint
         log_entry = _send_to_node(
             node=node,
             payload=payload,
             entry_fqid=ref_id,
-            endpoint_suffix="images/new/",
+            endpoint_suffix=f"{node.base_url.rstrip('/')}/federation/images/new/",
         )
         results["logs"].append(log_entry)
 

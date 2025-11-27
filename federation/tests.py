@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.utils import timezone
 from authors.models import Author
 from federation.models import FederatedNode, FederationLog
-from federation.utils import send_entry_to_federation, get_federation_status, _build_entry_payload
+from federation.utils import send_entry_to_federation, send_like_to_federation, send_comment_to_federation, get_federation_status, _build_entry_payload
 
 
 class FederatedNodeModelTests(TestCase):
@@ -183,6 +183,69 @@ class FederationUtilsTests(TestCase):
         self.active_node.refresh_from_db()
         self.assertEqual(self.active_node.total_sends, 1)
         self.assertEqual(self.active_node.total_failures, 0)
+
+    @patch('federation.utils.requests.post')
+    def test_send_like_success(self, mock_post):
+        """Test successful like sending"""
+        mock_post.return_value = Mock(status_code=200, text='{"status": "ok"}')
+
+        like_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#like-1",
+            "object_fqid": "http://localhost:8000/authors/test123/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        results = send_like_to_federation(like_dict)
+
+        self.assertEqual(results['successful'], 1)
+        self.assertEqual(results['failed'], 0)
+        
+        # Check log was created
+        log = FederationLog.objects.first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.status, FederationLog.Status.SUCCESS)
+        self.assertEqual(log.response_status_code, 200)
+        
+        # Check node statistics updated
+        self.active_node.refresh_from_db()
+        self.assertEqual(self.active_node.total_sends, 1)
+        self.assertEqual(self.active_node.total_failures, 0)
+
+    @patch('federation.utils.requests.post')
+    def test_send_comment_success(self, mock_post):
+        """Test successful comment sending"""
+        mock_post.return_value = Mock(status_code=200, text='{"status": "ok"}')
+
+        comment_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#comment-1",
+            "content": "Test comment",
+            "content_type": "text/plain",
+            "entry_id": "http://localhost:8000/api/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "likes_count": 3,
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        results = send_comment_to_federation(comment_dict)
+
+        self.assertEqual(results['successful'], 1)
+        self.assertEqual(results['failed'], 0)
+        
+        # Check log was created
+        log = FederationLog.objects.first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.status, FederationLog.Status.SUCCESS)
+        self.assertEqual(log.response_status_code, 200)
+        
+        # Check node statistics updated
+        self.active_node.refresh_from_db()
+        self.assertEqual(self.active_node.total_sends, 1)
+        self.assertEqual(self.active_node.total_failures, 0)
     
     @patch('federation.utils.requests.post')
     def test_send_entry_failure(self, mock_post):
@@ -214,9 +277,72 @@ class FederationUtilsTests(TestCase):
         self.active_node.refresh_from_db()
         self.assertEqual(self.active_node.total_sends, 1)
         self.assertEqual(self.active_node.total_failures, 1)
+
+    @patch('federation.utils.requests.post')
+    def test_send_like_failure(self, mock_post):
+        """Test failed like sending"""
+        mock_post.return_value = Mock(status_code=500, text='Internal Server Error')
+        
+        like_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#like-1",
+            "object_fqid": "http://localhost:8000/authors/test123/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        results = send_like_to_federation(like_dict)
+        
+        self.assertEqual(results['successful'], 0)
+        self.assertEqual(results['failed'], 1)
+        
+        # Check log was created
+        log = FederationLog.objects.first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.status, FederationLog.Status.FAILURE)
+        self.assertEqual(log.response_status_code, 500)
+        
+        # Check node statistics updated
+        self.active_node.refresh_from_db()
+        self.assertEqual(self.active_node.total_sends, 1)
+        self.assertEqual(self.active_node.total_failures, 1)
+
+    @patch('federation.utils.requests.post')
+    def test_send_comment_failure(self, mock_post):
+        """Test failed comment sending"""
+        mock_post.return_value = Mock(status_code=500, text='Internal Server Error')
+        
+        comment_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#comment-1",
+            "content": "Test comment",
+            "content_type": "text/plain",
+            "entry_id": "http://localhost:8000/api/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "likes_count": 3,
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        results = send_comment_to_federation(comment_dict)
+        
+        self.assertEqual(results['successful'], 0)
+        self.assertEqual(results['failed'], 1)
+        
+        # Check log was created
+        log = FederationLog.objects.first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.status, FederationLog.Status.FAILURE)
+        self.assertEqual(log.response_status_code, 500)
+        
+        # Check node statistics updated
+        self.active_node.refresh_from_db()
+        self.assertEqual(self.active_node.total_sends, 1)
+        self.assertEqual(self.active_node.total_failures, 1)
     
     @patch('federation.utils.requests.post')
-    def test_send_entry_network_error(self, mock_post):
+    def test_send_network_error(self, mock_post):
         """Test network error handling"""
         mock_post.side_effect = Exception("Network unreachable")
         
@@ -230,10 +356,41 @@ class FederationUtilsTests(TestCase):
             "updated": timezone.now(),
         }
         
-        results = send_entry_to_federation(entry_dict)
+        entry_results = send_entry_to_federation(entry_dict)
         
-        self.assertEqual(results['successful'], 0)
-        self.assertEqual(results['failed'], 1)
+        self.assertEqual(entry_results['successful'], 0)
+        self.assertEqual(entry_results['failed'], 1)
+
+        like_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#like-1",
+            "object_fqid": "http://localhost:8000/authors/test123/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        like_results = send_like_to_federation(like_dict)
+
+        self.assertEqual(like_results['successful'], 0)
+        self.assertEqual(like_results['failed'], 1)
+
+        comment_dict = {
+            "fqid": "http://localhost:8000/authors/test123/entries/entry123/#comment-1",
+            "content": "Test comment",
+            "content_type": "text/plain",
+            "entry_id": "http://localhost:8000/api/entries/entry123",
+            "author_id": "http://localhost:8000/api/authors/test123",
+            "likes_count": 3,
+            "created": timezone.now(),
+            "published": timezone.now(),
+            "updated": timezone.now(),
+        }
+
+        comment_results = send_comment_to_federation(comment_dict)
+
+        self.assertEqual(comment_results['successful'], 0)
+        self.assertEqual(comment_results['failed'], 1)
         
         # Check error was logged
         log = FederationLog.objects.first()

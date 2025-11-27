@@ -23,7 +23,8 @@ class Entry(TimeStampedModel):
     description = models.TextField(blank=True)
     content = models.TextField(blank=True)
     image_url = models.URLField(max_length=2000, blank=True, null=True)
-
+    is_local = models.BooleanField(default=True)
+    is_edited = models.BooleanField(default=False)
 
     class ContentType(models.TextChoices):
         MARKDOWN = "text/markdown", "text/markdown"

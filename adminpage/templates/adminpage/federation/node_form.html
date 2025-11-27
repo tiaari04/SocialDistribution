@@ -68,6 +68,21 @@
                 </li>
               </ul>
             </li>
+
+            <li>
+              <label style="display: block; margin-bottom: 4px; font-weight: 500;">Is Local *</label>
+              <div style="display: flex; gap: 16px; align-items: center;">
+                <label>
+                  <input type="radio" name="is_local" value="true" 
+                    {% if node and node.is_local %}checked{% endif %}> Yes
+                </label>
+                <label>
+                  <input type="radio" name="is_local" value="false" 
+                    {% if node and not node.is_local %}checked{% endif %}> No
+                </label>
+              </div>
+              <small style="color: #666;">Indicates whether this node is your local node</small>
+            </li>
           </ul>
         </li>
 
