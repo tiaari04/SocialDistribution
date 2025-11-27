@@ -369,6 +369,10 @@ def check_basic_auth(request):
         return None
 
 def create_remote_author(author_data):
+    author_id = author_payload.get('id')
+    if not author_id:
+        return None
+        
     # Normalize missing slashes
     author_id = author_id.rstrip('/').encode('utf-8').decode('unicode-escape')
     host = author_data.get("host", "").rstrip("/")
