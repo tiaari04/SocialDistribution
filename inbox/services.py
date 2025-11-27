@@ -125,8 +125,6 @@ def send_remote_follow_request(actor, obj):
     
     try:
         local_node = FederatedNode.objects.get(is_local=True)
-        print(local_node.name)
-        print("do we ever get here???????")
         headers = local_node.get_auth_headers()
         # team golden checks for type "follow"
         if "golden" in obj.host: 
