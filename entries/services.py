@@ -85,7 +85,7 @@ def _ensure_author(author_payload: dict) -> Author:
     local_base = local_node.base_url.rstrip('/')
 
     is_local = (host_base == local_base)
-    serial = author_data.get("uuid") or author_id.rstrip("/").split("/")[-1]
+    serial = author_payload.get("uuid") or author_id.rstrip("/").split("/")[-1]
 
     # get newest list of authors before checking that they exist
     sync_remote_authors()
@@ -93,12 +93,12 @@ def _ensure_author(author_payload: dict) -> Author:
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
-            'displayName': author_data.get("displayName") or author_data.get("username") or "",
+            'displayName': author_payload.get("displayName") or author_data.get("username") or "",
             'host': host,
             'web': author_payload.get('web', ''),
-            'github': author_data.get("github", ""),
+            'github': author_payload.get("github", ""),
             'profileImage': author_payload.get('profileImage', ''),
-            'description': author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
+            'description': author_payload.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
             'is_local': is_local,
             'serial': serial,  
         }
