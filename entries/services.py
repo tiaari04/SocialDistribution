@@ -4,7 +4,7 @@ from federation.models import FederatedNode
 from .models import Entry, Comment, Like
 from django.utils import timezone
 from django.forms.models import model_to_dict
-from federation.utils import send_like_to_federation, send_comment_to_federation
+from federation.utils import send_like_to_federation, send_comment_to_federation, sync_remote_authors
 from django.utils.dateparse import parse_datetime
 
 
@@ -85,6 +85,9 @@ def _ensure_author(author_payload: dict) -> Author:
     local_base = local_node.base_url.rstrip('/')
 
     is_local = (host_base == local_base)
+
+    # get newest list of authors before checking that they exist
+    sync_remote_authors()
 
     author, _ = Author.objects.get_or_create(
         id=author_id,

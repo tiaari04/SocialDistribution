@@ -369,6 +369,7 @@ def check_basic_auth(request):
         return None
 
 def create_remote_author(author_data):
+    print(author_data)
     author_id = author_data.get("id")
     host = author_data.get("host", "").rstrip("/")
     displayName = author_data.get("displayName") or author_data.get("username") or ""
