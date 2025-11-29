@@ -134,12 +134,12 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
 
-        normalized_entry_fqid = entry_fqid.rstrip('/')
+        normalized_entry_fqid = entry_fqid
         print("here1")
 
         if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
             # If so, replace the first instance of '/authors/' with '/api/authors/'
-            normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1)
+            normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1).rstrip('/')
 
         try:
             print(normalized_entry_fqid)
