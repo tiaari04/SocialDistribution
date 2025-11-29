@@ -185,14 +185,14 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     if typ == 'like':
         print(payload)
         direction = payload.get('direction')
+        object_fqid = object_fqid = payload.get('object_fqid').rstrip('/') or payload.get('object').rstrip('/')
+        if not object_fqid:
+                return {'status': 'error', 'error': 'missing_object'}
         
         if direction == 'outgoing':
             print("OUTGOING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object')
-            if not object_fqid:
-                return {'status': 'error', 'error': 'missing_object'}
             
             if author:
                 existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
@@ -220,9 +220,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             print("INCOMING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object_fqid') or payload.get('object')
-            if not object_fqid:
-                return {'status': 'error', 'error': 'missing_object'}
 
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
