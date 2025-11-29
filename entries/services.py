@@ -135,6 +135,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'error', 'error': 'missing_entry'}
 
         normalized_entry_fqid = entry_fqid.rstrip('/')
+        print("here1")
 
         if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
             # If so, replace the first instance of '/authors/' with '/api/authors/'
@@ -144,7 +145,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             entry = Entry.objects.get(fqid=normalized_entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
-
+        print("here1")
         # Ensure comment has an fqid
         comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
 
