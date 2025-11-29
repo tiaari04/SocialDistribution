@@ -185,7 +185,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     if typ == 'like':
         print(payload)
         direction = payload.get('direction')
-        object_fqid = object_fqid = payload.get('object_fqid').rstrip('/') or payload.get('object').rstrip('/')
+        object_fqid = payload.get('object_fqid').rstrip('/') or payload.get('object').rstrip('/')
         if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
         
