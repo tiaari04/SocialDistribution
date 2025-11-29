@@ -105,9 +105,11 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     Returns a dict with keys: 'status' (created/ignored/error) and 'object' (Comment/Like or None).
     """
     # Find recipient author by serial
+    print(payload)
     try:
         recipient = Author.objects.get(serial=recipient_serial)
     except Author.DoesNotExist:
+        print("no author")
         return {'status': 'error', 'error': 'recipient_not_found'}
 
     print(payload)
