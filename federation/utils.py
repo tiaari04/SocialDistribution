@@ -32,11 +32,10 @@ def sync_remote_authors():
             response.raise_for_status()
 
             data = response.json()
-            print(data)
             author_list = data.get("items") or data.get("authors") or []
             for author_data in author_list:
                 author_id = author_data.get("id")
-                
+
                 # if author is local
                 if Author.objects.filter(id=author_id, is_local=True).exists():
                     logger.info(f"Skipping local author {author_id}")

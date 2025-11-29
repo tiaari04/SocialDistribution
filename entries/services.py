@@ -130,12 +130,18 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
 
-        entry_fqid = payload.get('entry')
+        entry_fqid = payload.get('entry') or payload.get('object')
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
 
+        normalized_entry_fqid = entry_fqid
+
+        if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
+            # If so, replace the first instance of '/authors/' with '/api/authors/'
+            normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1)
+
         try:
-            entry = Entry.objects.get(fqid=entry_fqid)
+            entry = Entry.objects.get(fqid=normalized_entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
 
