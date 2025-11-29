@@ -188,7 +188,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         object_fqid = payload.get('object_fqid') or payload.get('object')
         if not object_fqid:
             return {'status': 'error', 'error': 'missing_object'}
-        object_fqid = object_fqid..rstrip('/')
+        object_fqid = object_fqid.rstrip('/')
         
         if direction == 'outgoing':
             print("OUTGOING")
