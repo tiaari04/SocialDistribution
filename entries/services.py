@@ -234,6 +234,44 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             like.save()
 
             return {'status': 'created', 'object': like}
+        
+    comments_block = payload.get("comments", {})
+    comments_src = comments_block.get("src", [])
+    if typ == "entry" and comments_src:
+        created_comments = []
+        for c in comments_src:
+            author_payload = c.get("author") or {}
+            author = _ensure_author(author_payload)
+
+            entry_fqid = payload.get("id") or payload.get("fqid") or payload.get("url")
+            if not entry_fqid:
+                continue
+
+            try:
+                entry = Entry.objects.get(fqid=entry_fqid)
+            except Entry.DoesNotExist:
+                continue
+
+            comment_fqid = c.get("id") or f"{entry_fqid}#comment-{timezone.now().timestamp()}"
+
+            existing = Comment.objects.filter(fqid=comment_fqid).first()
+            if existing:
+                continue
+
+            comment = Comment.objects.create(
+                fqid=comment_fqid,
+                author=author,
+                entry=entry,
+                content=c.get("content", ""),
+                content_type=c.get("contentType") or c.get("content_type") or Entry.ContentType.MARKDOWN,
+                published=c.get("published") or timezone.now(),
+                web=c.get("web", "")
+            )
+
+            created_comments.append(comment)
+
+    if created_comments:
+        return {"status": "created", "object": created_comments}
 
     if typ == 'post' or typ == 'entry':
         # Handle incoming federated posts
