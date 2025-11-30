@@ -13,6 +13,7 @@ import json
 from entries import services as entries_services
 from authors.models import Author
 from inbox.models import FollowRequest
+from django.views.decorators.csrf import csrf_exempt
 
 
 @login_required
@@ -152,6 +153,7 @@ def follow_requests_page(request, author_serial):
 
 	return render(request, "followPages/followRequests.html", context)
 
+@csrf_exempt
 def author_inbox(request, author_serial):
 
     if request.method != 'POST':
