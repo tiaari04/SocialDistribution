@@ -258,7 +258,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 "description": payload.get('description', ''),
                 "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
                 "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
-                "image_url": (payload.get('image_url', '') or (payload.get('url'))),
+                "image_url": (payload.get('image_url', '') or (payload.get('Image').get('url'))),
                 "web": payload.get('web', ''),
                 "published": payload.get('published') or timezone.now(),
                 "is_local": False,
