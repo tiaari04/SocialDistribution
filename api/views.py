@@ -144,6 +144,8 @@ def api_author_following_detail(request, author_serial, foreign_encoded):
 		return JsonResponse({"detail": "Method not allowed"}, status=405)
 
 	from authors.models import Author
+	decoded_serial = decode(author_serial, 'unicode_escape')
+	author_serial = unquote(decoded_serial)
 	author = get_object_or_404(Author, serial=author_serial)
 	actor_fqid = decode(foreign_encoded, 'unicode_escape')
 	actor_fqid = unquote(actor_fqid)

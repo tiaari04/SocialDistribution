@@ -74,7 +74,7 @@ def signup_view(request):
             # Create Author instance
             serial = str(uuid.uuid4())
             author = Author.objects.create(
-                id=f"{domain}/authors/{serial}",
+                id=f"{domain}/api/authors/{serial}",
                 user=user,
                 host=f"{domain}/api/",
                 displayName=user.username,

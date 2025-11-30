@@ -4,7 +4,7 @@ from federation.models import FederatedNode
 from .models import Entry, Comment, Like
 from django.utils import timezone
 from django.forms.models import model_to_dict
-from federation.utils import send_like_to_federation, send_comment_to_federation
+from federation.utils import send_like_to_federation, send_comment_to_federation, sync_remote_authors
 from django.utils.dateparse import parse_datetime
 
 
@@ -85,15 +85,24 @@ def _ensure_author(author_payload: dict) -> Author:
     local_base = local_node.base_url.rstrip('/')
 
     is_local = (host_base == local_base)
+    serial = author_payload.get("uuid") or author_id.rstrip("/").split("/")[-1]
+    is_approved = not is_local
+
+    # get newest list of authors before checking that they exist
+    sync_remote_authors()
 
     author, _ = Author.objects.get_or_create(
         id=author_id,
         defaults={
-            'displayName': author_payload.get('displayName', author_id),
-            'host': author_payload.get('host', ''),
+            'displayName': author_payload.get("displayName") or author_payload.get("username") or "",
+            'host': host,
             'web': author_payload.get('web', ''),
+            'github': author_payload.get("github", ""),
             'profileImage': author_payload.get('profileImage', ''),
-            'is_local': is_local
+            'description': author_payload.get("summary", "") or author_payload.get("note", "") or author_payload.get("bio", ""),
+            'is_local': is_local,
+            'is_approved': is_approved,
+            'serial': serial,  
         }
     )
     return author
@@ -121,15 +130,23 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         author_payload = payload.get('author') or {}
         author = _ensure_author(author_payload)
 
-        entry_fqid = payload.get('entry')
+        entry_fqid = payload.get('entry') or payload.get('object')
         if not entry_fqid:
             return {'status': 'error', 'error': 'missing_entry'}
 
+        normalized_entry_fqid = entry_fqid
+        print("here1")
+
+        if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
+            # If so, replace the first instance of '/authors/' with '/api/authors/'
+            normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1).rstrip('/')
+
         try:
-            entry = Entry.objects.get(fqid=entry_fqid)
+            print(normalized_entry_fqid)
+            entry = Entry.objects.get(fqid=normalized_entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
-
+        print("here2")
         # Ensure comment has an fqid
         comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
 
@@ -170,14 +187,15 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     if typ == 'like':
         print(payload)
         direction = payload.get('direction')
+        object_fqid = payload.get('object_fqid') or payload.get('object')
+        if not object_fqid:
+            return {'status': 'error', 'error': 'missing_object'}
+        object_fqid = object_fqid.rstrip('/')
         
         if direction == 'outgoing':
             print("OUTGOING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object')
-            if not object_fqid:
-                return {'status': 'error', 'error': 'missing_object'}
             
             if author:
                 existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
@@ -205,9 +223,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             print("INCOMING")
             author_payload = payload.get('author') or {}
             author = _ensure_author(author_payload)
-            object_fqid = payload.get('object_fqid') or payload.get('object')
-            if not object_fqid:
-                return {'status': 'error', 'error': 'missing_object'}
 
             existing = Like.objects.filter(author=author, object_fqid=object_fqid).first()
             if existing:
@@ -234,27 +249,26 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         fqid = payload.get('fqid') or payload.get('id')
         if not fqid:
             return {'status': 'error', 'error': 'missing_fqid'}
-        
-        # Check if entry already exists (idempotent)
-        existing_entry = Entry.objects.filter(fqid=fqid).first()
-        if existing_entry:
-            return {'status': 'exists', 'object': existing_entry}
-        
-        # Create the entry
-        entry = Entry.objects.create(
-            author=author,
-            serial=payload.get('serial') or fqid.split('/')[-1],
+     
+        # Update or create the entry
+        entry, created = Entry.objects.update_or_create(
             fqid=fqid,
-            title=payload.get('title', ''),
-            content=payload.get('content', ''),
-            description=payload.get('description', ''),
-            content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
-            visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
-            image_url=payload.get('image_url', ''),
-            web=payload.get('web', ''),
-            published=payload.get('published') or timezone.now(),
-            is_local=False
+            defaults={
+                "author": author,
+                "serial": payload.get('serial') or fqid.split('/')[-1],
+                "title": payload.get('title', ''),
+                "content": payload.get('content', ''),
+                "description": payload.get('description', ''),
+                "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
+                "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
+                "image_url": payload.get('image_url', ''),
+                "web": payload.get('web', ''),
+                "published": payload.get('published') or timezone.now(),
+                "is_local": False,
+            }            
         )
+        entry.is_edited = not created
+        entry.save()
         return {'status': 'created', 'object': entry}
 
     if typ == 'follow' or typ == 'followrequest' or typ == 'followRequest':
@@ -276,6 +290,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             if not author_followed.is_local:
                 from inbox.services import send_remote_follow_request
                 try:
+                    print('sending remote follow req')
                     send_remote_follow_request(actor, author_followed)
                     follow_request = FollowRequest.objects.create(
                         actor=actor,
@@ -290,7 +305,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 follow_request = FollowRequest.objects.create(
                     actor=actor,
                     author_followed = author_followed,
-                    state=FollowRequest.State.ACCEPTED
+                    state=FollowRequest.State.REQUESTING
                 ) 
                 follow_request.save()
                 return {'status': 'created', 'object': follow_request}

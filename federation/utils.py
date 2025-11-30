@@ -32,9 +32,15 @@ def sync_remote_authors():
             response.raise_for_status()
 
             data = response.json()
-            print(data)
             author_list = data.get("items") or data.get("authors") or []
             for author_data in author_list:
+                author_id = author_data.get("id")
+
+                # if author is local
+                if Author.objects.filter(id=author_id, is_local=True).exists():
+                    logger.info(f"Skipping local author {author_id}")
+                    continue
+                
                 create_remote_author(author_data)
                 synced_authors.append(author_data.get("id"))
 
@@ -130,6 +136,7 @@ def send_like_to_federation(like):
     return results
 
 def send_comment_to_federation(comment):
+    print('SENDING COMMENT TO FEDERATION')
     active_nodes = FederatedNode.objects.filter(is_active=True)
 
     if not active_nodes.exists():
@@ -141,6 +148,7 @@ def send_comment_to_federation(comment):
         "id": comment.get("fqid"),
         "entry": comment.get("entry"),
         "content": comment.get("content"),
+        "comment": comment.get("content"),
         "content_type": comment.get("content_type"),
         "likes_count": comment.get("likes_count"),
         "published": comment.get("published").isoformat()
@@ -169,7 +177,7 @@ def send_comment_to_federation(comment):
         # The inbox of the *recipient entry's author*
         recipient_serial = entry_obj.author.serial
         inbox_url = f"{node.base_url.rstrip('/')}/api/authors/{recipient_serial}/inbox/"
-
+        print(inbox_url)
         log_entry = _send_to_node(node, payload, comment.get("fqid"), inbox_url)
         results["logs"].append(log_entry)
 
@@ -267,6 +275,7 @@ def _send_to_node(node, payload, entry_fqid, endpoint_suffix: str | None = None)
         logger.info(
             f"Sending federation payload to {node.name} @ {target_url}"
         )
+        print('sending payload:', payload)
 
         response = requests.post(
             target_url,
@@ -366,28 +375,38 @@ def check_basic_auth(request):
         return None
 
 def create_remote_author(author_data):
-    author_id = author_data.get("id")
+    author_id = author_data.get('id')
+    if not author_id:
+        return None
+
+    # Normalize missing slashes
+    author_id = author_id.rstrip('/').encode('utf-8').decode('unicode-escape')
     host = author_data.get("host", "").rstrip("/")
     displayName = author_data.get("displayName") or author_data.get("username") or ""
     serial = author_data.get("uuid") or author_id.rstrip("/").split("/")[-1]
     if serial == '':
         return
 
-    author, created = Author.objects.update_or_create(
-        id=author_id,
-        defaults={
-            "displayName": displayName,
-            "host": host,
-            "github": author_data.get("github", ""),
-            "profileImage": author_data.get("profileImage", ""),
-            "web": author_data.get("web", ""),
-            "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
-            "is_local": False, 
-            "is_approved": True,  
-            "serial": serial,      
-        }
-    )
-    print("created:", displayName)
+    # if author_id is one of our local authors
+    # skip updating or creating since other nodes shouldn't be able to edit our authors 
+    # since gold is modifying our profile images and sending them back wrong
+    ids = list(Author.objects.filter(is_local=True).values_list('id', flat=True))
+    if author_id not in ids: 
+        author, created = Author.objects.update_or_create(
+            id=author_id,
+            defaults={
+                "displayName": displayName,
+                "host": host,
+                "github": author_data.get("github", ""),
+                "profileImage": author_data.get("profileImage", ""),
+                "web": author_data.get("web", ""),
+                "description": author_data.get("summary", "") or author_data.get("note", "") or author_data.get("bio", ""),
+                "is_local": False, 
+                "is_approved": True,  
+                "serial": serial,      
+            }
+        )
+        print("created:", displayName)
 
 def _build_image_payload(image: HostedImage) -> dict:
     """
