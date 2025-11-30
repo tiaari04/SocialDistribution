@@ -237,8 +237,10 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         
     comments_block = payload.get("comments", {})
     comments_src = comments_block.get("src", [])
+
+    created_comments = []
+
     if typ == "entry" and comments_src:
-        created_comments = []
         for c in comments_src:
             author_payload = c.get("author") or {}
             author = _ensure_author(author_payload)
@@ -246,7 +248,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             entry_fqid = payload.get("id") or payload.get("fqid") or payload.get("url")
             if not entry_fqid:
                 continue
-
             try:
                 entry = Entry.objects.get(fqid=entry_fqid)
             except Entry.DoesNotExist:
@@ -254,8 +255,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
             comment_fqid = c.get("id") or f"{entry_fqid}#comment-{timezone.now().timestamp()}"
 
-            existing = Comment.objects.filter(fqid=comment_fqid).first()
-            if existing:
+            if Comment.objects.filter(fqid=comment_fqid).exists():
                 continue
 
             comment = Comment.objects.create(
@@ -263,15 +263,14 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 author=author,
                 entry=entry,
                 content=c.get("content", ""),
-                content_type=c.get("contentType") or c.get("content_type") or Entry.ContentType.MARKDOWN,
+                content_type=c.get("contentType")
+                    or c.get("content_type")
+                    or Entry.ContentType.MARKDOWN,
                 published=c.get("published") or timezone.now(),
                 web=c.get("web", "")
             )
 
             created_comments.append(comment)
-
-    if created_comments:
-        return {"status": "created", "object": created_comments}
 
     if typ == 'post' or typ == 'entry':
         # Handle incoming federated posts
