@@ -110,8 +110,8 @@ def send_remote_follow_request(actor, obj):
         base_url = base_url[:-4]   # remove /api
     elif base_url.endswith("/api/"):
         base_url = base_url[:-5]   # remove /api/
-
-    node = FederatedNode.objects.get(base_url=base_url.rstrip('/') + '/')
+    
+    node = FederatedNode.objects.get(base_url=base_url)
 
     log_entry = FederationLog.objects.create(
         node=node,
