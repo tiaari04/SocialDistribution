@@ -144,3 +144,7 @@ def follow_requests_page(request, author_serial):
 	context = {"author": author, "requests": requests}
 
 	return render(request, "followPages/followRequests.html", context)
+
+def author_inbox(request, author_serial){
+    print("HERE")
+}

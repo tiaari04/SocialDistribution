@@ -130,8 +130,11 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
         direction = payload.get('direction')
-        author_payload = payload.get('author') or {}
+        author_payload = payload.get('author_data') or payload.get('author') or {}
         author = _ensure_author(author_payload)
+        
+        if not author:
+            return {'status': 'error', 'error': 'missing_author'}
 
         entry_fqid = payload.get('entry')
         if not entry_fqid:
@@ -185,8 +188,11 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         
         if direction == 'outgoing':
             print("OUTGOING")
-            author_payload = payload.get('author') or {}
+            author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
             object_fqid = payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
@@ -215,8 +221,12 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         
         elif direction == 'incoming' or direction == "" or not direction:
             print("INCOMING")
-            author_payload = payload.get('author') or {}
+            author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
+        
             object_fqid = payload.get('object_fqid') or payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
