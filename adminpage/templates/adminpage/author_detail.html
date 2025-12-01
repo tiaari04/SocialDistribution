@@ -128,19 +128,11 @@
     /* NO fixed height or min-height — shrink-wrap to content */
   }
 
-  /* Keep visual cleanup, but don't mess with borders/layout */
   .entry-card *:not(img) {
     background-color: transparent !important;
     background-image: none !important;
-  }
-
-  /* Tight, consistent spacing inside cards */
-  .entry-card > * {
-    margin-top: 0.15rem;
-  }
-
-  .entry-card > *:first-child {
-    margin-top: 0;
+    border-left: none !important;
+    border-right: none !important;
   }
 
   .entry-card:hover {
@@ -150,10 +142,10 @@
 
   .meta {
     display: flex;
-    flex-direction: column;    /* title + date stacked */
     gap: .25rem;
     flex-wrap: wrap;
-    align-items: flex-start;   /* align to left so content sits right under title */
+    flex-direction: column;
+    align-items: flex-start;
     font-size: .7rem;
     color: #111827;
     min-width: 0;
@@ -228,7 +220,8 @@
   }
 
   /* Pagination */
-  .pagination isplay: flex;
+  .pagination {
+    display: flex;
     gap: .5rem;
     margin-top: 1rem;
     flex-wrap: wrap;
