@@ -4,8 +4,24 @@
 {% block styles %}
 {{ block.super }}
 <style>
-  /* Remove default bullets + spacing from all uls/lis in this page */
-  .author-form-container,
+  /* Page wrapper aligned with other admin pages */
+  .author-form-container {
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .author-form-header {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .author-form-header h1 {
+    margin: 0;
+  }
+
+  /* Reset list styling in this page only */
   .author-form-container ul,
   .author-form-container li {
     list-style: none;
@@ -13,39 +29,12 @@
     padding: 0;
   }
 
-  .author-form-container {
-    max-width: 960px;
-    margin-inline: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .author-form-card {
-    background-color: #ffffff;
-    border-radius: 18px;
-    border: 2px solid rgba(128, 0, 32, 0.10); /* burgundy theme */
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    padding: 18px 20px 20px;
-  }
-
-  .author-form-heading {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 4px 0;
-  }
-
-  .author-form-heading h1 {
-    margin: 0;
-  }
-
-  /* Form grid */
+  /* Grid for fields */
   .author-form-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-    padding: 16px 4px 4px;
+    gap: 20px;
+    padding: 0.75rem 0.25rem 0;
   }
 
   @media (max-width: 768px) {
@@ -60,15 +49,13 @@
     gap: 6px;
   }
 
-  .author-form-field-label {
+  .author-form-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-strong, #111827);
   }
 
   .author-form-help {
     font-size: 0.8rem;
-    color: var(--text-muted, #6b7280);
   }
 
   .author-form-errors {
@@ -76,26 +63,6 @@
     color: #b91c1c;
   }
 
-  /* Style all inputs inside the card to match theme */
-  .author-form-card input,
-  .author-form-card select,
-  .author-form-card textarea {
-    width: 100%;
-    border-radius: 10px;
-    border: 1px solid var(--gray-300, #d1d5db);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .author-form-card input:focus,
-  .author-form-card select:focus,
-  .author-form-card textarea:focus {
-    outline: none;
-    border-color: rgba(128, 0, 32, 0.6);
-    box-shadow: 0 0 0 1px rgba(128, 0, 32, 0.15);
-  }
-
-  /* Non-field errors box */
   .author-form-nonfield {
     margin-bottom: 12px;
     padding: 10px 12px;
@@ -103,29 +70,19 @@
     background: var(--gray-100, #f3f4f6);
     border: 1px solid var(--gray-200, #e5e7eb);
   }
-
-  /* Actions row */
-  .author-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding-top: 12px;
-    margin-top: 12px;
-    border-top: 1px solid rgba(0, 0, 0, 0.04);
-  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="author-form-container">
-  <li class="author-form-heading">
+<div class="author-form-container">
+  <div class="author-form-header">
     <h1 class="text-xl semibold text-primary">
       {% if form.instance.pk %}Edit Author{% else %}Add Author{% endif %}
     </h1>
-  </li>
+  </div>
 
-  <li class="author-form-card">
-    <form method="post">
+  <div class="card p-4">
+    <form method="post" class="column gap-4">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
@@ -136,17 +93,17 @@
       </ul>
       {% endif %}
 
-      <ul class="author-form-grid">
+      <div class="author-form-grid">
         {% for field in form.visible_fields %}
-        <li class="author-form-field">
-          <label for="{{ field.id_for_label }}" class="author-form-field-label">
+        <div class="author-form-field">
+          <label for="{{ field.id_for_label }}" class="author-form-label text-strong">
             {{ field.label }}
           </label>
 
           {{ field }}
 
           {% if field.help_text %}
-            <span class="author-form-help">
+            <span class="author-form-help text-muted">
               {{ field.help_text|safe }}
             </span>
           {% endif %}
@@ -158,15 +115,24 @@
               {% endfor %}
             </ul>
           {% endif %}
-        </li>
+        </div>
         {% endfor %}
-      </ul>
-
-      <div class="author-form-actions">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">Cancel</a>
       </div>
+
+      <!-- Actions row — uses your existing button + row theme -->
+      <ul class="row p-4">
+        <li>
+          <button type="submit" class="btn btn-primary">
+            Save
+          </button>
+        </li>
+        <li>
+          <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">
+            Cancel
+          </a>
+        </li>
+      </ul>
     </form>
-  </li>
-</ul>
+  </div>
+</div>
 {% endblock %}
