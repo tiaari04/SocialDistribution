@@ -4,7 +4,6 @@
 
 {% block styles %}
 {{ block.super }}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
   .author-detail-container {
     list-style: none;
@@ -29,6 +28,11 @@
     padding: 18px 20px 20px;
   }
 
+  .muted {
+    color: #6b7280;
+    font-size: .9rem;
+  }
+
   .author-heading {
     display: flex;
     flex-direction: column;
@@ -39,11 +43,7 @@
     margin: 0;
   }
 
-  .muted {
-    color: #6b7280;
-    font-size: .9rem;
-  }
-
+  /* Tabs */
   .tabs {
     display: flex;
     gap: .5rem;
@@ -101,7 +101,7 @@
     color: #111827;
   }
 
-  /* Entries grid */
+  /* Cards grid */
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -113,7 +113,7 @@
     border-radius: 12px;
     border: 1px solid rgba(128,0,32,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    padding: .6rem .65rem;
+    padding: .7rem .75rem;
     display: flex;
     flex-direction: column;
     gap: .35rem;
@@ -121,8 +121,7 @@
     transition: box-shadow 0.2s, transform 0.2s;
   }
 
-  /* Force neutral backgrounds on children and remove weird borders from nested elements */
-  .entry-card *:not(.entry-image) {
+  .entry-card *:not(img) {
     background-color: transparent !important;
     background-image: none !important;
     border-left: none !important;
@@ -134,78 +133,65 @@
     transform: translateY(-1px);
   }
 
-  .entry-meta {
+  .meta {
     display: flex;
+    gap: .4rem;
     flex-wrap: wrap;
-    gap: .3rem;
     align-items: center;
     font-size: .8rem;
-    color: #111827 !important;
-    line-height: 1.3;
+    color: #111827;
+    min-width: 0;
   }
 
-  .entry-meta strong {
-    color: #111827 !important;
+  .meta strong {
     font-weight: 600;
+    color: #111827;
   }
 
-  .entry-meta .muted {
-    color: #9ca3af !important;
-  }
-
-  .entry-description {
-    font-size: .8rem;
-    color: #6b7280 !important;
-    margin: 0;
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
-  }
-
-  .entry-content {
-    font-size: .8rem;
-    color: #374151 !important;
-    line-height: 1.4;
-    word-break: break-word;
-    white-space: pre-wrap;
-    display: -webkit-box;
-    -webkit-line-clamp: 3; /* shorter so cards aren't huge */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .entry-image {
-    width: 100%;
-    max-height: 100px;
-    min-height: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 6px;
-    display: block;
-    flex-shrink: 0;
+  .meta .muted {
+    color: #9ca3af;
+    font-size: .78rem;
   }
 
   .break-anywhere {
     word-break: break-word;
     overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .description-text {
+    font-size: .8rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  .content-preview {
+    margin-top: .4rem;
+    font-size: .8rem;
+    color: #374151;
+  }
+
+  .entry-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: .5rem;
+    margin-top: .4rem;
   }
 
   footer.entry-footer {
-    margin-top: auto;
-    padding-top: .375rem;
+    margin-top: .6rem;
+    padding-top: .4rem;
     border-top: 1px solid rgba(128,0,32,0.08);
     font-size: .7rem;
-    color: #9ca3af !important;
+    color: #9ca3af;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
   .entry-footer a {
-    color: #800020 !important;
+    color: #800020;
     text-decoration: none;
     font-size: .7rem;
   }
@@ -214,11 +200,7 @@
     text-decoration: underline;
   }
 
-  .content-type-label {
-    font-size: .7rem;
-    color: #9ca3af !important;
-  }
-
+  /* Pagination */
   .pagination {
     display: flex;
     gap: .5rem;
@@ -247,37 +229,12 @@
     color: #111827;
     font-weight: 600;
   }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    padding: 6px 14px;
-    background: #ffffff;
-    border: 2px solid rgba(128,0,32,0.20);
-    border-radius: 12px;
-    color: #800020;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  .back-btn:hover {
-    background: rgba(128,0,32,0.05);
-  }
 </style>
 {% endblock %}
 
 {% block content %}
 <ul class="author-detail-container">
-
-  <!-- Back button -->
-  <li>
-    <a href="{% url 'adminpage:authors' %}" class="back-btn">
-      <i class="fa-solid fa-arrow-left"></i> Back to Authors
-    </a>
-  </li>
-
-  <!-- Header + tabs card -->
+  <!-- Heading -->
   <li class="author-detail-card">
     <div class="author-heading">
       <h1 class="text-xl semibold text-primary">
@@ -295,6 +252,7 @@
       </p>
     </div>
 
+    <!-- Tabs -->
     <nav class="tabs" aria-label="Entry visibility tabs">
       {% for t in tabs %}
         <a class="tab{% if t.key == tab %} active{% endif %}"
@@ -306,7 +264,7 @@
     </nav>
   </li>
 
-  <!-- Entries card -->
+  <!-- Entries -->
   <li class="author-detail-card">
     {% if page_obj.object_list %}
       <div class="section-head">
@@ -326,41 +284,41 @@
         {% for e in page_obj.object_list %}
           <article class="entry-card">
             <header>
-              <div class="entry-meta break-anywhere">
+              <div class="meta break-anywhere">
                 <strong>{{ e.title|default:"(untitled)" }}</strong>
-                <span class="muted">{{ e.published|date:"m/d/y" }}</span>
+                <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
               </div>
             </header>
 
             {% if e.description %}
-              <p class="entry-description break-anywhere">
-                {{ e.description|truncatechars:80 }}
+              <p class="description-text break-anywhere">
+                {{ e.description|truncatechars:140 }}
               </p>
             {% endif %}
 
-            {# Display image if image_url exists #}
-            {% if e.image_url %}
-              <img
-                class="entry-image"
-                src="{{ e.image_url }}"
-                alt="{{ e.title|default:"Entry image" }}"
-              >
-            {% endif %}
-
-            {# Display text content based on content_type (markdown / plain / anything else) #}
-            {% if e.content %}
-              <div class="entry-content">
-                {% if "markdown" in e.content_type %}
-                  {{ e.content|linebreaksbr }}
-                {% else %}
-                  {{ e.content }}
+            <div class="content-preview break-anywhere">
+              {# Image entries: either content_type contains "image" OR image_url is set #}
+              {% if "image" in e.content_type|default_if_none:"" or e.image_url %}
+                {% if e.image_url %}
+                  <img src="{{ e.image_url }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
+                {% elif e.content %}
+                  <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
                 {% endif %}
-              </div>
-            {% endif %}
+              {% else %}
+                {% if e.content %}
+                  {{ e.content|truncatechars:220 }}
+                {% endif %}
+              {% endif %}
+            </div>
 
             <footer class="entry-footer">
               <span>❤️ {{ e.likes_count }}</span>
-              <a href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">View →</a>
+              <a class="break-anywhere"
+                 href="{{ e.fqid }}"
+                 target="_blank"
+                 rel="noopener noreferrer">
+                View →
+              </a>
             </footer>
           </article>
         {% endfor %}
