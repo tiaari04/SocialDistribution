@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
+  /* Container */
   .images-container {
     list-style: none;
     margin: 0;
@@ -17,10 +18,17 @@
     gap: 20px;
   }
 
-  .images-container > li {
-    list-style: none;
+  .images-container > li,
+  .images-card ul,
+  .images-grid li,
+  .images-row-inner li,
+  .list li {
+    list-style: none !important;
+    margin: 0;
+    padding: 0;
   }
 
+  /* Card */
   .images-card {
     background-color: #ffffff;
     border-radius: 18px;
@@ -104,22 +112,21 @@
     transform: translateY(-2px);
   }
 
-  /* Thumbnail */
+  /* Larger thumbnails */
   .thumb {
     display: block;
-    width: 56px;
-    height: 56px;
+    width: 64px;       /* larger */
+    height: 64px;      /* larger */
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .preview-cell {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
   }
 
-  /* Table layout */
+  /* Table / Grid */
   .images-header-row {
     background-color: #fff0f4;
     border-bottom: 1px solid rgba(128,0,32,0.12);
@@ -133,17 +140,18 @@
   .images-row-inner {
     display: grid;
     grid-template-columns:
-      minmax(80px, 0.8fr)   /* Preview */
-      minmax(260px, 3fr)    /* URL */
-      minmax(130px, 1.4fr); /* Actions */
+      minmax(90px, 0.9fr)
+      minmax(260px, 3fr)
+      minmax(160px, 1.4fr);
     gap: 16px;
     align-items: center;
     min-width: 680px;
   }
 
+  /* Larger row height */
   .images-row {
     border-top: 1px solid rgba(128,0,32,0.08);
-    padding: 10px 20px;
+    padding: 14px 22px; /* increased */
     background-color: #ffffff;
     transition: background .12s ease;
   }
@@ -154,15 +162,6 @@
 
   .images-row:hover {
     background-color: #ffeef5;
-  }
-
-  .list,
-  .list li,
-  .images-grid li,
-  .images-row-inner li {
-    list-style: none;
-    margin: 0;
-    padding: 0;
   }
 
   .break-anywhere {
@@ -179,17 +178,17 @@
     line-height: 1.5;
   }
 
-  /* Icon buttons */
+  /* Actions */
   .actions-wrap {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    justify-content: flex-start;
   }
 
+  /* Slightly larger buttons */
   .icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 38px;    /* was 34 */
+    height: 38px;   /* was 34 */
     border: none;
     color: #800020;
     background: transparent;
@@ -201,7 +200,7 @@
   }
 
   .icon-btn i {
-    font-size: 16px;
+    font-size: 18px;   /* was 16 */
   }
 
   .icon-btn:hover {
@@ -260,6 +259,7 @@
         {% for i in images %}
         <li class="images-row">
           <ul class="images-row-inner">
+
             <!-- Preview -->
             <li class="preview-cell">
               <img class="thumb" src="{{ i.url }}" alt="image">
@@ -273,6 +273,7 @@
             <!-- Actions -->
             <li>
               <div class="actions-wrap">
+
                 <a href="{% url 'adminpage:image-send' i.id %}"
                    class="icon-btn"
                    title="Send to other nodes">
@@ -287,8 +288,10 @@
                     <i class="fas fa-trash"></i>
                   </button>
                 </form>
+
               </div>
             </li>
+
           </ul>
         </li>
         {% empty %}
