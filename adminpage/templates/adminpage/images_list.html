@@ -112,22 +112,22 @@
     transform: translateY(-2px);
   }
 
-  /* Thumbnail (size unchanged) */
+
+  .preview-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px !important;
+  }
+
   .thumb {
-    display: block;
     width: 64px;
     height: 64px;
     object-fit: cover;
     border-radius: 14px;
-    margin-right: 8px; /* space between image and URL column */
+    display: block;
   }
 
-  /* Cell that holds the image: add breathing room */
-  .preview-cell {
-    display: flex;
-    align-items: center;
-    padding: 8px 4px 8px 6px; /* top, right, bottom, left */
-  }
 
   /* Table / Grid */
   .images-header-row {
