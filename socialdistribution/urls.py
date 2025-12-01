@@ -18,9 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
+
+def redirect_to_login(request):
+    return redirect('login:login')
 
 
 urlpatterns = [
+    path("", redirect_to_login),
+
     path("federation/", include(("federation.urls", "federation"), namespace="federation")), # federation endpoints
     path("admin/", admin.site.urls),
     path("adminpage/", include(("adminpage.urls", "adminpage"), namespace="adminpage")), #adminpage

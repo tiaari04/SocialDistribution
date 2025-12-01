@@ -96,6 +96,7 @@ class FederatedNode(models.Model):
             credentials = f"{self.username}:{self.password}"
             encoded = base64.b64encode(credentials.encode()).decode()
             headers['Authorization'] = f"Basic {encoded}"
+            print(self.username)
         
         return headers
 

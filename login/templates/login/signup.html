@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up</title>
-
+  <title>Red Social Dist | Sign Up</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     /* ---------- Layout ---------- */
     body {
@@ -14,14 +14,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #f9e5eb, #fce7ed);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 2rem 1rem;
     }
 
     main {
       background-color: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      border: 2px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0, 0, 0, 0.1);
       padding: 2.5rem;
       width: 100%;
       max-width: 900px;
@@ -35,8 +37,13 @@
     header h1 {
       font-size: 2rem;
       font-weight: 700;
-      color: #1f2937;
-      margin: 0;
+      color: #800020;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 0.95rem;
     }
 
     /* ---------- Form Layout ---------- */
@@ -60,19 +67,21 @@
 
     label {
       display: block;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.4rem;
+      font-weight: 600;
+      color: #800020;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
     }
 
     input,
     textarea,
     select {
       width: 100%;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.5rem;
+      padding: 12px;
+      border: 1px solid #d4a5a5;
+      border-radius: 10px;
       font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
       box-sizing: border-box;
@@ -81,12 +90,13 @@
     input:focus,
     textarea:focus,
     select:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+      border-color: #a00030;
+      box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
     }
 
     textarea {
       resize: vertical;
+      min-height: 100px;
     }
 
     /* Make description span full width */
@@ -95,57 +105,85 @@
     }
 
     .error {
-      color: #dc2626;
+      color: #c43535;
       font-size: 0.9rem;
       margin-top: 0.25rem;
     }
 
-    /* ---------- Button ---------- */
-    footer {
-      text-align: center;
-      margin-top: 1.5rem;
-      color: #6b7280;
-      font-size: 0.95rem;
+    /* Non-field errors */
+    .errorlist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem 0;
+      background-color: #fee;
+      border: 1px solid #fcc;
+      border-radius: 10px;
+      padding: 10px 15px;
+      color: #c43535;
+      font-size: 0.9rem;
+      grid-column: 1 / -1;
     }
 
+    .errorlist li {
+      margin: 0;
+    }
+
+    /* ---------- Button ---------- */
     .button-row {
       grid-column: 1 / -1;
     }
 
     button {
       width: 100%;
-      background-color: #6366f1;
+      background-color: #800020;
       color: white;
       border: none;
       font-weight: 600;
-      padding: 0.8rem;
-      border-radius: 0.5rem;
+      padding: 12px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.25s ease, transform 0.1s ease;
       font-size: 1rem;
-      box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.2s, transform 0.1s;
     }
 
     button:hover {
-      background-color: #4f46e5;
+      background-color: #a00030;
     }
 
     button:active {
       transform: scale(0.98);
     }
 
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #666;
+      font-size: 0.95rem;
+    }
+
     footer a {
-      color: #6366f1;
-      font-weight: 500;
+      color: #800020;
+      font-weight: 600;
       text-decoration: none;
     }
 
     footer a:hover {
+      color: #a00030;
       text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: 2rem 1.5rem;
+      }
+
+      header h1 {
+        font-size: 1.75rem;
+      }
     }
   </style>
 </head>
-
 <body>
   <main>
     <header>
@@ -154,12 +192,21 @@
 
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      {{ form.non_field_errors }}
+      
+      {% if form.non_field_errors %}
+        <ul class="errorlist">
+          {% for error in form.non_field_errors %}
+            <li> {{ error }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
 
       {% for field in form %}
         {% if field.name == "description" %}
           <fieldset class="description-field">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+            </label>
             {{ field }}
             {% if field.errors %}
               <p class="error">{{ field.errors|striptags }}</p>
@@ -167,7 +214,16 @@
           </fieldset>
         {% else %}
           <fieldset>
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <label for="{{ field.id_for_label }}">
+              {% if field.name == "username" %}{% endif %}
+              {% if field.name == "password1" or field.name == "password2" %}{% endif %}
+              {% if field.name == "email" %}{% endif %}
+              {% if field.name == "displayName" %}{% endif %}
+              {% if field.name == "github" %}{% endif %}
+              {% if field.name == "web" %}{% endif %}
+              {% if field.name == "profileImageFile" %}{% endif %}
+              {{ field.label }}
+            </label>
             {{ field }}
             {% if field.errors %}
               <p class="error">{{ field.errors|striptags }}</p>
@@ -177,12 +233,13 @@
       {% endfor %}
 
       <section class="button-row">
-        <button type="submit">Request Sign Up Approval</button>
+        <button type="submit">
+          Request Sign Up Approval
+        </button>
       </section>
     </form>
 
     <footer>
-      Already have an account?
       <a href="{% url 'login:login' %}">Log in</a>
     </footer>
   </main>

@@ -1,26 +1,137 @@
 {% extends "base_adminpage.html" %}
-{% block title %}Upload Image{% endblock %}
+{% block title %}Upload Hosted Image{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-/* page-specific (optional) */
-.maxw-xl{ max-width:40rem; }
+  .upload-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .upload-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 24px 26px 28px;
+    max-width: 40rem;
+  }
+
+  .upload-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+    margin-bottom: 24px;
+  }
+
+  /* --- FILE INPUT STYLING --- */
+  .file-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Hide real input */
+  .file-input-wrapper input[type="file"] {
+    display: none;
+  }
+
+  /* Nice choose-file button */
+  .file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #fff0f4;
+    border: 2px solid #800020;
+    color: #800020;
+    font-weight: 600;
+    cursor: pointer;
+    width: fit-content;
+    transition: background .15s, transform .1s;
+  }
+
+  .file-label:hover {
+    background: #ffd2e2;
+    transform: translateY(-2px);
+  }
+
+  .file-selected {
+    font-size: 13px;
+    color: #6b7280;
+    margin-left: 2px;
+  }
+
+  /* --- UPLOAD BUTTON --- */
+  .upload-btn {
+    padding: 10px 18px;
+    background: #800020;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, transform .1s ease;
+    width: fit-content;
+  }
+
+  .upload-btn:hover {
+    background: #a00030;
+    transform: translateY(-2px);
+  }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("id_file");
+    const labelText = document.getElementById("file-selected-text");
+
+    if (input) {
+      input.addEventListener("change", () => {
+        labelText.textContent = input.files.length
+          ? input.files[0].name
+          : "No file chosen";
+      });
+    }
+  });
+</script>
+
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Upload Image</h1></li>
+<ul class="upload-container">
+  <li>
+    <section class="upload-card">
+      <div class="upload-heading">
+        <h1>Upload Image</h1>
+      </div>
 
-  <li class="card p-6 maxw-xl">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <ul class="gap-3">
-        <li>{{ form.file }}</li>
-        <li><button type="submit" class="btn btn-primary">Upload</button></li>
-      </ul>
-    </form>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="file-input-wrapper">
+          <label for="id_file" class="file-label">
+            <i class="fas fa-image"></i> Choose Image
+          </label>
+          {{ form.file }}
+          <span id="file-selected-text" class="file-selected">No file chosen</span>
+        </div>
+
+        <button type="submit" class="upload-btn" style="margin-top:16px;">
+          Upload
+        </button>
+      </form>
+    </section>
   </li>
 </ul>
 {% endblock %}

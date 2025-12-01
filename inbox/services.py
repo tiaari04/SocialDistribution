@@ -74,15 +74,14 @@ def add_followed_author(author, actor):
         )
         follow_request.save()
         return {"details": "created"}
-
-    follow_request = FollowRequest.objects.create(
-        actor=author,
-        author_followed=actor,
-        state=FollowRequest.State.ACCEPTED,
-    )
-    follow_request.save()
-
-    send_remote_follow_request(author, actor)
+    else: 
+        follow_request = FollowRequest.objects.create(
+            actor=author,
+            author_followed=actor,
+            state=FollowRequest.State.ACCEPTED,
+        )
+        follow_request.save()
+        send_remote_follow_request(author, actor)
 
     return {"details": "created"}
 
@@ -100,7 +99,7 @@ def remove_followed_author(author, actor):
 
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req_with_actor(actor, obj)
-    data["type"] = "followRequest"
+    data["type"] = "follow"
     # inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
     # print(obj.host)
 

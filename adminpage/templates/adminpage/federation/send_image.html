@@ -2,53 +2,258 @@
 
 {% block title %}Send Image to Nodes{% endblock %}
 
+{% block styles %}
+{{ block.super }}
+<style>
+  .send-image-container {
+    max-width: 960px;
+    margin-inline: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .send-image-container > li {
+    list-style: none;
+  }
+
+  .send-image-header {
+    padding: 4px 4px 0;
+  }
+
+  .send-image-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #800020;
+    font-weight: 700;
+  }
+
+  .send-image-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .send-image-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .send-image-preview {
+    flex: 0 0 240px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .send-image-preview img {
+    max-width: 240px;
+    max-height: 240px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.06);
+    object-fit: cover;
+  }
+
+  .send-image-meta {
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.95rem;
+  }
+
+  .send-image-meta p {
+    margin: 0;
+    color: #444;
+  }
+
+  .send-image-meta strong {
+    color: #800020;
+  }
+
+  .send-image-form-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .send-image-form-card h2 {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    color: #800020;
+  }
+
+  .send-image-form-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .nodes-list {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .nodes-list li {
+    list-style: none;
+  }
+
+  .node-item-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .node-item-label:hover {
+    background-color: #faf0f4;
+  }
+
+  .node-item-label input[type="checkbox"] {
+    accent-color: #800020;
+  }
+
+  .node-url {
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .nodes-empty {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #777;
+  }
+
+  .send-image-actions {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease, border-color 0.15s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background-color: #800020;
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: #9b1538;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    background-color: #ffffff;
+    color: #800020;
+    border: 1px solid rgba(128,0,32,0.35);
+    box-shadow: none;
+  }
+
+  .btn-outline:hover {
+    background-color: #fdf3f7;
+  }
+
+  @media (max-width: 640px) {
+    .send-image-card,
+    .send-image-form-card {
+      padding: 14px 14px 16px;
+    }
+
+    .send-image-inner {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container column gap-4 p-4">
-  <h1 class="text-xl semibold">Send Image to Other Nodes</h1>
+<ul class="send-image-container">
+  <li class="send-image-header">
+    <h1>Send Image to Other Nodes</h1>
+  </li>
 
-  <div class="row gap-4">
-    <div>
-      {% if image.file %}
-        <img src="{{ image.file.url }}" alt="" style="max-width: 240px; max-height: 240px;">
+  <li class="send-image-card">
+    <div class="send-image-inner">
+      <div class="send-image-preview">
+        {% if image.file %}
+          <img src="{{ image.file.url }}" alt="">
+        {% endif %}
+      </div>
+      <div class="send-image-meta">
+        <p><strong>File:</strong> {{ image.file.name }}</p>
+        {% if image.description %}
+          <p><strong>Description:</strong> {{ image.description }}</p>
+        {% endif %}
+        <p><strong>Created:</strong> {{ image.created_at }}</p>
+      </div>
+    </div>
+  </li>
+
+  <li class="send-image-form-card">
+    <form method="post">
+      {% csrf_token %}
+
+      <h2>Select nodes to send to</h2>
+      <p>Choose which remote federation nodes should receive this image.</p>
+
+      {% if nodes %}
+        <ul class="nodes-list">
+          {% for node in nodes %}
+            <li>
+              <label class="node-item-label">
+                <input type="checkbox" name="nodes" value="{{ node.id }}">
+                <span>
+                  <span>{{ node.name }}</span><br>
+                  <span class="node-url">{{ node.base_url }}</span>
+                </span>
+              </label>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nodes-empty">No active remote nodes configured.</p>
       {% endif %}
-    </div>
-    <div>
-      <p><strong>File:</strong> {{ image.file.name }}</p>
-      {% if image.description %}
-        <p><strong>Description:</strong> {{ image.description }}</p>
-      {% endif %}
-      <p><strong>Created:</strong> {{ image.created_at }}</p>
-    </div>
-  </div>
 
-  <form method="post" class="column gap-3 mt-4">
-    {% csrf_token %}
-
-    <h2 class="text-lg semibold">Select nodes to send to:</h2>
-
-    {% if nodes %}
-      <ul class="column gap-2">
-        {% for node in nodes %}
-          <li>
-            <label>
-              <input type="checkbox" name="nodes" value="{{ node.id }}">
-              {{ node.name }} ({{ node.base_url }})
-            </label>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No active remote nodes configured.</p>
-    {% endif %}
-
-    <div class="row gap-2 mt-3">
-      <button type="submit" class="btn btn-primary">
-        Send
-      </button>
-      <a href="{% url 'adminpage:images' %}" class="btn btn-outline">
-        Cancel
-      </a>
-    </div>
-  </form>
-</div>
+      <div class="send-image-actions">
+        <button type="submit" class="btn btn-primary">
+          Send
+        </button>
+        <a href="{% url 'adminpage:images' %}" class="btn btn-outline">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </li>
+</ul>
 {% endblock %}

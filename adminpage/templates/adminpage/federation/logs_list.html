@@ -1,35 +1,258 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Federation Logs{% endblock %}
 
+{% block styles %}
+{{ block.super }}
+<style>
+  .logs-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .logs-container > li {
+    list-style: none;
+  }
+
+  .logs-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-inline: 4px;
+  }
+
+  .muted {
+    color: #6b7280;
+    font-size: .9rem;
+  }
+
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  /* Filters */
+  .filters-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  .filters-form .field-group {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .filters-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    font-size: .85rem;
+    color: #374151;
+  }
+
+  .filters-form select {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: .85rem;
+    background-color: #ffffff;
+  }
+
+  .filters-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Logs table */
+  .logs-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+    min-width: 720px;
+  }
+
+  .logs-table thead {
+    background: #f9fafb;
+  }
+
+  .logs-table th,
+  .logs-table td {
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .logs-table th {
+    font-weight: 600;
+    font-size: .8rem;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+  }
+
+  .logs-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .logs-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .logs-table td {
+    vertical-align: top;
+  }
+
+  .logs-table .cell-center {
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* Status dot */
+  .status-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+  }
+
+  .status-success {
+    background-color: #16a34a; /* green */
+  }
+
+  .status-failure {
+    background-color: #dc2626; /* red */
+  }
+
+  .status-pending {
+    background-color: #f97316; /* orange */
+  }
+
+  /* Code badge */
+  .code-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 500;
+  }
+
+  .code-ok {
+    background: #d1fae5;
+    color: #166534;
+  }
+
+  .code-error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .code-none {
+    color: #9ca3af;
+    font-size: .75rem;
+  }
+
+  /* Error box */
+  .error-chip {
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #fff7ed;
+    border-left: 3px solid #fdba74;
+    font-size: .78rem;
+    color: #7c2d12;
+    border-radius: 6px;
+  }
+
+  /* Time */
+  .time-main {
+    font-size: .8rem;
+    color: #111827;
+  }
+
+  .time-sub {
+    font-size: .75rem;
+    color: #6b7280;
+  }
+
+  /* Pagination */
+  .pagination-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .pagination-row span {
+    font-size: .85rem;
+    color: #4b5563;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<ul class="container gap-6">
-  <li class="row align-center p-4" style="justify-content: space-between;">
-    <h1 class="text-xl semibold text-primary">Federation Logs</h1>
-    <a href="{% url 'adminpage:federation-dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+<ul class="logs-container">
+  <!-- Header -->
+  <li class="logs-card">
+    <div class="logs-header">
+      <h1 class="text-xl semibold text-primary">Federation Logs</h1>
+      <a href="{% url 'adminpage:federation-dashboard' %}" class="btn btn-secondary">
+        Back to Dashboard
+      </a>
+    </div>
   </li>
 
   <!-- Filters -->
-  <li class="card p-4">
-    <form method="get" class="row gap-4" style="align-items: flex-end;">
-      <div style="flex: 1;">
-        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Filter by Node</label>
-        <select name="node" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+  <li class="logs-card">
+    <form method="get" class="filters-form">
+      <div class="field-group">
+        <label>Filter by Node</label>
+        <select name="node">
           <option value="">All Nodes</option>
           {% for n in nodes %}
-          <option value="{{ n.pk }}" {% if current_node == n.pk|stringformat:"s" %}selected{% endif %}>{{ n.name }}</option>
+            <option value="{{ n.pk }}" {% if current_node == n.pk|stringformat:"s" %}selected{% endif %}>
+              {{ n.name }}
+            </option>
           {% endfor %}
         </select>
       </div>
-      <div style="flex: 1;">
-        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Filter by Status</label>
-        <select name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+
+      <div class="field-group">
+        <label>Filter by Status</label>
+        <select name="status">
           <option value="">All Statuses</option>
           {% for value, label in statuses %}
-          <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+              {{ label }}
+            </option>
           {% endfor %}
         </select>
       </div>
-      <div>
+
+      <div class="filters-actions">
         <button type="submit" class="btn btn-primary">Apply Filters</button>
         <a href="{% url 'adminpage:federation-logs' %}" class="btn btn-secondary">Clear</a>
       </div>
@@ -37,80 +260,102 @@
   </li>
 
   <!-- Logs Table -->
-  <li class="card">
+  <li class="logs-card">
     {% if logs %}
-    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-      <thead style="background: #f8f9fa;">
-        <tr>
-          <th style="text-align: center; padding: 12px; width: 80px;">Status</th>
-          <th style="text-align: left; padding: 12px;">Node</th>
-          <th style="text-align: left; padding: 12px;">Entry FQID</th>
-          <th style="text-align: center; padding: 12px; width: 100px;">Response</th>
-          <th style="text-align: left; padding: 12px; width: 180px;">Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for log in logs %}
-        <tr style="border-bottom: 1px solid #dee2e6;">
-          <td style="text-align: center; padding: 12px;">
-            {% if log.status == 'success' %}
-              <span style="color: green; font-size: 1.5rem;" title="Success">●</span>
-            {% elif log.status == 'failure' %}
-              <span style="color: red; font-size: 1.5rem;" title="Failure">●</span>
-            {% else %}
-              <span style="color: orange; font-size: 1.5rem;" title="Pending">●</span>
-            {% endif %}
-          </td>
-          <td style="padding: 12px;">
-            <a href="{% url 'adminpage:federation-node-detail' log.node.pk %}" style="color: #0066cc;">
-              {{ log.node.name }}
-            </a>
-          </td>
-          <td style="padding: 12px;">
-            <div title="{{ log.entry_fqid }}">{{ log.entry_fqid|truncatechars:50 }}</div>
-            {% if log.error_message %}
-            <div style="margin-top: 4px; padding: 4px 8px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.8125rem;">
-              <strong>Error:</strong> {{ log.error_message|truncatechars:120 }}
-            </div>
-            {% endif %}
-          </td>
-          <td style="text-align: center; padding: 12px;">
-            {% if log.response_status_code %}
-              <span style="padding: 4px 8px; background: {% if log.response_status_code < 300 %}#d4edda; color: #155724{% else %}#f8d7da; color: #721c24{% endif %}; border-radius: 3px; font-weight: 500;">
-                {{ log.response_status_code }}
-              </span>
-            {% else %}
-              <span style="color: #999;">-</span>
-            {% endif %}
-          </td>
-          <td style="padding: 12px;">
-            <div>{{ log.created|date:"M d, Y" }}</div>
-            <div style="color: #666;">{{ log.created|date:"H:i:s" }}</div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+      <div class="logs-table-wrapper">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th class="cell-center" style="width: 80px;">Status</th>
+              <th>Node</th>
+              <th>Entry FQID</th>
+              <th class="cell-center" style="width: 110px;">Response</th>
+              <th style="width: 190px;">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+              <tr>
+                <td class="cell-center">
+                  {% if log.status == 'success' %}
+                    <span class="status-dot status-success" title="Success"></span>
+                  {% elif log.status == 'failure' %}
+                    <span class="status-dot status-failure" title="Failure"></span>
+                  {% else %}
+                    <span class="status-dot status-pending" title="Pending"></span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <a href="{% url 'adminpage:federation-node-detail' log.node.pk %}" style="color: #800020; text-decoration: none;">
+                    {{ log.node.name }}
+                  </a>
+                </td>
+
+                <td>
+                  <div class="break-anywhere" title="{{ log.entry_fqid }}">
+                    {{ log.entry_fqid|truncatechars:80 }}
+                  </div>
+                  {% if log.error_message %}
+                    <div class="error-chip break-anywhere">
+                      <strong>Error:</strong> {{ log.error_message|truncatechars:140 }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td class="cell-center">
+                  {% if log.response_status_code %}
+                    {% if log.response_status_code < 300 %}
+                      <span class="code-badge code-ok">{{ log.response_status_code }}</span>
+                    {% else %}
+                      <span class="code-badge code-error">{{ log.response_status_code }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="code-none">–</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="time-main">
+                    {{ log.created|date:"M d, Y" }}
+                  </div>
+                  <div class="time-sub">
+                    {{ log.created|date:"H:i:s" }}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
-    <div style="padding: 40px; text-align: center;">
-      <p class="text-muted">No logs found matching your criteria.</p>
-    </div>
+      <div style="padding: 32px; text-align: center;">
+        <p class="muted">No logs found matching your criteria.</p>
+      </div>
     {% endif %}
   </li>
 
   <!-- Pagination -->
   {% if page_obj.has_other_pages %}
-  <li class="row gap-2 p-4" style="justify-content: center; align-items: center;">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
-         class="btn btn-secondary">Previous</a>
-    {% endif %}
-    <span style="padding: 8px 16px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
-         class="btn btn-secondary">Next</a>
-    {% endif %}
-  </li>
+    <li class="logs-card">
+      <div class="pagination-row">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+             class="btn btn-secondary">
+            Previous
+          </a>
+        {% endif %}
+
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if current_node %}&node={{ current_node }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+             class="btn btn-secondary">
+            Next
+          </a>
+        {% endif %}
+      </div>
+    </li>
   {% endif %}
 </ul>
 {% endblock %}
