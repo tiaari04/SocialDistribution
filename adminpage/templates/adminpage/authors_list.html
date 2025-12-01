@@ -3,6 +3,7 @@
 
 {% block styles %}
 {{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
   .authors-container {
     list-style: none;
@@ -42,15 +43,71 @@
     color: #7b5a65;
   }
 
-  .authors-search-row {
+  /* --- SEARCH BAR AREA --- */
+  .search-section {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: center;
     margin-top: 16px;
   }
 
-  .authors-search-row input[name="q"] {
-    flex: 1 1 220px;
+  .search-input-wrapper {
+    flex: 1 1 260px;
+    display: flex;
+    border: 2px solid rgba(128,0,32,0.25);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .search-input-wrapper input[name="q"] {
+    flex: 1;
+    border: none;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-input-wrapper button {
+    background-color: #800020;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-input-wrapper button i {
+    font-size: 14px;
+  }
+
+  .search-input-wrapper button:hover {
+    background-color: #a00030;
+  }
+
+  .add-author-btn {
+    padding: 10px 16px;
+    background: #fff0f4;
+    border: 2px solid #800020;
+    border-radius: 999px;
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s, transform .1s;
+  }
+
+  .add-author-btn:hover {
+    background: #ffd2e2;
+    transform: translateY(-2px);
   }
 
   /* Author link styling (match theme) */
@@ -174,16 +231,43 @@
   .authors-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .authors-actions .btn {
-    padding: .35rem .7rem;
-    font-size: .75rem;
+    gap: 8px;
+    align-items: center;
   }
 
   .mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  /* Icon buttons for actions */
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(128,0,32,0.4);
+    color: #800020;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+    font-size: 15px;
+  }
+
+  .icon-btn:hover {
+    background: #fff0f4;
+    transform: translateY(-2px);
+  }
+
+  .icon-btn.delete {
+    border-color: rgba(220,38,38,0.4);
+    color: #b00020;
+  }
+
+  .icon-btn.delete:hover {
+    background: #ffe6ea;
+    color: #e11d48;
   }
 
   @media (max-width: 900px) {
@@ -200,7 +284,7 @@
   }
 
   @media (max-width: 720px) {
-    /* On smaller screens, stack some columns but keep it readable */
+    /* On smaller screens, you can simplify; here we just let it wrap by default */
     .authors-row-inner,
     .authors-header-row .authors-grid {
       grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.3fr);
@@ -209,7 +293,7 @@
 
     .authors-row-inner > li:nth-child(n+3),
     .authors-header-row .authors-grid > li:nth-child(n+3) {
-      display: none; /* If you want, you can hide some columns on very small screens */
+      display: none; /* hide extra columns on very small screens if desired */
     }
   }
 </style>
@@ -226,10 +310,18 @@
       </div>
 
       <form method="get">
-        <div class="authors-search-row">
-          <input name="q" value="{{ q }}" placeholder="Search by display name..." />
-          <button class="btn btn-primary">Search</button>
-          <a class="btn btn-outline" href="{% url 'adminpage:author-create' %}">Add Author</a>
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <input name="q" value="{{ q }}" placeholder="Search by display name..." />
+            <button type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <a class="add-author-btn" href="{% url 'adminpage:author-create' %}">
+            <i class="fas fa-user-plus"></i>
+            <span>Add Author</span>
+          </a>
         </div>
       </form>
     </section>
@@ -312,10 +404,15 @@
             <!-- Actions -->
             <li>
               <div class="authors-actions">
-                <a href="{% url 'adminpage:author-update' a.pk %}" class="btn btn-outline">Edit</a>
+                <a href="{% url 'adminpage:author-update' a.pk %}" class="icon-btn" title="Edit author">
+                  <i class="fas fa-pencil-alt"></i>
+                </a>
+
                 <form action="{% url 'adminpage:author-delete' a.pk %}" method="post" onsubmit="return confirm('Delete this author?');">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-danger">Delete</button>
+                  <button type="submit" class="icon-btn delete" title="Delete author">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </form>
               </div>
             </li>
