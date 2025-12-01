@@ -152,22 +152,20 @@ p.bio {
     }
 
 .icon-button.edit {
-      background-color: #3b82f6;
-      color: white;
+      color: rgb(84, 101, 178);
     }
 
 .icon-button.edit:hover {
-      background-color: #2563eb;
+      color: #2563eb;
     }
 
 .icon-button.requests {
-      background-color: #f59e0b;
-      color: white;
+      color: #f59e0b;
       position: relative;
     }
 
 .icon-button.requests:hover {
-      background-color: #d97706;
+      color: #d97706;
     }
 
 .icon-button.requests .badge {
@@ -357,7 +355,7 @@ post.innerHTML = html;
             
             <div class="stats">
               <div class="stat-item">
-                <span class="stat-number">{{ follower_count }}</span>
+                <span class="stat-number">{{ follower_count|default:0 }}</span>
                 <span class="stat-label"><a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
               </div>
               {% if request.user.is_authenticated and request.user == author.user %}
@@ -382,7 +380,7 @@ post.innerHTML = html;
                   <i class="fas fa-edit"></i>
                 </a>
                 <a href="{% url 'authors:follow-requests' author.serial %}" class="icon-button requests" title="Follow Requests">
-                  <i class="fas fa-user-clock"></i>
+                  <i class="fas fa-inbox"></i>
                   {% if request_count > 0 %}
                     <span class="badge">{{ request_count }}</span>
                   {% endif %}
