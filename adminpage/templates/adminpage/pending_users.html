@@ -3,14 +3,115 @@
 
 {% block styles %}
 {{ block.super }}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-  /* remove all list bullets globally for this page */
+  /* REMOVE BULLET POINTS */
   ul, li {
-    list-style: none !important;
+    list-style: none;
+  }
+
+  /* Same theme as authors_list */
+  .approvals-container {
+    list-style: none;
     margin: 0;
     padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .approvals-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .approvals-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+  }
+  .approvals-heading p {
+    margin: 0;
+    font-size: 13px;
+    color: #7b5a65;
+  }
+
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .approvals-table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .approvals-grid,
+  .approvals-row-inner {
+    display: grid;
+    grid-template-columns:
+      minmax(180px, 2fr)
+      minmax(120px, 1.2fr)
+      minmax(120px, 1fr);
+    gap: 8px;
+    align-items: center;
+    min-width: 530px;
+  }
+
+  .approvals-header-row {
+    background-color: #fff0f4;
+    border-bottom: 1px solid rgba(128,0,32,0.12);
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b3b47;
+  }
+
+  .approvals-row {
+    border-top: 1px solid rgba(128,0,32,0.08);
+    padding: 10px 16px;
+    font-size: 13px;
+    background-color: #ffffff;
+    transition: background .12s ease;
+  }
+  .approvals-row:nth-child(even) {
+    background-color: #fdf8fa;
+  }
+  .approvals-row:hover {
+    background-color: #ffeef5;
+  }
+
+  .text-muted {
+    color: #9ca3af;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: #15803d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+    flex-shrink: 0;
+  }
+  .icon-btn i {
+    font-size: 18px !important;
+  }
+  .icon-btn:hover {
+    background: #e6f7ef;
+    transform: translateY(-2px);
+    color: #166534;
   }
 </style>
 {% endblock %}
@@ -18,6 +119,7 @@
 {% block content %}
 <ul class="approvals-container">
 
+  <!-- Heading -->
   <li>
     <section class="approvals-card">
       <div class="approvals-heading">
@@ -27,10 +129,12 @@
     </section>
   </li>
 
+  <!-- Table -->
   <li>
     <section class="approvals-card approvals-table-card">
       <div class="table-scroll">
 
+        <!-- Header Row -->
         <div class="approvals-header-row">
           <ul class="approvals-grid">
             <li>Username</li>
@@ -39,6 +143,7 @@
           </ul>
         </div>
 
+        <!-- Body -->
         <ul class="approvals-table-inner">
           {% for u in pending %}
           <li class="approvals-row">
@@ -48,6 +153,7 @@
                 {{ u.displayName }}
               </li>
 
+              <!-- MST conversion -->
               <li class="text-muted">
                 {{ u.created|timezone:"America/Edmonton" }}
               </li>
