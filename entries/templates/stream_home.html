@@ -63,13 +63,14 @@
         .iconButton:hover { color: #a00030; }
         .iconButton .likeCount { margin-left: 4px; font-size: 0.9rem; }
 
-        #createPost { position: fixed; bottom: 20px; right: 20px; font-size: 22px; border-radius: 50%; padding: 12px 15px; background-color: #800020; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        #createPost { position: fixed; bottom: 20px; right: 20px; font-size: 22px; border-radius: 50%; padding: 12px 15px; background-color: #800020; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: none; cursor: pointer; }
+        #createPost:hover { background-color: #a00030; }
 
         /* Comments panel */
         #commentsPanel {
             position: fixed;
             top: 0;
-            right: -35vw; /* hidden initially */
+            right: -35vw;
             width: 35vw;
             height: 100vh;
             background: #fff;
@@ -77,7 +78,6 @@
             display: flex;
             flex-direction: column;
             z-index: 200;
-            padding: 10px;
             transition: right 0.3s ease;
         }
 
@@ -89,30 +89,58 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #800020;
-            padding-bottom: 5px;
+            border-bottom: 2px solid #800020;
+            padding: 15px 20px;
             flex-shrink: 0;
+            background-color: #800020;
+            color: white;
+        }
+
+        #commentsPanel header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        #closePanel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        #closePanel:hover {
+            color: #f9f5f5;
         }
 
         #commentsPanel section#comments {
             flex: 1;
             overflow-y: auto;
-            margin: 10px 0;
+            padding: 20px;
         }
 
         #commentsPanel footer {
             display: flex;
-            gap: 5px;
-            border-top: 1px solid #800020;
-            padding-top: 5px;
+            gap: 10px;
+            border-top: 2px solid #800020;
+            padding: 15px 20px;
             flex-shrink: 0;
+            background-color: #f9f5f5;
         }
 
         #commentInput {
             flex: 1;
             padding: 10px;
             border-radius: 10px;
-            border: 1px solid #a00030;
+            border: 2px solid #800020;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #commentInput:focus {
+            outline: none;
+            border-color: #a00030;
         }
 
         #sendComment {
@@ -120,23 +148,66 @@
             border: none;
             color: white;
             border-radius: 10px;
-            padding: 5px 12px;
+            padding: 10px 20px;
             cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        #sendComment:hover {
+            background-color: #a00030;
         }
 
         .comment {
-            border-bottom: 1px solid #800020;
-            padding: 8px 0;
+            border: 1px solid #800020;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
         }
 
         .commentAuthor {
             font-weight: 600;
             color: #800020;
+            display: block;
+            margin-bottom: 8px;
         }
 
         .commentText {
-            margin: 4px 0;
-            line-height: 1.4;
+            margin: 8px 0;
+            line-height: 1.5;
+            color: #374151;
+        }
+
+        .comment .reactions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .commentLikes {
+            color: #800020;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .comment .likeButton {
+            background-color: #800020;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .comment .likeButton:hover {
+            background-color: #a00030;
         }
 
         @media (max-width: 900px) {
@@ -144,7 +215,7 @@
             main { padding: 20px 10px; }
             .stream { width: 95%; }
             #createPost { bottom: 20px; right: 20px; }
-            #commentsPanel { width: 90vw; }
+            #commentsPanel { width: 90vw; right: -90vw; }
         }
     </style>
 </head>
@@ -199,7 +270,7 @@
         {% endfor %}
     </ul>
 
-    <a href="{% url 'entries:create' author.serial %}" id="createPost" title="New Post"><i class="fas fa-plus"></i></a>
+    <button id="createPost" onclick="window.location.href='{% url 'entries:create' author.serial %}';" title="New Post"><i class="fas fa-plus"></i></button>
 </main>
 
 <section id="commentsPanel">
@@ -216,9 +287,12 @@
 
 <template id="commentTemplate">
     <section class="comment">
-        <span class="commentAuthor"></span>
+        <strong class="commentAuthor"></strong>
         <p class="commentText"></p>
-        <button class="iconButton likeButton" title="Like"><i class="fas fa-heart"></i> <span class="commentLikes">0</span></button>
+        <section class="reactions">
+            <p class="commentLikes"></p>
+            <button class="likeButton">Like</button>
+        </section>
     </section>
 </template>
 
@@ -230,9 +304,13 @@
 const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
 const userFqid = '{{ author.id }}';
 const currUser = {
+    type: "author",
     id: '{{ author.id }}',
     displayName: '{{ author.displayName }}',
-    host: '{{ author.host }}'
+    host: '{{ author.host }}',
+    github: '{{ author.github }}',
+    profileImage: '{{ author.profileImage }}',
+    web: '{{ author.web }}'
 };
 
 // Parse markdown
@@ -244,17 +322,20 @@ document.querySelectorAll('.postText').forEach(post => {
 
 // Like posts
 document.querySelectorAll('.likeButton').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const fqid = btn.dataset.fqid;
-        const endpoint = btn.dataset.endpoint;
-        const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken },
-            body: JSON.stringify(payload)
+    // Only attach event to post like buttons, not comment like buttons
+    if (!btn.closest('.comment')) {
+        btn.addEventListener('click', async () => {
+            const fqid = btn.dataset.fqid;
+            const endpoint = btn.dataset.endpoint;
+            const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken },
+                body: JSON.stringify(payload)
+            });
+            if(res.ok) window.location.reload();
         });
-        if(res.ok) window.location.reload();
-    });
+    }
 });
 
 // Share posts
@@ -273,46 +354,105 @@ const closeComments = document.getElementById('closePanel');
 const commentsContent = document.getElementById('comments');
 const commentInput = document.getElementById('commentInput');
 const sendCommentBtn = document.getElementById('sendComment');
+const commentTemplate = document.getElementById('commentTemplate');
 let entryFqid = null;
+let endpoint = null;
 
 async function getComments(fqid){
     const res = await fetch(`/api/entries/${encodeURIComponent(fqid)}/comments/`, {
-        method: 'GET', credentials:'same-origin',
+        method: 'GET', 
+        credentials:'same-origin',
         headers:{'Content-Type':'application/json','X-Author-Id':userFqid}
     });
-    return res.ok ? await res.json() : [];
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
 }
 
 async function postComment(fqid, text){
-    const payload = { type:"comment", direction:"outgoing", author:currUser, entry:fqid, content:text };
-    const endpoint = `/api/entries/${encodeURIComponent(fqid)}/comments/`;
-    await fetch(endpoint,{
+    const payload = { 
+        type:"comment", 
+        direction:"outgoing", 
+        author:currUser, 
+        entry:fqid, 
+        content:text 
+    };
+    const res = await fetch(endpoint, {
         method:'POST',
         headers:{'Content-Type':'application/json','X-Author-Id':userFqid,"X-CSRFToken":csrftoken},
         body: JSON.stringify(payload)
     });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+}
+
+async function likeComment(commentFqid) {
+    const payload = {
+        type: "like",
+        direction: "outgoing",
+        author: currUser,
+        object: commentFqid,
+    };
+
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-Author-Id': userFqid, 
+            "X-CSRFToken": csrftoken 
+        },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
 }
 
 async function loadComments(fqid){
-    const data = await getComments(fqid);
+    let commentRes = await getComments(fqid);
     commentsContent.innerHTML='';
-    if(data.results){
-        data.results.forEach(c=>{
-            const clone = document.getElementById('commentTemplate').content.cloneNode(true);
-            clone.querySelector('.commentAuthor').textContent = c.author.displayName;
-            clone.querySelector('.commentText').textContent = c.content;
-            clone.querySelector('.commentLikes').textContent = c.likes_count || 0;
+    
+    while (commentRes) {
+        const comments = commentRes.results;
+        
+        comments.forEach(comment => {
+            const clone = commentTemplate.content.cloneNode(true);
+            const commentSection = clone.querySelector('.comment');
+            commentSection.dataset.commentId = comment.fqid;
+            
+            clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
+            clone.querySelector('.commentText').textContent = comment.content;
+            clone.querySelector('.commentLikes').textContent = `${comment.likes_count} ${comment.likes_count === 1 ? "like" : "likes"}`;
+            
+            const likeButton = clone.querySelector('.likeButton');
+            likeButton.addEventListener('click', async () => {
+                await likeComment(comment.fqid);
+                loadComments(fqid); // Reload comments to show updated like count
+            });
+            
             commentsContent.appendChild(clone);
         });
-        // scroll to bottom
-        commentsContent.scrollTop = commentsContent.scrollHeight;
+        
+        // Handle pagination
+        if (commentRes.next) {
+            const res = await fetch(commentRes.next, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
+            });
+            if (!res.ok) throw new Error(await res.text());
+            commentRes = await res.json();
+        } else {
+            commentRes = null;
+        }
     }
+    
     commentPanel.classList.add('visible');
+    // Scroll to bottom to show newest comments
+    commentsContent.scrollTop = commentsContent.scrollHeight;
 }
 
 commentButtons.forEach(btn=>{
     btn.addEventListener('click',()=>{
         entryFqid = btn.dataset.fqid;
+        endpoint = btn.dataset.endpoint;
         loadComments(entryFqid);
     });
 });
