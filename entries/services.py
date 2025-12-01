@@ -145,7 +145,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
         # Ensure comment has an fqid
-        comment_fqid = payload.get('id') or f"{author.id}/commented/{uuid.uuid4()}"
+        comment_fqid = payload.get('id') or f"{author.id}/commented/{uuid.uuid4()}" or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
 
         # Handle duplicate
         existing = Comment.objects.filter(fqid=comment_fqid).first()
@@ -199,7 +199,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                     return {'status': 'exists', 'object': existing}
             
             like = Like.objects.create(
-                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}",
+                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}",
                 author=author,
                 object_fqid=object_fqid,
                 published=payload.get('published') or timezone.now(),
@@ -225,7 +225,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 return {'status': 'exists', 'object': existing}
 
             like = Like.objects.create(
-                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}",
+                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}",
                 author=author,
                 object_fqid=object_fqid,
                 published=payload.get('published') or timezone.now(),
