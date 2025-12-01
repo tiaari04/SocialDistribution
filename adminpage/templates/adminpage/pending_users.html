@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-  /* Mimic authors_list theme */
+  /* Same theme as authors_list */
   .approvals-container {
     list-style: none;
     margin: 0;
@@ -52,9 +52,9 @@
   .approvals-row-inner {
     display: grid;
     grid-template-columns:
-      minmax(180px, 2fr)    /* Username */
-      minmax(120px, 1.2fr)  /* Joined */
-      minmax(120px, 1fr);   /* Actions */
+      minmax(180px, 2fr)
+      minmax(120px, 1.2fr)
+      minmax(120px, 1fr);
     gap: 8px;
     align-items: center;
     min-width: 530px;
@@ -87,13 +87,13 @@
     color: #9ca3af;
   }
 
-  /* Icon buttons (same as authors_list) */
+  /* Icon button */
   .icon-btn {
     width: 34px;
     height: 34px;
     border: none;
-    color: #800020;
     background: transparent;
+    color: #15803d;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -105,22 +105,9 @@
     font-size: 18px !important;
   }
   .icon-btn:hover {
-    background: #fff0f4;
-    transform: translateY(-2px);
-  }
-  .icon-btn.approve {
-    color: #15803d;
-  }
-  .icon-btn.approve:hover {
     background: #e6f7ef;
+    transform: translateY(-2px);
     color: #166534;
-  }
-  .icon-btn.decline {
-    color: #b00020;
-  }
-  .icon-btn.decline:hover {
-    background: #ffe6ea;
-    color: #e11d48;
   }
 </style>
 {% endblock %}
@@ -133,7 +120,7 @@
     <section class="approvals-card">
       <div class="approvals-heading">
         <h1>Pending Users</h1>
-        <p>Approve or deny users waiting for activation.</p>
+        <p>Approve users waiting for activation.</p>
       </div>
     </section>
   </li>
@@ -167,32 +154,22 @@
               </li>
 
               <li>
-                <div style="display:flex;gap:8px;">
-                  <!-- APPROVE -->
-                  <form action="{% url 'adminpage:approve-user' u.id %}" method="post"
-                        onsubmit="return confirm('Approve {{ u.displayName }}?');">
-                    {% csrf_token %}
-                    <button type="submit" class="icon-btn approve" title="Approve user">
-                      <i class="fas fa-check"></i>
-                    </button>
-                  </form>
-
-                  <!-- DECLINE -->
-                  <form action="{% url 'adminpage:decline-user' u.id %}" method="post"
-                        onsubmit="return confirm('Decline {{ u.displayName }}?');">
-                    {% csrf_token %}
-                    <button type="submit" class="icon-btn decline" title="Decline user">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </form>
-                </div>
+                <form action="{% url 'adminpage:approve-user' u.id %}" method="post"
+                      onsubmit="return confirm('Approve {{ u.displayName }}?');">
+                  {% csrf_token %}
+                  <button type="submit" class="icon-btn" title="Approve user">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
               </li>
 
             </ul>
           </li>
           {% empty %}
           <li class="approvals-row">
-            <div class="text-muted" style="text-align:center; width:100%;">No pending users.</div>
+            <div class="text-muted" style="text-align:center;width:100%;">
+              No pending users.
+            </div>
           </li>
           {% endfor %}
         </ul>
