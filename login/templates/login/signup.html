@@ -215,13 +215,13 @@
         {% else %}
           <fieldset>
             <label for="{{ field.id_for_label }}">
-              {% if field.name == "username" %}<i class="fas fa-user"></i>{% endif %}
-              {% if field.name == "password1" or field.name == "password2" %}<i class="fas fa-lock"></i>{% endif %}
-              {% if field.name == "email" %}<i class="fas fa-envelope"></i>{% endif %}
-              {% if field.name == "displayName" %}<i class="fas fa-id-card"></i>{% endif %}
-              {% if field.name == "github" %}<i class="fab fa-github"></i>{% endif %}
-              {% if field.name == "web" %}<i class="fas fa-globe"></i>{% endif %}
-              {% if field.name == "profileImageFile" %}<i class="fas fa-image"></i>{% endif %}
+              {% if field.name == "username" %}{% endif %}
+              {% if field.name == "password1" or field.name == "password2" %}{% endif %}
+              {% if field.name == "email" %}{% endif %}
+              {% if field.name == "displayName" %}{% endif %}
+              {% if field.name == "github" %}{% endif %}
+              {% if field.name == "web" %}{% endif %}
+              {% if field.name == "profileImageFile" %}{% endif %}
               {{ field.label }}
             </label>
             {{ field }}
