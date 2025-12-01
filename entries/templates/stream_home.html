@@ -7,34 +7,35 @@
         <meta name="csrf-token" content="{{ csrf_token }}">
         <style>
             body {
-                overflow: auto;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 margin: 0;
-                background-color: #f9f5f5; /* soft off-white background */
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f9f5f5;
                 display: flex;
                 min-height: 100vh;
+                overflow-x: hidden;
             }
 
-            /* Vertical sidebar */
+            /* Sidebar menu */
             header {
                 position: sticky;
                 top: 0;
                 left: 0;
                 z-index: 100;
-                width: 200px;
+                width: 150px; /* narrower */
                 height: 100vh;
+                background-color: #800020;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                padding: 20px 10px;
-                background-color: #800020; /* burgundy */
-                color: white;
+                padding: 20px 5px;
                 box-shadow: 2px 0 6px rgba(0,0,0,0.1);
             }
 
             header h3 {
                 margin-bottom: 30px;
-                font-size: 22px;
+                font-size: 20px;
+                color: white;
+                text-align: center;
             }
 
             header a {
@@ -57,15 +58,20 @@
                 padding: 30px;
                 display: flex;
                 justify-content: center;
-                background-color: #f9f5f5;
             }
 
+            /* Posts stream */
             .stream {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 30px;
-                width: 70%;
+                width: 75%;
+                padding-left: 10px;
+            }
+
+            .stream li {
+                list-style: none; /* remove bullet points */
             }
 
             .post {
@@ -74,19 +80,18 @@
                 background-color: white;
                 padding: 20px 25px;
                 border-radius: 20px;
-                box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
-                border-top: 4px solid #800020;
+                border: 2px solid #800020; /* thin burgundy border */
+                box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
                 transition: transform 0.2s ease, box-shadow 0.2s ease;
             }
 
             .post:hover {
-                transform: translateY(-3px);
-                box-shadow: 2px 8px 16px rgba(0,0,0,0.15);
+                transform: translateY(-2px);
+                box-shadow: 2px 6px 12px rgba(0,0,0,0.12);
             }
 
             .post.comment {
                 background-color: #f5e5e5;
-                border-top: 4px solid #a00030;
             }
 
             .postContent {
@@ -120,7 +125,7 @@
                 color: white;
                 font-weight: 600;
                 border-radius: 12px;
-                padding: 5px 12px;
+                padding: 5px 10px;
                 margin: 3px 5px 3px 0;
                 display: flex;
                 align-items: center;
@@ -137,8 +142,6 @@
                 display: flex;
                 flex-direction: column;
                 gap: 2px;
-                background-color: transparent;
-                border: none;
                 cursor: pointer;
             }
 
@@ -187,10 +190,11 @@
                 box-shadow: 0px 3px #a00030;
             }
 
+            /* Comments */
             .comment {
                 width: 100%;
                 max-width: 600px;
-                border: solid 1px #a00030;
+                border: 1px solid #800020;
                 padding: 10px 15px;
                 border-radius: 20px;
                 background-color: #f5e5e5;
@@ -202,13 +206,14 @@
                 right: -35vw;
                 width: 35vw;
                 height: 100vh;
-                background: white;
-                box-shadow: -4px 0 12px rgba(0,0,0,0.2);
+                background: #fff;
+                box-shadow: -4px 0 12px rgba(0,0,0,0.15);
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
                 transition: right 0.3s ease;
                 z-index: 200;
+                padding: 10px;
             }
 
             #commentsPanel.visible {
@@ -242,7 +247,7 @@
             #createPost {
                 position: fixed;
                 bottom: 20px;
-                left: 220px; /* move right of sidebar */
+                right: 20px; /* move to right side */
                 font-size: 22px;
                 border-radius: 50%;
                 padding: 12px 15px;
@@ -266,9 +271,8 @@
                     width: 95%;
                 }
                 #createPost {
-                    left: auto;
-                    right: 20px;
                     bottom: 20px;
+                    right: 20px;
                 }
             }
         </style>
