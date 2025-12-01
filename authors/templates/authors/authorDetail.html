@@ -11,27 +11,30 @@
   {% include 'components/sidebar_styles.html' %}
   
   <style>
-    body {
-      margin: 0;
-      overflow-x: hidden;
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
     }
 
-    /* Banner Section - Fixed */
+    .profile-wrapper {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    /* Banner Section */
     .profile-banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 350px;
       background: linear-gradient(135deg, #800020 0%, #a00030 100%);
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 20px;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
 
     .banner-content {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 60px 20px 20px;
+      padding: 40px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,7 +45,6 @@
       .banner-content {
         flex-direction: row;
         align-items: flex-start;
-        padding: 80px 40px 30px;
       }
     }
 
@@ -51,8 +53,8 @@
     }
 
     figure img {
-      width: 180px;
-      height: 180px;
+      width: 160px;
+      height: 160px;
       border-radius: 50%;
       object-fit: cover;
       border: 5px solid white;
@@ -106,7 +108,6 @@
       white-space: pre-line;
       margin-top: 1rem;
       line-height: 1.6;
-      max-width: 600px;
     }
 
     .button {
@@ -141,22 +142,13 @@
       color: white !important;
     }
 
-    /* Main Content - Scrollable */
-    main {
-      margin-top: 350px;
-      padding: 30px 20px 60px;
-      display: flex;
-      justify-content: center;
-    }
-
+    /* Entries Section */
     .entries-container {
       background-color: white;
       padding: 30px;
       border-radius: 20px;
       border: 1px solid #d4a5a5;
       box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
-      width: 100%;
-      max-width: 900px;
     }
 
     .entries {
@@ -226,12 +218,8 @@
     }
 
     @media (max-width: 900px) {
-      .profile-banner {
-        height: 450px;
-      }
-
-      main {
-        margin-top: 450px;
+      .banner-content {
+        padding: 30px 20px;
       }
 
       .entries-container {
@@ -244,8 +232,8 @@
       }
 
       figure img {
-        width: 140px;
-        height: 140px;
+        width: 120px;
+        height: 120px;
       }
 
       .button {
@@ -280,86 +268,88 @@
 <body>
   {% include 'components/sidebar_menu.html' %}
 
-  <!-- Fixed Banner -->
-  <div class="profile-banner">
-    <div class="banner-content">
-      <figure>
-        <img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
-      </figure>
-
-      <section class="profile-info">
-        <h1>{{ author.displayName }}</h1>
-        <p class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></p>
-
-        {% if author.github %}
-          <a href="{{ author.github }}" target="_blank" class="link"><i class="fab fa-github"></i> {{ author.github }}</a>
-        {% endif %}
-
-        {% if author.web %}
-          <a href="{{ author.web }}" target="_blank" class="link"><i class="fas fa-globe"></i> {{ author.web }}</a>
-        {% endif %}
-
-        <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
-
-        {% if request.user.is_authenticated and request.user == author.user %}
-          <a href="{% url 'authors:edit' author.serial %}" class="button"><i class="fas fa-edit"></i> Edit Profile</a>
-          <a href="{% url 'authors:following' author.serial %}" class="button"><i class="fas fa-users"></i> Following</a>
-          <a href="{% url 'authors:follow-requests' author.serial %}" class="button"><i class="fas fa-user-plus"></i> Follow Requests ({{request_count}})</a>
-
-        {% elif request.user.is_authenticated %}
-          <button
-            id="follow-btn"
-            class="button {% if follow_status == 'Pending' %}pending{% endif %}"
-            data-endpoint="{% url 'api:author-inbox' author.serial %}"
-            data-initial-state="{{ follow_status|escapejs }}"
-            data-actor-id="{{ request.user.author.id|escapejs }}"
-            data-actor-host="{{ request.user.author.host|escapejs }}"
-            data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
-            data-actor-username="{{ request.user.username|escapejs }}"
-            data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
-            data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
-            data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
-            data-object-id="{{ author.id|escapejs }}"
-            data-object-host="{{ author.host|escapejs }}"
-            data-object-displayname="{{ author.displayName|escapejs }}"
-            data-object-github="{{ author.github|default:''|escapejs }}"
-            data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
-            data-object-web="{{ author.web|default:''|escapejs }}"
-          >
-            {{ follow_status }}
-          </button>
-
-        {% else %}
-          <a href="{% url 'login:login' %}" class="button"><i class="fas fa-sign-in-alt"></i> Log in to follow</a>
-        {% endif %}
-      </section>
-    </div>
-  </div>
-
-  <!-- Scrollable Content -->
   <main>
-    <div class="entries-container">
-      <article class="entries">
-        <h2><i class="fas fa-stream"></i> Public Entries</h2>
-        {% if entries %}
-          {% for entry in entries %}
-            <div class="post">
-              <div class="postContent">
-                <h2>{{ entry.title }}</h2>
-                <h3>{{ entry.description }}</h3>
-                <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
-                  {{ entry.content }}
-                </p>
-                {% if entry.image_url %}
-                  <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
-                {% endif %}
+    <div class="profile-wrapper">
+      <!-- Banner -->
+      <div class="profile-banner">
+        <div class="banner-content">
+          <figure>
+            <img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+          </figure>
+
+          <section class="profile-info">
+            <h1>{{ author.displayName }}</h1>
+            <p class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></p>
+
+            {% if author.github %}
+              <a href="{{ author.github }}" target="_blank" class="link"><i class="fab fa-github"></i> {{ author.github }}</a>
+            {% endif %}
+
+            {% if author.web %}
+              <a href="{{ author.web }}" target="_blank" class="link"><i class="fas fa-globe"></i> {{ author.web }}</a>
+            {% endif %}
+
+            <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
+
+            {% if request.user.is_authenticated and request.user == author.user %}
+              <a href="{% url 'authors:edit' author.serial %}" class="button"><i class="fas fa-edit"></i> Edit Profile</a>
+              <a href="{% url 'authors:following' author.serial %}" class="button"><i class="fas fa-users"></i> Following</a>
+              <a href="{% url 'authors:follow-requests' author.serial %}" class="button"><i class="fas fa-user-plus"></i> Follow Requests ({{request_count}})</a>
+
+            {% elif request.user.is_authenticated %}
+              <button
+                id="follow-btn"
+                class="button {% if follow_status == 'Pending' %}pending{% endif %}"
+                data-endpoint="{% url 'api:author-inbox' author.serial %}"
+                data-initial-state="{{ follow_status|escapejs }}"
+                data-actor-id="{{ request.user.author.id|escapejs }}"
+                data-actor-host="{{ request.user.author.host|escapejs }}"
+                data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
+                data-actor-username="{{ request.user.username|escapejs }}"
+                data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
+                data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
+                data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
+                data-object-id="{{ author.id|escapejs }}"
+                data-object-host="{{ author.host|escapejs }}"
+                data-object-displayname="{{ author.displayName|escapejs }}"
+                data-object-github="{{ author.github|default:''|escapejs }}"
+                data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
+                data-object-web="{{ author.web|default:''|escapejs }}"
+              >
+                {{ follow_status }}
+              </button>
+
+            {% else %}
+              <a href="{% url 'login:login' %}" class="button"><i class="fas fa-sign-in-alt"></i> Log in to follow</a>
+            {% endif %}
+          </section>
+        </div>
+      </div>
+
+      <!-- Posts -->
+      <div class="entries-container">
+        <article class="entries">
+          <h2><i class="fas fa-stream"></i> Public Entries</h2>
+          {% if entries %}
+            {% for entry in entries %}
+              <div class="post">
+                <div class="postContent">
+                  <h2>{{ entry.title }}</h2>
+                  <h3>{{ entry.description }}</h3>
+                  <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+                    {{ entry.content }}
+                  </p>
+                  {% if entry.image_url %}
+                    <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                  {% endif %}
+                </div>
               </div>
-            </div>
-          {% endfor %}
-        {% else %}
-          <p class="no-entries">No entries yet — this section will display posts or GitHub activity.</p>
-        {% endif %}
-      </article>
+            {% endfor %}
+          {% else %}
+            <p class="no-entries">No entries yet — this section will display posts or GitHub activity.</p>
+          {% endif %}
+        </article>
+      </div>
     </div>
   </main>
 
