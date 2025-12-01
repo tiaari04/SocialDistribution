@@ -164,7 +164,7 @@ def api_author_following_detail(request, author_serial, foreign_serial):
             return JsonResponse({"detail": "Follow request sent"}, status=201)
     
     elif request.method == "DELETE":
-        if not author.is_local() or not foreign_author.is_local():
+        if not author.is_local or not foreign_author.is_local:
             return JsonResponse({"detail": "Cannot unfollow remote authors"}, status=403)
         
         response = followers_services.remove_followed_author(author, foreign_author)
