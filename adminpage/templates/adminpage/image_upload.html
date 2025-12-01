@@ -1,26 +1,73 @@
 {% extends "base_adminpage.html" %}
-{% block title %}Upload Image{% endblock %}
+{% block title %}Hosted Images{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-/* page-specific (optional) */
-.maxw-xl{ max-width:40rem; }
+  .upload-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .upload-container > li {
+    list-style: none;
+  }
+
+  .upload-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+    max-width: 40rem;
+  }
+
+  .upload-heading {
+    margin-bottom: 12px;
+  }
+
+  .upload-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+  }
+
+  .upload-form-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Upload Image</h1></li>
+<ul class="upload-container">
+  <li>
+    <section class="upload-card">
+      <div class="upload-heading">
+        <h1>Upload Image</h1>
+      </div>
 
-  <li class="card p-6 maxw-xl">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <ul class="gap-3">
-        <li>{{ form.file }}</li>
-        <li><button type="submit" class="btn btn-primary">Upload</button></li>
-      </ul>
-    </form>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <ul class="upload-form-list">
+          <li>{{ form.file }}</li>
+          <li>
+            <button type="submit" class="btn btn-primary">Upload</button>
+          </li>
+        </ul>
+      </form>
+    </section>
   </li>
 </ul>
 {% endblock %}
