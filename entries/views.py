@@ -158,6 +158,7 @@ def github_webhook(request):
 def stream_home(request, author_serial):
     current_author = get_object_or_404(Author, serial=author_serial)
 
+    # --- Followers/friends logic ---
     following = FollowRequest.objects.filter(
         actor=current_author, state=FollowRequest.State.ACCEPTED
     ).values_list("author_followed_id", flat=True)
@@ -168,7 +169,7 @@ def stream_home(request, author_serial):
 
     friends = set(following).intersection(followers)
 
-
+    # --- Entries ---
     local_entries = Entry.objects.filter(is_local=True).exclude(
         visibility=Entry.Visibility.DELETED
     )
@@ -222,16 +223,24 @@ def stream_home(request, author_serial):
         remote_visible
     ).select_related("author").order_by("-published")
 
-    likes = Like.objects.filter(fqid__icontains=current_author.id)
-    like_ids = []
-    for like in likes: 
-        like_ids.append(like.object_fqid)
+
+    if request.user.is_authenticated:
+        user_likes = Like.objects.filter(
+            author_id=current_author.id
+        ).values_list('object_fqid', flat=True)
+        user_likes_set = set(user_likes)
+    else:
+        user_likes_set = set()
+
+
+    for entry in entries:
+        entry.user_liked = entry.fqid in user_likes_set
 
     return render(request, "stream_home.html", {
         "entries": entries,
         "author": current_author,
-        "likes": like_ids,
     })
+
 
 def public_entries(request):
     """
