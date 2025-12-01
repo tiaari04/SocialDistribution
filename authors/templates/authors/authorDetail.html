@@ -310,9 +310,9 @@
             <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
 
             {% if request.user.is_authenticated and request.user == author.user %}
-              <a href="{% url 'authors:edit' author.serial %}" class="button"><i class="fas fa-edit"></i> Edit Profile</a>
-              <a href="{% url 'authors:following' author.serial %}" class="button"><i class="fas fa-users"></i> Following</a>
-              <a href="{% url 'authors:follow-requests' author.serial %}" class="button"><i class="fas fa-user-plus"></i> Follow Requests ({{request_count}})</a>
+              <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
+              <a href="{% url 'authors:following' author.serial %}" class="button">Following</a>
+              <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests ({{request_count}})</a>
 
             {% elif request.user.is_authenticated %}
               <button
