@@ -498,8 +498,8 @@ applyVisual("Request to Follow");
           }
         } else if (state === "Pending" || state === "Unfollow") {
           const authorSerial = btn.dataset.actorSerial;
-          const followedAuthorId = btn.dataset.objectSerial || btn.dataset.objectId;
-            const deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
+          const followedAuthorSerial = btn.dataset.objectSerial;
+          const deleteEndpoint = `/api/authors/${actorSerial}/following/${followedAuthorSerial}/`;
 
 
 

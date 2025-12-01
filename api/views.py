@@ -139,37 +139,38 @@ def api_author_following(request, author_serial):
 	resp, status_code = followers_serializers.serialize_followers_view(author, FOLLOWING)
 	return JsonResponse(resp, status=status_code)
 
-def api_author_following_detail(request, author_serial, foreign_encoded):
-	if request.method not in ["GET", "PUT", "DELETE"]:
-		return JsonResponse({"detail": "Method not allowed"}, status=405)
+def api_author_following_detail(request, author_serial, foreign_serial):
 
-	from authors.models import Author
-	author = get_object_or_404(Author, serial=author_serial)
-	actor_fqid = decode(foreign_encoded, 'unicode_escape')
-	actor_fqid = unquote(actor_fqid)
-	actor = get_object_or_404(Author, id=actor_fqid)
-		
-	if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
-		return JsonResponse({"detail": "Authentication required"}, status=403)
+    if request.method not in ["GET", "PUT", "DELETE"]:
+        return JsonResponse({"detail": "Method not allowed"}, status=405)
 
-	if request.method == "GET":
-		result = followers_services.get_followed_author(author, actor)
-		if result:
-			return JsonResponse(result)
-		return JsonResponse({"is_following": False}, status=404)
+    # Get the local author
+    author = get_object_or_404(Author, serial=author_serial)
+    # Get the target author by UUID
+    foreign_author = get_object_or_404(Author, serial=foreign_serial)
 
-	elif request.method == "PUT":
-		response = followers_services.add_followed_author(author, actor)
-		if response["details"] == "exists":
-			return JsonResponse({"detail": "Follow request already exists"}, status=200)
-		if response["details"] == "created":
-			return JsonResponse({"detail": "Follow request sent"}, status=201)
+    # Make sure the authenticated user matches the author
+    if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
+        return JsonResponse({"detail": "Authentication required"}, status=403)
 
-	elif request.method == "DELETE":
-		response = followers_services.remove_followed_author(author, actor)
-		if response:
-			return JsonResponse({"detail": "Author unfollowed"}, status=200)
-		return JsonResponse({"detail": "You didn't follow this author"}, status=404)
+    if request.method == "GET":
+        result = followers_services.get_followed_author(author, foreign_author)
+        if result:
+            return JsonResponse(result)
+        return JsonResponse({"is_following": False}, status=404)
+
+    elif request.method == "PUT":
+        response = followers_services.add_followed_author(author, foreign_author)
+        if response.get("details") == "exists":
+            return JsonResponse({"detail": "Follow request already exists"}, status=200)
+        if response.get("details") == "created":
+            return JsonResponse({"detail": "Follow request sent"}, status=201)
+
+    elif request.method == "DELETE":
+        response = followers_services.remove_followed_author(author, foreign_author)
+        if response:
+            return JsonResponse({"detail": "Author unfollowed"}, status=200)
+        return JsonResponse({"detail": "You didn't follow this author"}, status=404)
 
 def api_author_follow_requests(request, author_serial):
 	if request.method != "GET":

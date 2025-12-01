@@ -22,10 +22,12 @@ urlpatterns = [
     ),
     path("authors/<str:author_serial>/following/", views.api_author_following, name="author-following"),
     path(
-        "authors/<str:author_serial>/following/<str:foreign_uuid>/",
+        "authors/<str:author_serial>/following/<str:foreign_serial>/",
         views.api_author_following_detail,
         name="author-following-detail",
     ),
+
+
 
     path("authors/<str:author_serial>/follow_requests/", views.api_author_follow_requests, name="author-follow-requests"),
 
