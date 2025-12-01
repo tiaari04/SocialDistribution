@@ -144,7 +144,6 @@
 {% block content %}
 <div class="dashboard-header">
     <h1>Admin Overview</h1>
-    <p>Quick snapshot of what’s happening across Red Social Dist.</p>
 </div>
 
 <section class="dashboard-grid">
@@ -156,9 +155,6 @@
         </div>
         <p class="stat-label">Total approved authors</p>
         <p class="stat-value">{{ total_authors }}</p>
-        <p class="stat-subtext">
-            Including local and remote accounts that are currently active.
-        </p>
         <div class="stat-footer">
             <a href="{% url 'adminpage:authors' %}">
                 Manage authors <span class="arrow">→</span>
@@ -174,9 +170,6 @@
         </div>
         <p class="stat-label">Awaiting approval</p>
         <p class="stat-value">{{ pending_users }}</p>
-        <p class="stat-subtext">
-            Users who have registered but are not yet approved.
-        </p>
         <div class="stat-footer">
             <a href="{% url 'adminpage:pending-users' %}">
                 Review pending <span class="arrow">→</span>
@@ -192,9 +185,6 @@
         </div>
         <p class="stat-label">Hosted images</p>
         <p class="stat-value">{{ total_images }}</p>
-        <p class="stat-subtext">
-            Images stored via <code>HostedImage</code>, ready for posts & profiles.
-        </p>
         <div class="stat-footer">
             <a href="{% url 'adminpage:images' %}">
                 View library <span class="arrow">→</span>
@@ -210,9 +200,6 @@
         </div>
         <p class="stat-label">Connected nodes</p>
         <p class="stat-value">{{ federation_nodes }}</p>
-        <p class="stat-subtext">
-            Remote servers you’re currently talking to and sharing posts with.
-        </p>
         <div class="stat-footer">
             <a href="{% url 'adminpage:federation-dashboard' %}">
                 Federation tools <span class="arrow">→</span>
