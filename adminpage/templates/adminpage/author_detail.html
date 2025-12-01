@@ -109,21 +109,19 @@
   }
 
   .entry-card {
-    background-color: #ffffff !important;
+    background-color: #ffffff;
     border-radius: 12px;
     border: 1px solid rgba(128,0,32,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    padding: .75rem;
+    padding: .6rem .65rem;
     display: flex;
     flex-direction: column;
-    gap: .375rem;
+    gap: .35rem;
     min-width: 0;
-    max-height: 200px;
     transition: box-shadow 0.2s, transform 0.2s;
   }
 
-  /* Force white background on all children and REMOVE ANY BORDERS */
-  .entry-card,
+  /* Force neutral backgrounds on children and remove weird borders from nested elements */
   .entry-card *:not(.entry-image) {
     background-color: transparent !important;
     background-image: none !important;
@@ -168,29 +166,22 @@
   }
 
   .entry-content {
-    font-size: .82rem;
+    font-size: .8rem;
     color: #374151 !important;
-    line-height: 1.45;
+    line-height: 1.4;
     word-break: break-word;
+    white-space: pre-wrap;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 3; /* shorter so cards aren't huge */
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .entry-content.markdown {
-    white-space: pre-wrap;
-  }
-
-  .entry-content.plain {
-    white-space: pre-wrap;
-  }
-
   .entry-image {
     width: 100%;
-    max-height: 110px;
-    min-height: 110px;
-    height: 110px;
+    max-height: 100px;
+    min-height: 100px;
+    height: 100px;
     object-fit: cover;
     border-radius: 6px;
     display: block;
@@ -354,16 +345,17 @@
                 src="{{ e.image_url }}"
                 alt="{{ e.title|default:"Entry image" }}"
               >
-            
-            {# Display text content based on content_type #}
-            {% elif e.content %}
-              {% if e.content_type == "text/markdown" %}
-                <div class="entry-content markdown">{{ e.content|linebreaksbr }}</div>
-              {% elif e.content_type == "text/plain" %}
-                <div class="entry-content plain">{{ e.content }}</div>
-              {% else %}
-                <div class="entry-content">{{ e.content }}</div>
-              {% endif %}
+            {% endif %}
+
+            {# Display text content based on content_type (markdown / plain / anything else) #}
+            {% if e.content %}
+              <div class="entry-content">
+                {% if "markdown" in e.content_type %}
+                  {{ e.content|linebreaksbr }}
+                {% else %}
+                  {{ e.content }}
+                {% endif %}
+              </div>
             {% endif %}
 
             <footer class="entry-footer">
