@@ -1,120 +1,387 @@
 {% extends "base_adminpage.html" %}
 {% block title %}{{ node.name }}{% endblock %}
 
+{% block styles %}
+{{ block.super }}
+<style>
+  .node-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .node-container > li {
+    list-style: none;
+  }
+
+  .node-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .node-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .muted {
+    color: #6b7280;
+    font-size: .9rem;
+  }
+
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  /* Two-column info layout */
+  .node-info-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 800px) {
+    .node-info-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .section-title {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .info-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: .85rem;
+  }
+
+  .info-list strong {
+    font-weight: 600;
+  }
+
+  /* Status pill */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .85rem;
+    font-weight: 500;
+  }
+
+  .status-pill-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+  }
+
+  .status-active {
+    color: #166534;
+  }
+
+  .status-active .status-pill-dot {
+    background-color: #16a34a;
+  }
+
+  .status-inactive {
+    color: #b91c1c;
+  }
+
+  .status-inactive .status-pill-dot {
+    background-color: #dc2626;
+  }
+
+  /* Recent logs table (reuse logs_list styles) */
+  .logs-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .8rem;
+    min-width: 620px;
+  }
+
+  .logs-table thead {
+    background: #f9fafb;
+  }
+
+  .logs-table th,
+  .logs-table td {
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .logs-table th {
+    font-weight: 600;
+    font-size: .78rem;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+  }
+
+  .logs-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .logs-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .logs-table td {
+    vertical-align: top;
+  }
+
+  .cell-center {
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* Status dot */
+  .status-dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+  }
+
+  .status-success {
+    background-color: #16a34a;
+  }
+
+  .status-failure {
+    background-color: #dc2626;
+  }
+
+  .status-pending {
+    background-color: #f97316;
+  }
+
+  /* Code badge */
+  .code-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 500;
+  }
+
+  .code-ok {
+    background: #d1fae5;
+    color: #166534;
+  }
+
+  .code-error {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .code-none {
+    color: #9ca3af;
+    font-size: .72rem;
+  }
+
+  .error-chip {
+    margin-top: 4px;
+    font-size: .75rem;
+    color: #b91c1c;
+  }
+
+  .time-main {
+    font-size: .8rem;
+    color: #111827;
+  }
+
+  .time-sub {
+    font-size: .74rem;
+    color: #6b7280;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<ul class="container gap-6">
-  <li class="row align-center p-4" style="justify-content: space-between;">
-    <h1 class="text-xl semibold text-primary">{{ node.name }}</h1>
-    <ul class="row gap-2">
-      <li><a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-primary">Edit</a></li>
-      <li>
-        <form method="post" action="{% url 'adminpage:federation-node-delete' node.pk %}" style="display: inline;"
+<ul class="node-container">
+
+  <!-- Header: name + actions -->
+  <li class="node-card">
+    <div class="node-header">
+      <h1 class="text-xl semibold text-primary break-anywhere">
+        {{ node.name }}
+      </h1>
+      <div class="node-header-actions">
+        <a href="{% url 'adminpage:federation-node-update' node.pk %}" class="btn btn-primary">
+          Edit
+        </a>
+        <form method="post"
+              action="{% url 'adminpage:federation-node-delete' node.pk %}"
               onsubmit="return confirm('Are you sure you want to delete this node?');">
           {% csrf_token %}
           <button type="submit" class="btn btn-danger">Delete</button>
         </form>
-      </li>
-    </ul>
-  </li>
-
-  <!-- Node Information -->
-  <li class="grid cols-2 gap-6">
-    <div class="card p-4">
-      <ul class="gap-4">
-        <li><h2 class="text-lg semibold">Connection Details</h2></li>
-        <li>
-          <ul class="gap-2">
-            <li>
-              <strong>Status:</strong>
-              {% if node.is_active %}
-                <span style="color: green; font-weight: 500;">● Active</span>
-              {% else %}
-                <span style="color: red; font-weight: 500;">● Inactive</span>
-              {% endif %}
-            </li>
-            <li><strong>Base URL:</strong> <a href="{{ node.base_url }}" target="_blank" style="color: #0066cc;">{{ node.base_url }}</a></li>
-            <li><strong>Auth Method:</strong> {{ node.get_auth_method_display }}</li>
-          </ul>
-        </li>
-      </ul>
+      </div>
     </div>
-
   </li>
 
-  <!-- Additional Info -->
-  {% if node.description or node.admin_contact %}
-  <li class="card p-4">
-    <ul class="gap-3">
-      <li><h2 class="text-lg semibold">Additional Information</h2></li>
-      {% if node.admin_contact %}
-      <li><strong>Admin Contact:</strong> <a href="mailto:{{ node.admin_contact }}">{{ node.admin_contact }}</a></li>
-      {% endif %}
-      {% if node.description %}
-      <li><strong>Description:</strong><br>{{ node.description }}</li>
-      {% endif %}
-      <li style="font-size: 0.875rem; color: #666;">
-        <strong>Created:</strong> {{ node.created|date:"M d, Y H:i" }} | 
-        <strong>Updated:</strong> {{ node.updated|date:"M d, Y H:i" }}
-      </li>
-    </ul>
-  </li>
-  {% endif %}
+  <!-- Node information: Connection + Additional info -->
+  <li class="node-card">
+    <div class="node-info-grid">
 
-  <!-- Recent Logs -->
-  <li class="card p-4">
-    <ul class="gap-4">
-      <li>
-        <h2 class="text-lg semibold">Recent Activity (Last 50)</h2>
-      </li>
-      
-      {% if logs %}
-      <li>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-          <thead style="background: #f8f9fa;">
+      <!-- Connection details -->
+      <section>
+        <h2 class="section-title">Connection Details</h2>
+        <ul class="info-list">
+          <li>
+            <strong>Status:</strong>
+            {% if node.is_active %}
+              <span class="status-pill status-active">
+                <span class="status-pill-dot"></span>
+                Active
+              </span>
+            {% else %}
+              <span class="status-pill status-inactive">
+                <span class="status-pill-dot"></span>
+                Inactive
+              </span>
+            {% endif %}
+          </li>
+          <li>
+            <strong>Base URL:</strong>
+            <a href="{{ node.base_url }}" target="_blank" rel="noopener noreferrer"
+               class="break-anywhere" style="color:#800020; text-decoration:none;">
+              {{ node.base_url }}
+            </a>
+          </li>
+          <li>
+            <strong>Auth Method:</strong> {{ node.get_auth_method_display }}
+          </li>
+        </ul>
+      </section>
+
+      <!-- Additional info -->
+      <section>
+        <h2 class="section-title">Additional Information</h2>
+        <ul class="info-list">
+          {% if node.admin_contact %}
+            <li>
+              <strong>Admin Contact:</strong>
+              <a href="mailto:{{ node.admin_contact }}" class="break-anywhere">
+                {{ node.admin_contact }}
+              </a>
+            </li>
+          {% endif %}
+          {% if node.description %}
+            <li>
+              <strong>Description:</strong><br>
+              <span class="break-anywhere">{{ node.description }}</span>
+            </li>
+          {% endif %}
+          <li class="muted">
+            <strong>Created:</strong> {{ node.created|date:"M d, Y H:i" }}
+            &nbsp;|&nbsp;
+            <strong>Updated:</strong> {{ node.updated|date:"M d, Y H:i" }}
+          </li>
+        </ul>
+      </section>
+
+    </div>
+  </li>
+
+  <!-- Recent logs -->
+  <li class="node-card">
+    <h2 class="section-title">Recent Activity (Last 50)</h2>
+
+    {% if logs %}
+      <div class="logs-table-wrapper">
+        <table class="logs-table">
+          <thead>
             <tr>
-              <th style="text-align: center; padding: 8px; width: 80px;">Status</th>
-              <th style="text-align: left; padding: 8px;">Entry FQID</th>
-              <th style="text-align: center; padding: 8px; width: 100px;">Response</th>
-              <th style="text-align: left; padding: 8px; width: 180px;">Time</th>
+              <th class="cell-center" style="width: 70px;">Status</th>
+              <th>Entry FQID</th>
+              <th class="cell-center" style="width: 90px;">Response</th>
+              <th style="width: 170px;">Time</th>
             </tr>
           </thead>
           <tbody>
             {% for log in logs %}
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="text-align: center; padding: 8px;">
-                {% if log.status == 'success' %}
-                  <span style="color: green; font-size: 1.2rem;">●</span>
-                {% elif log.status == 'failure' %}
-                  <span style="color: red; font-size: 1.2rem;">●</span>
-                {% else %}
-                  <span style="color: orange; font-size: 1.2rem;">●</span>
-                {% endif %}
-              </td>
-              <td style="padding: 8px;">
-                <span title="{{ log.entry_fqid }}">{{ log.entry_fqid|truncatechars:60 }}</span>
-                {% if log.error_message %}
-                <br><small style="color: red;">{{ log.error_message|truncatechars:80 }}</small>
-                {% endif %}
-              </td>
-              <td style="text-align: center; padding: 8px;">
-                {% if log.response_status_code %}
-                  <span style="padding: 2px 6px; background: {% if log.response_status_code < 300 %}#d4edda{% else %}#f8d7da{% endif %}; border-radius: 3px;">
-                    {{ log.response_status_code }}
+              <tr>
+                <td class="cell-center">
+                  {% if log.status == 'success' %}
+                    <span class="status-dot status-success" title="Success"></span>
+                  {% elif log.status == 'failure' %}
+                    <span class="status-dot status-failure" title="Failure"></span>
+                  {% else %}
+                    <span class="status-dot status-pending" title="Pending"></span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <span class="break-anywhere" title="{{ log.entry_fqid }}">
+                    {{ log.entry_fqid|truncatechars:60 }}
                   </span>
-                {% else %}
-                  <span style="color: #999;">-</span>
-                {% endif %}
-              </td>
-              <td style="padding: 8px;">{{ log.created|date:"M d, H:i:s" }}</td>
-            </tr>
+                  {% if log.error_message %}
+                    <div class="error-chip break-anywhere">
+                      {{ log.error_message|truncatechars:80 }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td class="cell-center">
+                  {% if log.response_status_code %}
+                    {% if log.response_status_code < 300 %}
+                      <span class="code-badge code-ok">{{ log.response_status_code }}</span>
+                    {% else %}
+                      <span class="code-badge code-error">{{ log.response_status_code }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="code-none">–</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="time-main">
+                    {{ log.created|date:"M d, Y" }}
+                  </div>
+                  <div class="time-sub">
+                    {{ log.created|date:"H:i:s" }}
+                  </div>
+                </td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
-      </li>
-      {% else %}
-      <li class="text-muted">No activity logs yet</li>
-      {% endif %}
-    </ul>
+      </div>
+    {% else %}
+      <p class="muted" style="margin-top: 8px;">No activity logs yet.</p>
+    {% endif %}
   </li>
 </ul>
 {% endblock %}

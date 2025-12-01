@@ -1,10 +1,11 @@
 {% extends "base_adminpage.html" %}
-{% block title %}Federation Dashboard{% endblock %}
+
+{% block title %}{{ author.displayName }} · Entries{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-  .federation-container {
+  .author-detail-container {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -15,334 +16,366 @@
     gap: 20px;
   }
 
-  .federation-container > li {
+  .author-detail-container > li {
     list-style: none;
   }
 
-  .federation-header {
-    padding: 4px 4px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .federation-header h1 {
-    margin: 0;
-    font-size: 1.6rem;
-    color: #800020;
-    font-weight: 700;
-  }
-
-  .federation-header p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  .federation-card {
+  .author-detail-card {
     background-color: #ffffff;
     border-radius: 18px;
     border: 2px solid rgba(128,0,32,0.10);
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    padding: 18px 20px 20px;
+    padding: 16px 18px 18px;
   }
 
-  .federation-card ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .muted {
+    color: #6b7280;
+    font-size: .85rem;
   }
 
-  .federation-card h2 {
-    margin: 0 0 4px;
-    font-size: 1.1rem;
-    color: #800020;
-  }
-
-  .federation-card p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  /* Stats grid */
-  .federation-stats-grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  .stat-card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    border: 1px solid rgba(128,0,32,0.12);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    padding: 14px 16px;
+  .author-heading {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
-  .stat-label {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #999;
+  .author-heading h1 {
+    margin: 0;
   }
 
-  .stat-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #800020;
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
-  .stat-value--success {
-    color: #137b35;
-  }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-    white-space: nowrap;
-  }
-
-  .btn-primary {
-    background-color: #800020;
-    color: #ffffff;
-  }
-
-  .btn-primary:hover {
-    background-color: #9b1538;
-    transform: translateY(-1px);
-  }
-
-  .btn-success {
-    background-color: #198754;
-    color: #ffffff;
-  }
-
-  .btn-success:hover {
-    background-color: #147245;
-    transform: translateY(-1px);
-  }
-
-  .quick-actions-row {
+  /* Tabs */
+  .tabs {
     display: flex;
+    gap: .5rem;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 8px;
+    margin-top: .75rem;
   }
 
-  /* Nodes table */
-  .nodes-header-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 10px;
-  }
-
-  .nodes-table-wrapper {
-    margin-top: 6px;
-    overflow-x: auto;
-  }
-
-  .nodes-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  .nodes-table th,
-  .nodes-table td {
-    padding: 10px 8px;
-    text-align: left;
-    border-bottom: 1px solid rgba(128,0,32,0.08);
-  }
-
-  .nodes-table th {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #888;
-  }
-
-  .nodes-table tbody tr:hover {
-    background-color: #faf0f4;
-  }
-
-  .node-name-link {
-    color: #800020;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .node-name-link:hover {
-    text-decoration: underline;
-  }
-
-  .node-url {
-    font-size: 0.85rem;
-    color: #666;
-    word-break: break-all;
-  }
-
-  .status-pill {
+  .tab {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 4px 10px;
+    gap: .5rem;
+    padding: .35rem .7rem;
     border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    border: 1px solid rgba(128,0,32,0.15);
+    text-decoration: none;
+    background: #ffffff;
+    color: #4b1a25;
+    font-size: .8rem;
   }
 
-  .status-pill--active {
-    background-color: rgba(19,123,53,0.08);
-    color: #137b35;
+  .tab:hover {
+    background: rgba(128,0,32,0.03);
   }
 
-  .status-pill--inactive {
-    background-color: rgba(204,0,0,0.06);
-    color: #b3261e;
-  }
-
-  .status-dot {
-    font-size: 0.7rem;
-  }
-
-  .nodes-empty {
-    font-size: 0.9rem;
-    color: #777;
-  }
-
-  .nodes-empty a {
+  .tab.active {
+    border-color: #800020;
+    background: rgba(128,0,32,0.06);
+    box-shadow: 0 0 0 1px rgba(128,0,32,0.15) inset;
     color: #800020;
     font-weight: 600;
-    text-decoration: none;
   }
 
-  .nodes-empty a:hover {
+  .badge {
+    font-size: .7rem;
+    line-height: 1;
+    padding: .1rem .45rem;
+    border-radius: 999px;
+    background: rgba(128,0,32,0.09);
+    color: #800020;
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: .75rem;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  /* Cards grid */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: .75rem;
+  }
+
+  .entry-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(128,0,32,0.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: .55rem .6rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    min-width: 0;
+    transition: box-shadow 0.2s, transform 0.2s;
+    height: 180px;             /* SHORT fixed card height */
+    overflow: hidden;          /* clamp anything that overflows */
+  }
+
+  .entry-card *:not(img) {
+    background-color: transparent !important;
+    background-image: none !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .entry-card:hover {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+
+  .meta {
+    display: flex;
+    gap: .25rem;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: .7rem;
+    color: #111827;
+    min-width: 0;
+  }
+
+  .meta strong {
+    font-size: .75rem;
+    font-weight: 600;
+    color: #111827;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .meta .muted {
+    font-size: .65rem;
+    color: #9ca3af;
+  }
+
+  .description-text {
+    font-size: .7rem;
+    color: #6b7280;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .content-preview {
+    margin-top: .25rem;
+    font-size: .7rem;
+    color: #374151;
+    line-height: 1.2;
+    max-height: 2.4em; /* ~2 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .entry-image {
+    height: 60px;              /* small image */
+    width: 100%;
+    object-fit: cover;
+    border-radius: .4rem;
+    margin-top: .25rem;
+    flex-shrink: 0;
+  }
+
+  footer.entry-footer {
+    margin-top: auto;
+    padding-top: .3rem;
+    border-top: 1px solid rgba(128,0,32,0.08);
+    font-size: .6rem;
+    color: #9ca3af;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .entry-footer a {
+    color: #800020;
+    text-decoration: none;
+    font-size: .6rem;
+  }
+
+  .entry-footer a:hover {
     text-decoration: underline;
   }
 
-  @media (max-width: 640px) {
-    .federation-card {
-      padding: 14px 14px 16px;
-    }
+  /* Pagination */
+  .pagination {
+    display: flex;
+    gap: .5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
 
-    .nodes-table th,
-    .nodes-table td {
-      padding: 8px 6px;
-    }
+  .pagination a,
+  .pagination span {
+    padding: .35rem .7rem;
+    border-radius: .5rem;
+    border: 1px solid rgba(128,0,32,0.18);
+    text-decoration: none;
+    font-size: .8rem;
+    color: #374151;
+    background: #ffffff;
+  }
+
+  .pagination a:hover {
+    background: rgba(128,0,32,0.04);
+  }
+
+  .pagination .current {
+    background: rgba(128,0,32,0.08);
+    border-color: #800020;
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 2px solid rgba(128,0,32,0.20);
+    border-radius: 12px;
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-btn:hover {
+    background: rgba(128,0,32,0.05);
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="federation-container">
-  <!-- Page header -->
-  <li class="federation-header">
-    <h1>Federation Dashboard</h1>
-    <p>Monitor and manage the nodes connected to your Project Red instance.</p>
-  </li>
-
-  <!-- Stats cards -->
+<ul class="author-detail-container">
+  <!-- Back button -->
   <li>
-    <ul class="federation-stats-grid">
-      <li class="stat-card">
-        <span class="stat-label">Total Nodes</span>
-        <span class="stat-value">{{ status.total_nodes }}</span>
-      </li>
-      <li class="stat-card">
-        <span class="stat-label">Active Nodes</span>
-        <span class="stat-value stat-value--success">{{ status.active_nodes }}</span>
-      </li>
-    </ul>
+    <a href="{% url 'adminpage:authors' %}" class="back-btn">
+      ← Back to Authors
+    </a>
   </li>
 
-  <!-- Quick Actions -->
-  <li class="federation-card">
-    <ul>
-      <li>
-        <h2>Quick Actions</h2>
-        <p>Jump directly to managing or adding federation nodes.</p>
-      </li>
-      <li class="quick-actions-row">
-        <a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-primary">
-          Manage Nodes
+  <!-- Heading + Tabs card -->
+  <li class="author-detail-card">
+    <div class="author-heading">
+      <h1 class="text-xl semibold text-primary">
+        {{ author.displayName }}
+        <span class="muted">·</span>
+        <span class="muted break-anywhere">{{ author.id }}</span>
+      </h1>
+
+      <p class="muted">
+        {% if tab == "PUBLIC" %}Public posts{% endif %}
+        {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
+        {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
+        {% if tab == "DELETED" %}Deleted posts{% endif %}
+        · {{ blurb }}
+      </p>
+    </div>
+
+    <nav class="tabs" aria-label="Entry visibility tabs">
+      {% for t in tabs %}
+        <a class="tab{% if t.key == tab %} active{% endif %}"
+           href="{% url 'adminpage:author-detail-tab' author.id t.key %}">
+          <span>{{ t.label }}</span>
+          <span class="badge">{{ t.count }}</span>
         </a>
-        <a href="{% url 'adminpage:federation-node-create' %}" class="btn btn-success">
-          Add New Node
-        </a>
-      </li>
-    </ul>
+      {% endfor %}
+    </nav>
   </li>
 
-  <!-- Node Status Overview -->
-  <li class="federation-card">
-    <ul>
-      <li class="nodes-header-row">
-        <h2>Connected Nodes</h2>
-        <p>Overview of all configured federation nodes and their current status.</p>
-      </li>
+  <!-- Entries card -->
+  <li class="author-detail-card">
+    {% if page_obj.object_list %}
+      <div class="section-head">
+        <h2>
+          {% if tab == "PUBLIC" %}Public posts{% endif %}
+          {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
+          {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
+          {% if tab == "DELETED" %}Deleted posts{% endif %}
+        </h2>
+        <span class="muted">
+          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+          of {{ page_obj.paginator.count }} entries
+        </span>
+      </div>
 
-      {% if status.nodes %}
-        <li class="nodes-table-wrapper">
-          <table class="nodes-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>URL</th>
-                <th style="text-align: center;">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for node in status.nodes %}
-              <tr>
-                <td>
-                  <a href="{% url 'adminpage:federation-node-detail' node.id %}" class="node-name-link">
-                    {{ node.name }}
-                  </a>
-                </td>
-                <td class="node-url">{{ node.url }}</td>
-                <td style="text-align: center;">
-                  {% if node.is_active %}
-                    <span class="status-pill status-pill--active">
-                      <span class="status-dot">●</span> Active
-                    </span>
-                  {% else %}
-                    <span class="status-pill status-pill--inactive">
-                      <span class="status-dot">●</span> Inactive
-                    </span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </li>
-      {% else %}
-        <li class="nodes-empty">
-          No nodes configured yet.
-          <a href="{% url 'adminpage:federation-node-create' %}">Add your first node</a>.
-        </li>
-      {% endif %}
-    </ul>
+      <div class="cards">
+        {% for e in page_obj.object_list %}
+          <article class="entry-card">
+            <header>
+              <div class="meta break-anywhere">
+                <strong>{{ e.title|default:"(untitled)" }}</strong>
+                <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
+              </div>
+            </header>
+
+            {% if e.description %}
+              <p class="description-text break-anywhere">
+                {{ e.description|truncatechars:100 }}
+              </p>
+            {% endif %}
+
+            <div class="content-preview break-anywhere">
+              {# If this is an image-style entry, show a tiny image; otherwise show truncated text #}
+              {% if "image" in e.content_type|default_if_none:"" or e.image_url %}
+                {% if e.image_url %}
+                  <img src="{{ e.image_url }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
+                {% elif e.content %}
+                  <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
+                {% endif %}
+              {% else %}
+                {% if e.content %}
+                  {{ e.content|truncatechars:140 }}
+                {% endif %}
+              {% endif %}
+            </div>
+
+            <footer class="entry-footer">
+              <span>❤️ {{ e.likes_count }}</span>
+              <a href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">
+                View →
+              </a>
+            </footer>
+          </article>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.previous_page_number }}">Prev</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="muted">No entries for {{ tab|title }}.</p>
+    {% endif %}
   </li>
 </ul>
 {% endblock %}
