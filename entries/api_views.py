@@ -78,6 +78,8 @@ class EntryCommentsViewSet(viewsets.ViewSet):
 
 class EntryLikesViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
+    
     def _resolve_entry(self, author_serial=None, entry_serial=None, entry_fqid=None):
         if entry_fqid:
             return get_object_or_404(Entry, fqid=entry_fqid)
