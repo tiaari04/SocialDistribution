@@ -132,6 +132,9 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         direction = payload.get('direction')
         author_payload = payload.get('author_data') or payload.get('author') or {}
         author = _ensure_author(author_payload)
+        
+        if not author:
+            return {'status': 'error', 'error': 'missing_author'}
 
         entry_fqid = payload.get('entry')
         if not entry_fqid:
@@ -187,6 +190,9 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             print("OUTGOING")
             author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
             object_fqid = payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
@@ -217,6 +223,10 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             print("INCOMING")
             author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
+        
             object_fqid = payload.get('object_fqid') or payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
@@ -242,7 +252,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     if typ == "entry" and comments_src:
         for c in comments_src:
-            author_payload = c.get('author_data') or c.get('author') or {}
+            author_payload = c.get("author") or c.get('author_data') or {}
             author = _ensure_author(author_payload)
 
             entry_fqid = payload.get("id") or payload.get("fqid") or payload.get("url")
@@ -352,4 +362,3 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
-
