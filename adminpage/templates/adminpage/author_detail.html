@@ -16,6 +16,7 @@
     flex-direction: column;
     gap: 20px;
   }
+
   .author-detail-container > li {
     list-style: none;
   }
@@ -33,6 +34,7 @@
     flex-direction: column;
     gap: 6px;
   }
+
   .author-heading h1 {
     margin: 0;
   }
@@ -48,6 +50,7 @@
     flex-wrap: wrap;
     margin-top: .75rem;
   }
+
   .tab {
     display: inline-flex;
     align-items: center;
@@ -60,9 +63,11 @@
     color: #4b1a25;
     font-size: .85rem;
   }
+
   .tab:hover {
     background: rgba(128,0,32,0.03);
   }
+
   .tab.active {
     border-color: #800020;
     background: rgba(128,0,32,0.06);
@@ -70,6 +75,7 @@
     color: #800020;
     font-weight: 600;
   }
+
   .badge {
     font-size: .75rem;
     line-height: 1;
@@ -87,6 +93,7 @@
     gap: .75rem;
     flex-wrap: wrap;
   }
+
   .section-head h2 {
     margin: 0;
     font-size: 1rem;
@@ -94,7 +101,7 @@
     color: #111827;
   }
 
-  /* entries grid */
+  /* Entries grid */
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -106,15 +113,11 @@
     border-radius: 14px;
     border: 1px solid rgba(128,0,32,0.12);
     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    padding: 0.9rem 1rem 0.8rem;
+    padding: 0.85rem 1rem 0.8rem;
     display: flex;
     flex-direction: column;
-    gap: .4rem;
+    gap: .35rem;
     min-width: 0;
-  }
-
-  .entry-card header {
-    margin-bottom: .1rem;
   }
 
   .entry-meta {
@@ -131,40 +134,34 @@
     margin: 0;
   }
 
-  .entry-body {
-    margin-top: .3rem;
+  /* Just let content be content; no backgrounds */
+  .entry-content {
+    margin-top: .25rem;
     font-size: .9rem;
+    color: #111827;
     max-height: 220px;
     overflow: auto;
+    white-space: pre-wrap;
   }
 
-  /* break long URLs / ids */
+  /* Images */
+  .entry-image {
+    margin-top: .35rem;
+    border-radius: 10px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Break long URLs / ids */
   .break-anywhere {
     word-break: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
   }
 
-  /* images inside cards */
-  .entry-body img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-    display: block;
-  }
-
-  /* plain text preview */
-  .entry-text {
-    background: rgba(128,0,32,0.03);
-    border: 1px solid rgba(128,0,32,0.10);
-    border-radius: 8px;
-    padding: .55rem .6rem;
-    font-size: .86rem;
-    white-space: pre-wrap;
-  }
-
   footer.entry-footer {
-    margin-top: .35rem;
+    margin-top: .3rem;
     font-size: .8rem;
   }
 
@@ -174,6 +171,7 @@
     margin-top: 1rem;
     flex-wrap: wrap;
   }
+
   .pagination a,
   .pagination span {
     padding: .35rem .7rem;
@@ -184,9 +182,11 @@
     color: #374151;
     background: #ffffff;
   }
+
   .pagination a:hover {
     background: rgba(128,0,32,0.04);
   }
+
   .pagination .current {
     background: rgba(128,0,32,0.08);
     border-color: #800020;
@@ -206,6 +206,7 @@
     text-decoration: none;
     font-weight: 600;
   }
+
   .back-btn:hover {
     background: rgba(128,0,32,0.05);
   }
@@ -284,26 +285,25 @@
               </p>
             {% endif %}
 
-            <div class="entry-body break-anywhere">
-              {# 1. IMAGE POSTS #}
-              {% if e.content_type and "image" in e.content_type %}
-                {% if e.content %}
-                  <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}">
-                {% endif %}
+            {# CONTENT #}
+            {% if e.content %}
+              {# 1. IMAGE POSTS (e.g., image/png, image/jpeg) #}
+              {% if e.content_type and e.content_type|slice:":6" == "image/" %}
+                <img class="entry-image" src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}">
 
-              {# 2. MARKDOWN POSTS (render as HTML; swap filter if needed) #}
+              {# 2. MARKDOWN POSTS (render with simple linebreaks; swap to markdown filter if you have one) #}
               {% elif e.content_type and "markdown" in e.content_type %}
-                {{ e.content|safe }}
+                <div class="entry-content break-anywhere">
+                  {{ e.content|linebreaksbr }}
+                </div>
 
-              {# 3. EVERYTHING ELSE = PLAIN TEXT #}
+              {# 3. PLAIN TEXT OR OTHER TYPES #}
               {% else %}
-                {% if e.content %}
-                  <div class="entry-text">
-                    {{ e.content|truncatechars:260 }}
-                  </div>
-                {% endif %}
+                <div class="entry-content break-anywhere">
+                  {{ e.content|truncatechars:260 }}
+                </div>
               {% endif %}
-            </div>
+            {% endif %}
 
             <footer class="muted break-anywhere entry-footer">
               FQID:
@@ -312,8 +312,7 @@
                  target="_blank"
                  rel="noopener noreferrer">
                 {{ e.fqid }}
-              </a>
-              <br>
+              </a><br/>
               Likes: {{ e.likes_count }}
             </footer>
           </article>
