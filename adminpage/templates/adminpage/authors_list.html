@@ -175,6 +175,12 @@
     min-width: 0;
   }
 
+  /* kill bullets in header + rows */
+  .authors-grid li,
+  .authors-row-inner li {
+    list-style: none !important;
+  }
+
   /* Header row */
   .authors-header-row {
     background-color: #fff0f4;
@@ -209,7 +215,6 @@
     border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
-    text-transform: lowercase;
     white-space: nowrap;
   }
 
@@ -247,8 +252,8 @@
 
   /* Icon buttons for actions */
   .icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     border: 2px solid rgba(128,0,32,0.4);
     color: #800020;
@@ -258,8 +263,12 @@
     justify-content: center;
     cursor: pointer;
     transition: background .15s ease, color .15s ease, transform .1s ease;
-    font-size: 15px;
     flex-shrink: 0;
+  }
+
+  .icon-btn i {
+    font-size: 16px;
+    line-height: 1;
   }
 
   .icon-btn:hover {
@@ -368,27 +377,27 @@
               <!-- Local -->
               <li>
                 {% if a.is_local %}
-                  <span class="badge badge-local">local</span>
+                  <span class="badge badge-local">Local</span>
                 {% else %}
-                  <span class="text-muted">remote</span>
+                  <span class="text-muted">Remote</span>
                 {% endif %}
               </li>
 
               <!-- Admin -->
               <li>
                 {% if a.is_admin %}
-                  <span class="badge badge-admin">admin</span>
+                  <span class="badge badge-admin">Admin</span>
                 {% else %}
-                  <span class="text-muted">no</span>
+                  <span class="text-muted">No</span>
                 {% endif %}
               </li>
 
               <!-- Active -->
               <li>
                 {% if a.is_active %}
-                  <span class="badge badge-active">active</span>
+                  <span class="badge badge-active">Active</span>
                 {% else %}
-                  <span class="badge badge-inactive">inactive</span>
+                  <span class="badge badge-inactive">Inactive</span>
                 {% endif %}
               </li>
 
