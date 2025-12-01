@@ -4,51 +4,168 @@
 {% block styles %}
 {{ block.super }}
 <style>
-/* page-specific (optional) */
+  /* Remove default bullets + spacing from all uls/lis in this page */
+  .author-form-container,
+  .author-form-container ul,
+  .author-form-container li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .author-form-container {
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .author-form-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128, 0, 32, 0.10); /* burgundy theme */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .author-form-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 4px 0;
+  }
+
+  .author-form-heading h1 {
+    margin: 0;
+  }
+
+  /* Form grid */
+  .author-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    padding: 16px 4px 4px;
+  }
+
+  @media (max-width: 768px) {
+    .author-form-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .author-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .author-form-field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-strong, #111827);
+  }
+
+  .author-form-help {
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b7280);
+  }
+
+  .author-form-errors {
+    font-size: 0.8rem;
+    color: #b91c1c;
+  }
+
+  /* Style all inputs inside the card to match theme */
+  .author-form-card input,
+  .author-form-card select,
+  .author-form-card textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--gray-300, #d1d5db);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .author-form-card input:focus,
+  .author-form-card select:focus,
+  .author-form-card textarea:focus {
+    outline: none;
+    border-color: rgba(128, 0, 32, 0.6);
+    box-shadow: 0 0 0 1px rgba(128, 0, 32, 0.15);
+  }
+
+  /* Non-field errors box */
+  .author-form-nonfield {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--gray-100, #f3f4f6);
+    border: 1px solid var(--gray-200, #e5e7eb);
+  }
+
+  /* Actions row */
+  .author-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">
+<ul class="author-form-container">
+  <li class="author-form-heading">
+    <h1 class="text-xl semibold text-primary">
       {% if form.instance.pk %}Edit Author{% else %}Add Author{% endif %}
     </h1>
   </li>
 
-  <li class="card p-4">
+  <li class="author-form-card">
     <form method="post">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-      <ul class="p-3 border rounded" style="background:var(--gray-100);">
-        {% for err in form.non_field_errors %}<li class="text-sm text-strong">{{ err }}</li>{% endfor %}
+      <ul class="author-form-nonfield">
+        {% for err in form.non_field_errors %}
+          <li class="author-form-errors">{{ err }}</li>
+        {% endfor %}
       </ul>
       {% endif %}
 
-      <ul class="grid cols-2 gap-6 p-4">
+      <ul class="author-form-grid">
         {% for field in form.visible_fields %}
-        <li>
-          <ul class="gap-3">
-            <li><label for="{{ field.id_for_label }}" class="text-sm semibold text-strong">{{ field.label }}</label></li>
-            <li>{{ field }}</li>
-            {% if field.help_text %}<li class="text-sm text-muted">{{ field.help_text|safe }}</li>{% endif %}
-            {% if field.errors %}
-              <li>
-                <ul class="text-sm" style="color:#b91c1c;">
-                  {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              </li>
-            {% endif %}
-          </ul>
+        <li class="author-form-field">
+          <label for="{{ field.id_for_label }}" class="author-form-field-label">
+            {{ field.label }}
+          </label>
+
+          {{ field }}
+
+          {% if field.help_text %}
+            <span class="author-form-help">
+              {{ field.help_text|safe }}
+            </span>
+          {% endif %}
+
+          {% if field.errors %}
+            <ul class="author-form-errors">
+              {% for err in field.errors %}
+                <li>{{ err }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         </li>
         {% endfor %}
       </ul>
 
-      <ul class="row p-4">
-        <li><button type="submit" class="btn btn-primary">Save</button></li>
-        <li><a href="{% url 'adminpage:authors' %}" class="btn btn-outline">Cancel</a></li>
-      </ul>
+      <div class="author-form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">Cancel</a>
+      </div>
     </form>
   </li>
 </ul>
