@@ -5,285 +5,407 @@
     <title>Red Social Dist | Home</title>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token }}">
-
-    <!-- ICONS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
     <style>
-        :root {
-            --primary: #d62828;   /* Red */
-            --primary-light: #e85d5d;
-            --background: #fafafa;
-            --text-dark: #333;
-        }
-
         body {
-            margin: 0;
-            display: flex;
+            overflow: auto;
+            font-family: sans-serif;
             height: 100vh;
-            font-family: system-ui, sans-serif;
-            background: var(--background);
-            color: var(--text-dark);
-        }
-
-        /* --------------------------------------- */
-        /* SIDEBAR */
-        /* --------------------------------------- */
-        .sidebar {
-            width: 220px;
-            background: #fff;
-            border-right: 1px solid #ddd;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 30px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-        }
-
-        .sidebar h2 {
-            color: var(--primary);
             margin: 0;
+            background-color: #ffe5e5; /* soft red background */
         }
 
-        .side-links a {
+        main {
+            background: linear-gradient(135deg, #ffcccc, #ff9999);
+            padding-top: 30px;
+            z-index: 50;
+            flex: 1;
+        }
+
+        button {
+            background-color: #ff4d4d; /* red button */
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 5px 10px;
+            margin: 3px 5px 3px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 5px;
-            color: var(--text-dark);
-            font-size: 16px;
-            border-radius: 6px;
-            text-decoration: none;
+            justify-content: center;
         }
 
-        .side-links a:hover {
-            background: var(--primary-light);
+        button:hover {
+            cursor: pointer;
+            background-color: #ff1a1a;
             color: white;
         }
 
-        .side-profile {
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
+        button a {
+            color: white;
+            text-decoration: none;
         }
 
-        .side-profile img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
+        body.no-scroll {
+            overflow: hidden;
         }
 
-        /* --------------------------------------- */
-        /* MAIN FEED */
-        /* --------------------------------------- */
-        main {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: solid #ff4d4d 2px;
+            padding: 10px 20px;
+            background-color: #ff1a1a; /* stronger red */
+            color: white;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        ul.stream {
+            list-style: none; /* remove bullet points */
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            list-style-type: none;
+        }
+
+        p {
+            font-size: 14px;
         }
 
         .stream {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 30px;
+            min-height: 80vh;
+        }
+
+        .stream.comment {
+            align-items: start;
         }
 
         .post {
-            width: 60%;
-            background: white;
-            padding: 20px;
-            border-radius: 18px;
-            border: 1px solid #ddd;
-            margin: 0 auto;
+            width: 50vw;
+            background-color: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 2px 6px 10px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #ff4d4d; /* red accent */
+        }
+
+        .post.comment {
+            background-color: #ffe5e5;
+            border-top: 4px solid #ff1a1a;
+        }
+
+        .postContent {
+            color: #374151;
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .postContent img,
+        .postText img {
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            object-fit: contain;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .reactions {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: right;
+            padding-top: 10px;
+            gap: 10px;
+        }
+
+        .share {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sharePoint {
+            background-color: #ff4d4d;
+            width: 3px;
+            height: 3px;
+            border-radius: 3px;
+        }
+
+        .reactions p {
+            color: #ff1a1a;
+            margin: 0;
+            padding: 0;
         }
 
         .user {
             display: flex;
             justify-content: space-between;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .user a {
+            text-decoration: none;
+            color: #ff1a1a;
+            font-weight: 600;
+        }
+
+        .user a:hover {
+            text-decoration: underline;
+        }
+
+        .username a {
+            display: flex;
             align-items: center;
+            gap: 8px;
         }
 
         .profilePhoto {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             object-fit: cover;
+            background-color: white;
+            border-radius: 50%;
         }
 
-        .postContent img {
-            max-width: 100%;
-            border-radius: 10px;
-            margin-top: 10px;
+        .profilePhoto:hover {
+            box-shadow: 0px 3px #ff9999;
         }
 
-        .reactions {
+        #comments {
+            height: 100%;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: start;
             align-items: center;
-            margin-top: 15px;
+            gap: 20px;
+            overflow: auto;
+            margin-top: 30px;
         }
 
-        /* ICON BUTTONS */
-        .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px 10px;
-            color: var(--primary);
+        .comment {
+            width: 30vw;
+            border: solid 1px #ff4d4d;
+            padding: 10px 15px;
+            border-radius: 20px;
         }
 
-        .icon-btn:hover {
-            color: var(--primary-light);
-        }
-
-        .action-group {
+        #commentsPanel {
+            position: fixed;
+            top: 0;
+            right: -35vw;
+            width: 35vw;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 10px rgba(0, 0, 0, 0.2);
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: right 0.3s ease;
+            z-index: 200;
         }
 
-        /* NEW POST BUTTON */
+        #commentsPanel.visible {
+            right: 0;
+        }
+
+        #commentsPanel footer {
+            border-top: 1px solid #ff4d4d;
+            display: flex;
+            padding: 8px;
+        }
+
+        #commentInput {
+            flex: 1;
+            padding: 5px;
+            border-radius: 10px;
+            font-family: sans-serif;
+            border: 1px solid #ff4d4d;
+            margin-right: 10px;
+        }
+
+        #sendComment {
+            padding: 8px 12px;
+            background-color: #ff4d4d;
+            border: none;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .commentLikes {
+            width: 100%;
+            display: flex;
+            justify-content: end;
+            color: #ff1a1a !important;
+        }
+
+        .likeButton {
+            background-color: #ff4d4d;
+            border: none;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
         #createPost {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: var(--primary);
+            bottom: 20px;
+            left: 20px;
+            font-size: 20px;
+            border-radius: 30px;
+            padding: 10px 15px;
+            background-color: #ff4d4d;
             color: white;
-            font-size: 28px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
         }
 
-        #createPost:hover {
-            background: var(--primary-light);
-            cursor: pointer;
-        }
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
 
-        #createPost a {
-            color: white;
-            text-decoration: none;
+            .profilePhoto {
+                width: 35px;
+                height: 35px;
+            }
+
+            li.post {
+                width: 90%;
+            }
         }
     </style>
 
-    <!-- Your original JS and logic stays the same -->
-    {{ block.super }}
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-
-    <!-- ================================= -->
-    <!-- SIDEBAR -->
-    <!-- ================================= -->
-    <aside class="sidebar">
-        <h2>RED</h2>
-
-        <nav class="side-links">
-            <a href="{% url 'authors:list' %}">
-                <i class="fa-solid fa-users"></i> All Authors
-            </a>
-
-            {% if request.user.is_authenticated and request.user.author.is_admin %}
-            <a href="{% url 'adminpage:dashboard' %}">
-                <i class="fa-solid fa-gear"></i> Admin
-            </a>
-            {% endif %}
-        </nav>
-
-        <div class="side-profile">
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'authors:detail' author.serial %}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text-dark)">
-                <img class='profilePhoto' src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}">
-                <strong>{{ author.displayName }}</strong>
-            </a>
-            {% else %}
-            <a href="{% url 'login:login' %}" style="text-decoration:none;color:var(--primary);">
-                <i class="fa-solid fa-right-to-bracket"></i> Log In
-            </a>
-            {% endif %}
-        </div>
-    </aside>
-
-    <!-- ================================= -->
-    <!-- MAIN FEED -->
-    <!-- ================================= -->
-    <main>
-        <ul class="stream" id="stream">
-            {% for entry in entries %}
+<header>
+    <h3>CMPUT404</h3>
+    <a href="{% url 'authors:list' %}">All Authors</a>
+    {% if request.user.is_authenticated and request.user.author.is_admin %}
+        <a href="{% url 'adminpage:dashboard' %}">Admin</a>
+    {% endif %}
+    {% if request.user.is_authenticated %}
+        <a href="{% url 'authors:detail' author.serial %}">
+            <img class='profilePhoto' src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+        </a>   
+    {% else %}
+        <a href="{% url 'login:login' %}" class="button">Log In</a>
+    {% endif %}
+</header>
+<main>
+    <ul class="stream" id="stream">
+        {% for entry in entries %}
             <li id="post_{{ entry.fqid }}" class="post">
                 <section class="user">
-                    <a href="{% url 'authors:detail' entry.author.serial %}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text-dark);">
-                        <img class="profilePhoto" src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}">
-                        <strong>{{ entry.author.displayName }}</strong>
-                    </a>
-
-                    <!-- SHARE ICON -->
-                    <button class="icon-btn share" data-fqid="{{ entry.fqid }}/">
-                        <i class="fa-solid fa-share-nodes"></i>
+                    <section class="username">
+                        <a href="{% url 'authors:detail' entry.author.serial %}">
+                            <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
+                            {{ entry.author.displayName }}
+                        </a>
+                    </section>
+                    <button data-fqid="{{ entry.fqid }}/" class="share">
+                        <div class="sharePoint"></div>
+                        <div class="sharePoint"></div>
+                        <div class="sharePoint"></div>
                     </button>
                 </section>
 
                 <section class="postContent">
                     <h2>{{ entry.title }}</h2>
-                    <p>{{ entry.description }}</p>
-
+                    <h3>{{ entry.description }}</h3>
                     <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
                         {{ entry.content|striptags }}
                     </p>
 
                     {% if entry.image_url %}
-                    <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                        <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
                     {% endif %}
-                </section>
+                </section> 
 
                 <section class="reactions">
-                    <p>{{ entry.likes_count }} {{ entry.likes_count|pluralize:"like,likes" }}</p>
-
+                    <p>{{ entry.likes_count }} {% if entry.likes_count == 1 %}❤️{% else %}❤️{% endif %}</p>
                     {% if request.user.is_authenticated %}
-                    <div class="action-group">
-                        <!-- LIKE ICON -->
-                        <button class="icon-btn likeButton"
-                                data-fqid="{{ entry.fqid }}"
-                                data-endpoint="{% url 'api:author-inbox' author.serial %}">
-                            <i class="fa-regular fa-thumbs-up"></i>
-                        </button>
+                    <div>
+                        <button 
+                            data-fqid="{{ entry.fqid }}" 
+                            data-author="{{ entry.author.id }}" 
+                            data-endpoint="{% url 'api:author-inbox' author.serial %}" 
+                            class="likeButton">👍</button>
 
-                        <!-- COMMENT ICON -->
-                        <button class="icon-btn commentButton"
-                                data-fqid="{{ entry.fqid }}"
-                                data-endpoint="{% url 'api:author-inbox' author.serial %}">
-                            <i class="fa-regular fa-comment"></i>
-                        </button>
+                        <button 
+                            data-fqid="{{ entry.fqid }}" 
+                            data-author="{{ entry.author.id }}" 
+                            data-endpoint="{% url 'api:author-inbox' author.serial %}"
+                            class="commentButton">💬</button>
 
                         {% if entry.author.id == author.id %}
-                        <!-- EDIT ICON -->
-                        <a href="{% url 'entries:edit' entry.author.serial entry.serial %}" class="icon-btn">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
+                            <button>
+                                <a id='editButton' href="{% url 'entries:edit' entry.author.serial entry.serial %}">✏️</a>
+                            </button>
                         {% endif %}
                     </div>
                     {% endif %}
                 </section>
             </li>
-            {% endfor %}
-        </ul>
+        {% endfor %}
+    </ul>
 
-        <!-- NEW POST FLOATING BUTTON -->
-        <button id="createPost">
-            <a href="{% url 'entries:create' author.serial %}">
-                <i class="fa-solid fa-plus"></i>
-            </a>
-        </button>
+    <button id="createPost"><a href="{% url 'entries:create' author.serial %}" id="createPost" class="button">➕</a></button>
+</main>
 
-    </main>
+<section id="commentsPanel">
+    <header>
+        <h3>Comments</h3>
+        <button id="closePanel">&times;</button>
+    </header>
+    <section id="comments"></section>
+    <footer>
+        <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+        <button id="sendComment">Send</button>
+    </footer>
+</section>
 
+<template id="commentTemplate" class="comment">
+    <section class="comment">
+        <strong class="commentAuthor"></strong>
+        <p class="commentText"></p>
+        <section class="reactions">
+            <p class="commentLikes"></p>
+            <button class="likeButton">👍</button>
+        </section>
+    </section>
+</template>
 </body>
 </html>
