@@ -3,6 +3,10 @@
 
 {% block styles %}
 {{ block.super }}
+
+<!-- ADD FONT AWESOME (fix invisible icons) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
   .images-container {
     list-style: none;
@@ -15,8 +19,14 @@
     gap: 20px;
   }
 
-  .images-container > li {
-    list-style: none;
+  .images-container > li,
+  .images-card ul,
+  .images-grid li,
+  .images-row-inner li,
+  .list li {
+    list-style: none !important;   /* ← remove all bullets everywhere */
+    margin: 0;
+    padding: 0;
   }
 
   .images-card {
@@ -118,9 +128,9 @@
   .images-row-inner {
     display: grid;
     grid-template-columns:
-      minmax(90px, 1fr)     /* Preview */
-      minmax(240px, 3fr)    /* URL */
-      minmax(160px, 2fr);   /* Actions */
+      minmax(90px, 1fr)
+      minmax(240px, 3fr)
+      minmax(160px, 2fr);
     gap: 12px;
     align-items: center;
     min-width: 680px;
@@ -143,7 +153,6 @@
 
   .break-anywhere {
     word-break: break-word;
-    white-space: normal;
     overflow-wrap: anywhere;
   }
 
@@ -209,7 +218,6 @@
   <!-- Table -->
   <li>
     <section class="images-card" style="padding:0;">
-      <!-- Header -->
       <div class="images-header-row">
         <ul class="images-grid">
           <li>Preview</li>
@@ -218,22 +226,14 @@
         </ul>
       </div>
 
-      <!-- Body -->
-      <ul class="list" style="list-style:none; margin:0; padding:0;">
+      <ul class="list" style="margin:0; padding:0;">
         {% for i in images %}
         <li class="images-row">
           <ul class="images-row-inner">
-            <!-- Preview -->
-            <li>
-              <img class="thumb" src="{{ i.url }}" alt="image">
-            </li>
+            <li><img class="thumb" src="{{ i.url }}" alt="image"></li>
 
-            <!-- URL -->
-            <li class="mono break-anywhere text-muted">
-              {{ i.url }}
-            </li>
+            <li class="mono break-anywhere text-muted">{{ i.url }}</li>
 
-            <!-- Actions -->
             <li>
               <div style="display:flex; gap:8px;">
                 <a href="{% url 'adminpage:image-send' i.id %}"
@@ -246,7 +246,7 @@
                       method="post"
                       onsubmit="return confirm('Delete this image?');">
                   {% csrf_token %}
-                  <button type="submit" class="icon-btn delete" title="Delete image">
+                  <button type="submit" class="icon-btn delete">
                     <i class="fas fa-trash"></i>
                   </button>
                 </form>
@@ -258,7 +258,6 @@
         <li class="p-6 text-center text-muted">No images found.</li>
         {% endfor %}
       </ul>
-
     </section>
   </li>
 
