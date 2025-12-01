@@ -5,7 +5,7 @@
     <title>Red Social Dist | Home</title>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     {% include 'components/sidebar_styles.html' %}
     
@@ -31,7 +31,7 @@
             width: 100%;
             max-width: 900px;
             background-color: white;
-            padding: 20px 25px;
+            padding: 0;
             border-radius: 20px;
             border: 2px solid #800020;
             box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
@@ -42,11 +42,36 @@
             box-shadow: 2px 6px 12px rgba(0,0,0,0.12); 
         }
 
+        .postHeader {
+            background: #fff0f4;
+            border-bottom: 1px solid #e8c5cf;
+            padding: 12px 18px;
+            border-radius: 18px 18px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .postHeader .username a {
+            font-weight: 700;
+            color: #800020;
+            text-decoration: none;
+        }
+
+        .postHeader .username a:hover {
+            text-decoration: underline;
+        }
+
+        .postHeader .actions {
+            display: flex;
+            gap: 12px;
+        }
+
         .postContent { 
             background-color: #fff; 
             color: #374151; 
-            padding: 15px 20px; 
-            border-radius: 12px; 
+            padding: 20px 25px; 
+            border-radius: 0 0 18px 18px;
         }
         
         .postContent img, .postText img { 
@@ -56,28 +81,6 @@
             border-radius: 8px; 
             object-fit: contain; 
             margin: 5px 0; 
-        }
-
-        .user { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 10px; 
-            align-items: center; 
-        }
-        
-        .username a { 
-            font-weight: 600; 
-            color: #800020; 
-            text-decoration: none; 
-        }
-        
-        .username a:hover { 
-            text-decoration: underline; 
-        }
-
-        .actions { 
-            display: flex; 
-            gap: 10px; 
         }
         
         .iconButton { 
@@ -109,7 +112,6 @@
             color: #3a93d1;
         }
 
-        /* Like (red) */
         .actions .likeButton {
             color: #d7263d;
         }
@@ -117,7 +119,6 @@
             color: #f23e54;
         }
 
-        /* Comment (amber) */
         .actions .commentButton {
             color: #ffb400;
         }
@@ -125,7 +126,6 @@
             color: #ffc940;
         }
 
-        /* Edit (sea-green) */
         .actions a.iconButton i.fas.fa-edit {
             color: #2e8b57;
         }
@@ -151,7 +151,6 @@
             background-color: #a00030; 
         }
 
-        /* Comments panel */
         #commentsPanel {
             position: fixed;
             top: 0;
@@ -189,8 +188,6 @@
         #commentsPanel header h3 {
             margin: 0;
             font-size: 1.1rem;
-            color: #800020;
-            line-height: 1;
         }
 
         #closePanel {
@@ -200,14 +197,12 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0;
-            line-height: 1;
             width: 30px;
             height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            flex-shrink: 0;
         }
 
         #closePanel:hover {
@@ -239,7 +234,6 @@
             padding: 10px;
             border-radius: 10px;
             border: 2px solid #800020;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         #commentInput:focus {
@@ -289,13 +283,11 @@
             align-items: center;
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #f0f0f0;
         }
 
         .commentLikes {
             color: #800020;
             font-size: 0.9rem;
-            margin: 0;
         }
 
         .comment .likeButton {
@@ -315,22 +307,12 @@
         }
 
         @media (max-width: 900px) {
-            .stream { 
-                width: 95%; 
-            }
-            
-            #createPost { 
-                bottom: 20px; 
-                right: 20px; 
-            }
-            
-            #commentsPanel { 
-                width: 90vw; 
-                right: -90vw; 
-            }
+            .stream { width: 95%; }
+            #commentsPanel { width: 90vw; right: -90vw; }
         }
     </style>
 </head>
+
 <body>
     {% include 'components/sidebar_menu.html' %}
 
@@ -338,22 +320,31 @@
         <ul class="stream" id="stream">
             {% for entry in entries %}
                 <li id="post_{{ entry.fqid }}" class="post">
-                    <section class="user">
+
+                    <section class="postHeader">
                         <div class="username">
                             <a href="{% url 'authors:detail' entry.author.serial %}">{{ entry.author.displayName }}</a>
                         </div>
+
                         <div class="actions">
-                            <button class="iconButton share" data-fqid="{{ entry.fqid }}/" title="Share"><i class="fas fa-share-alt"></i></button>
+                            <button class="iconButton share" data-fqid="{{ entry.fqid }}/" title="Share">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+
                             {% if request.user.is_authenticated %}
                                 <button class="iconButton likeButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Like">
                                     <i class="fas fa-heart"></i>
                                     <span class="likeCount">{{ entry.likes_count }}</span>
                                 </button>
+
                                 <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Comment">
                                     <i class="fas fa-comment"></i>
                                 </button>
+
                                 {% if entry.author.id == author.id %}
-                                    <a href="{% url 'entries:edit' entry.author.serial entry.serial %}" class="iconButton" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'entries:edit' entry.author.serial entry.serial %}" class="iconButton" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -367,6 +358,7 @@
                             <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
                         {% endif %}
                     </section>
+
                 </li>
             {% endfor %}
         </ul>
@@ -398,10 +390,10 @@
     </template>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <script>
         'use strict';
 
-        // CSRF & user info
         const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
         const userFqid = '{{ author.id }}';
         const currUser = {
@@ -414,16 +406,13 @@
             web: '{{ author.web }}'
         };
 
-        // Parse markdown
         document.querySelectorAll('.postText').forEach(post => {
             if (post.dataset.type === "text/markdown") {
                 post.innerHTML = marked.parse(post.dataset.content);
             }
         });
 
-        // Like posts
         document.querySelectorAll('.likeButton').forEach(btn => {
-            // Only attach event to post like buttons, not comment like buttons
             if (!btn.closest('.comment')) {
                 btn.addEventListener('click', async () => {
                     const fqid = btn.dataset.fqid;
@@ -439,7 +428,6 @@
             }
         });
 
-        // Share posts
         document.querySelectorAll('.share').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
@@ -448,7 +436,6 @@
             });
         });
 
-        // Comment panel
         const commentButtons = document.querySelectorAll('.commentButton');
         const commentPanel = document.getElementById('commentsPanel');
         const closeComments = document.getElementById('closePanel');
@@ -526,13 +513,12 @@
                     const likeButton = clone.querySelector('.likeButton');
                     likeButton.addEventListener('click', async () => {
                         await likeComment(comment.fqid);
-                        loadComments(fqid); // Reload comments to show updated like count
+                        loadComments(fqid);
                     });
                     
                     commentsContent.appendChild(clone);
                 });
                 
-                // Handle pagination
                 if (commentRes.next) {
                     const res = await fetch(commentRes.next, {
                         method: 'GET',
@@ -546,7 +532,6 @@
             }
             
             commentPanel.classList.add('visible');
-            // Scroll to bottom to show newest comments
             commentsContent.scrollTop = commentsContent.scrollHeight;
         }
 
