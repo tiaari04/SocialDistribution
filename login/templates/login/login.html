@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-
+  <title>Red Social Dist | Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     /* -------- Page layout -------- */
     body {
@@ -14,26 +14,34 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #ebf2ff, #e0e7ff);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #f9e5eb, #fce7ed);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     main {
       background-color: white;
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      border: 2px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0, 0, 0, 0.1);
       padding: 2.5rem;
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
     }
 
     /* -------- Headings -------- */
     h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 700;
-      color: #1f2937;
+      color: #800020;
       text-align: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
     }
 
     /* -------- Form -------- */
@@ -45,42 +53,48 @@
 
     label {
       display: block;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: #800020;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
     }
 
     input[type="text"],
     input[type="password"] {
-      width: 93%;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.5rem;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d4a5a5;
+      border-radius: 10px;
       font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
     }
 
     input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      border-color: #a00030;
+      box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
     }
 
     /* -------- Button -------- */
     button {
       width: 100%;
-      background-color: #6366f1;
+      background-color: #800020;
       color: white;
       border: none;
       font-weight: 600;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
+      padding: 12px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.25s ease, transform 0.1s ease;
+      font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 0.5rem;
     }
 
     button:hover {
-      background-color: #4f46e5;
+      background-color: #a00030;
     }
 
     button:active {
@@ -91,40 +105,81 @@
     footer {
       margin-top: 1.5rem;
       text-align: center;
-      color: #6b7280;
+      color: #666;
       font-size: 0.95rem;
     }
 
     footer a {
-      color: #6366f1;
-      font-weight: 500;
+      color: #800020;
+      font-weight: 600;
       text-decoration: none;
     }
 
     footer a:hover {
+      color: #a00030;
       text-decoration: underline;
+    }
+
+    /* -------- Error messages -------- */
+    .errorlist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem 0;
+      background-color: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 10px 15px;
+      color: #c43535;
+      font-size: 0.9rem;
+    }
+
+    .errorlist li {
+      margin: 0;
+    }
+
+    @media (max-width: 500px) {
+      main {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
     }
   </style>
 </head>
-
 <body>
   <main>
-    <h1>Sign In</h1>
+    <h1><i class="fas fa-sign-in-alt"></i> Sign In</h1>
+    <p class="subtitle">Welcome back to Red Social Dist</p>
+    
+    {% if form.errors %}
+      <ul class="errorlist">
+        <li><i class="fas fa-exclamation-circle"></i> Invalid username or password. Please try again.</li>
+      </ul>
+    {% endif %}
 
     <form method="post">
       {% csrf_token %}
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required>
-
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
-
-      <button type="submit">Log In</button>
+      <div>
+        <label for="username"><i class="fas fa-user"></i> Username</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      
+      <div>
+        <label for="password"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      
+      <button type="submit">
+        <i class="fas fa-sign-in-alt"></i> Log In
+      </button>
     </form>
 
     <footer>
       <p>
-        Don’t have an account?
+        Don't have an account?
         <a href="{% url 'login:signup' %}">Sign up</a>
       </p>
     </footer>
