@@ -111,7 +111,7 @@
 
         .button-group { 
             display: grid;
-            grid-template-columns: 2fr 2fr;
+            grid-template-columns: 1fr 1fr;
             gap: 15px; 
             margin-top: 10px;
         }
@@ -213,18 +213,20 @@
                     <button type="submit" class="save-btn">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
-                </div>
-            </form>
-
-            <!-- Delete Form -->
-            <form method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}">
-                {% csrf_token %}
-                <div class="button-group" style="margin-top: 10px;">
-                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this entry?');">
+                    <button type="button" class="delete-btn" onclick="document.getElementById('deleteForm').submit(); return confirm('Are you sure you want to delete this entry?');">
                         <i class="fas fa-trash-alt"></i> Delete Entry
                     </button>
                 </div>
             </form>
+
+            <!-- Hidden Delete Form -->
+            <form id="deleteForm" method="POST" action="{% url 'entries:entry_delete' author_serial=entry.author.serial entry_serial=entry.serial %}" style="display: none;">
+                {% csrf_token %}
+            </form>
+
+            <a href="{% url 'entries:stream_home' author_serial=entry.author.serial %}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Stream
+            </a>
         </div>
     </main>
 </body>
