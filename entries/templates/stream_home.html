@@ -10,9 +10,13 @@
     {% include 'components/sidebar_styles.html' %}
     
     <style>
+        /* MAIN LAYOUT */
         main { 
             display: flex; 
             justify-content: center; 
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden; 
         }
         
         .stream { 
@@ -20,13 +24,16 @@
             flex-direction: column; 
             align-items: center; 
             gap: 30px; 
-            width: 75%; 
+            width: 100%; 
+            max-width: 900px; 
+            box-sizing: border-box;
         }
         
         .stream li { 
             list-style: none; 
         }
 
+        /* POST STYLING */
         .post {
             width: 100%;
             max-width: 900px;
@@ -36,6 +43,9 @@
             border: 2px solid #800020;
             box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
             transition: box-shadow 0.2s ease;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .post:hover { 
@@ -72,6 +82,9 @@
             color: #1d232d; 
             padding: 20px 25px; 
             border-radius: 0 0 18px 18px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         
         .postContent img, .postText img { 
@@ -81,6 +94,7 @@
             border-radius: 8px; 
             object-fit: contain; 
             margin: 5px 0; 
+            display: block;
         }
         
         .iconButton { 
@@ -151,6 +165,7 @@
             background-color: #a00030; 
         }
 
+        /* COMMENTS PANEL */
         #commentsPanel {
             position: fixed;
             top: 0;
@@ -257,6 +272,9 @@
             padding: 15px;
             margin-bottom: 15px;
             background-color: white;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .commentAuthor {
@@ -323,8 +341,12 @@
                             </button>
 
                             {% if request.user.is_authenticated %}
-                                <button class="iconButton likeButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Like">
-                                    <i class="fas fa-heart"></i>
+                                <button class="iconButton likeButton" 
+                                        data-fqid="{{ entry.fqid }}" 
+                                        data-liked="{{ entry.user_liked|yesno:'true,false' }}" 
+                                        data-endpoint="{% url 'api:author-inbox' author.serial %}" 
+                                        title="Like">
+                                    <i class="{% if entry.user_liked %}fas{% else %}far{% endif %} fa-heart"></i>
                                     <span class="likeCount">{{ entry.likes_count }}</span>
                                 </button>
 
@@ -375,7 +397,7 @@
             <p class="commentText"></p>
             <section class="reactions">
                 <p class="commentLikes"></p>
-                <button class="likeButton"><i class="fas fa-heart"></i></button>
+                <button class="likeButton" data-liked="false"><i class="far fa-heart"></i></button>
             </section>
         </section>
     </template>
@@ -397,28 +419,51 @@
             web: '{{ author.web }}'
         };
 
+        // Render markdown
         document.querySelectorAll('.postText').forEach(post => {
             if (post.dataset.type === "text/markdown") {
                 post.innerHTML = marked.parse(post.dataset.content);
             }
         });
 
+        // POST LIKE BUTTONS
         document.querySelectorAll('.likeButton').forEach(btn => {
             if (!btn.closest('.comment')) {
                 btn.addEventListener('click', async () => {
+                    if (btn.dataset.liked === "true") return;
+
                     const fqid = btn.dataset.fqid;
                     const endpoint = btn.dataset.endpoint;
                     const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
-                    const res = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken },
-                        body: JSON.stringify(payload)
-                    });
-                    if(res.ok) window.location.reload();
+                    
+                    try {
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Author-Id': userFqid,
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if(res.ok){
+                            btn.dataset.liked = "true";
+                            const icon = btn.querySelector('i');
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+
+                            const countSpan = btn.querySelector('.likeCount');
+                            countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                        } else {
+                            console.error(await res.text());
+                        }
+                    } catch(err) { console.error(err); }
                 });
             }
         });
 
+        // SHARE BUTTONS
         document.querySelectorAll('.share').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
@@ -427,6 +472,7 @@
             });
         });
 
+        // COMMENTS PANEL
         const commentButtons = document.querySelectorAll('.commentButton');
         const commentPanel = document.getElementById('commentsPanel');
         const closeComments = document.getElementById('closePanel');
@@ -464,7 +510,7 @@
             return res.json();
         }
 
-        async function likeComment(commentFqid) {
+        async function likeComment(commentFqid, likeBtn){
             const payload = {
                 type: "like",
                 direction: "outgoing",
@@ -481,8 +527,15 @@
                 },
                 body: JSON.stringify(payload),
             });
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
+            if(!res.ok) throw new Error(await res.text());
+
+            // Update UI
+            likeBtn.dataset.liked = "true";
+            likeBtn.querySelector('i').classList.replace('far', 'fas');
+
+            const likesElem = likeBtn.closest('.comment').querySelector('.commentLikes');
+            let count = parseInt(likesElem.textContent) || 0;
+            likesElem.textContent = `${count + 1} ${count + 1 === 1 ? 'like' : 'likes'}`;
         }
 
         async function loadComments(fqid){
@@ -499,12 +552,24 @@
                     
                     clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
                     clone.querySelector('.commentText').textContent = comment.content;
-                    clone.querySelector('.commentLikes').textContent = `${comment.likes_count} ${comment.likes_count === 1 ? "like" : "likes"}`;
-                    
+                    const likesElem = clone.querySelector('.commentLikes');
+                    likesElem.textContent = `${comment.likes_count} ${comment.likes_count === 1 ? "like" : "likes"}`;
+
                     const likeButton = clone.querySelector('.likeButton');
+                    likeButton.dataset.liked = comment.user_liked ? "true" : "false";
+
+                    const icon = likeButton.querySelector('i');
+                    if(comment.user_liked){
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
+
                     likeButton.addEventListener('click', async () => {
-                        await likeComment(comment.fqid);
-                        loadComments(fqid);
+                        if(likeButton.dataset.liked === "true") return;
+                        await likeComment(comment.fqid, likeButton);
                     });
                     
                     commentsContent.appendChild(clone);
@@ -515,34 +580,44 @@
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
                     });
-                    if (!res.ok) throw new Error(await res.text());
+                    if (!res.ok) break;
                     commentRes = await res.json();
                 } else {
                     commentRes = null;
                 }
             }
-            
-            commentPanel.classList.add('visible');
-            commentsContent.scrollTop = commentsContent.scrollHeight;
         }
 
-        commentButtons.forEach(btn=>{
-            btn.addEventListener('click',()=>{
+        commentButtons.forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
                 entryFqid = btn.dataset.fqid;
                 endpoint = btn.dataset.endpoint;
+                commentPanel.classList.add('visible');
                 loadComments(entryFqid);
             });
         });
 
-        sendCommentBtn.addEventListener('click', async ()=>{
-            const text = commentInput.value.trim();
-            if(!text) return;
+        closeComments.addEventListener('click', e => {
+            e.stopPropagation();
+            commentPanel.classList.remove('visible');
+            commentsContent.innerHTML='';
+        });
+
+        sendCommentBtn.addEventListener('click', async () => {
+            if(!commentInput.value.trim()) return;
+            await postComment(entryFqid, commentInput.value.trim());
             commentInput.value='';
-            await postComment(entryFqid, text);
             loadComments(entryFqid);
         });
 
-        closeComments.addEventListener('click',()=>commentPanel.classList.remove('visible'));
+        commentInput.addEventListener('keypress', async e => {
+            if(e.key==='Enter') {
+                e.preventDefault();
+                sendCommentBtn.click();
+            }
+        });
+
     </script>
 </body>
 </html>
