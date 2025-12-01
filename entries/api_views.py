@@ -21,6 +21,7 @@ class SmallPage(PageNumberPagination):
 class EntryCommentsViewSet(viewsets.ViewSet):
     pagination_class = SmallPage
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def _resolve_entry(self, author_serial=None, entry_serial=None, entry_fqid=None):
         if entry_fqid:
@@ -134,6 +135,7 @@ class EntryLikesViewSet(viewsets.ViewSet):
 
 class CommentLikesViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
     def _resolve_comment(self, author_serial=None, entry_serial=None, entry_fqid=None, comment_fqid=None):
         return get_object_or_404(Comment, fqid=comment_fqid)
 
