@@ -1,188 +1,330 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Choose from Admin Images</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --ink: #0f172a;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --ring: #c7d2fe;
-      --ring-strong: #60a5fa;
-      --bg: #f8fafc;
-      --panel: #ffffff;
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      margin: 0; background: var(--bg); color: var(--ink);
-    }
-    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px 88px; }
-    h1 { font-size: 20px; margin: 0 0 12px; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Red Social Dist | Choose Images</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    {% include 'components/sidebar_styles.html' %}
+    
+    <style>
+        main {
+            padding: 40px 20px 120px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    .thumb-grid {
-      display: grid; gap: 10px;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-    .thumb {
-      appearance: none; display: block; width: 100%;
-      border: 1px solid var(--border); border-radius: 10px;
-      overflow: hidden; background: var(--panel);
-      cursor: pointer; padding: 0;
-    }
-    .thumb img { width: 100%; height: 140px; object-fit: cover; display: block; }
-    .thumb.selected { box-shadow: 0 0 0 3px var(--ring-strong); border-color: #3b82f6; }
+        h1 { 
+            font-size: 2rem; 
+            margin: 0 0 15px; 
+            color: #800020;
+        }
 
-    .pager { display:flex; gap:.5rem; justify-content:center; margin:16px 0; flex-wrap: wrap; }
-    .pager a, .pager span {
-      padding:.35rem .6rem; border:1px solid var(--border);
-      border-radius:.5rem; text-decoration:none;
-      color: #111827; background:#fff;
-    }
-    .pager .current { box-shadow: 0 0 0 2px #e0e7ff inset; border-color:#c7d2fe; }
-    .muted { color: var(--muted); font-size: 12px; }
+        .muted { 
+            color: #666; 
+            font-size: 0.9rem; 
+            margin-bottom: 25px;
+        }
 
-    .bar {
-      position: fixed; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,.9);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(6px);
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 16px;
-    }
-    .bar .grow { flex: 1; color:#374151; font-size: 14px; min-width: 0; }
-    .btn {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: #111827; color: #fff;
-      border-radius: 10px;
-      padding: 10px 14px; font-weight: 600; cursor: pointer;
-    }
-    .btn[disabled] { opacity:.5; cursor: not-allowed; }
-    .btn.secondary { background:#fff; color:#111827; }
-  </style>
+        .muted code {
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #800020;
+        }
+
+        .thumb-grid {
+            display: grid; 
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            margin-bottom: 30px;
+        }
+
+        .thumb {
+            appearance: none; 
+            display: block; 
+            width: 100%;
+            border: 2px solid #800020; 
+            border-radius: 15px;
+            overflow: hidden; 
+            background: white;
+            cursor: pointer; 
+            padding: 0;
+            transition: all 0.2s;
+            box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
+        }
+
+        .thumb:hover {
+            box-shadow: 2px 6px 12px rgba(128, 0, 32, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .thumb img { 
+            width: 100%; 
+            height: 180px; 
+            object-fit: cover; 
+            display: block; 
+        }
+
+        .thumb.selected { 
+            box-shadow: 0 0 0 4px #a00030; 
+            border-color: #a00030;
+            transform: translateY(-2px);
+        }
+
+        .pager { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            margin: 30px 0; 
+            flex-wrap: wrap; 
+        }
+
+        .pager a, .pager span {
+            padding: 10px 18px; 
+            border: 2px solid #800020;
+            border-radius: 10px; 
+            text-decoration: none;
+            color: #800020; 
+            background: white;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pager a:hover {
+            background: #800020;
+            color: white;
+        }
+
+        .pager .current { 
+            background: #800020;
+            color: white;
+            border-color: #800020;
+        }
+
+        .no-images {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .bar {
+            position: fixed; 
+            left: 0; 
+            right: 0; 
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 2px solid #800020;
+            backdrop-filter: blur(8px);
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .bar .grow { 
+            flex: 1; 
+            color: #800020; 
+            font-size: 1rem; 
+            font-weight: 600;
+            min-width: 0; 
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            background: #800020; 
+            color: white;
+            border-radius: 10px;
+            padding: 12px 24px; 
+            font-weight: 600; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn:hover {
+            background: #a00030;
+        }
+
+        .btn[disabled] { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+
+        .btn.secondary { 
+            background: white; 
+            color: #800020;
+            border: 2px solid #800020;
+        }
+
+        .btn.secondary:hover {
+            background: #f9f5f5;
+        }
+
+        @media (max-width: 900px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .thumb-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+
+            .thumb img {
+                height: 140px;
+            }
+
+            .bar {
+                flex-wrap: wrap;
+                padding: 12px 15px;
+            }
+
+            .bar .grow {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Choose from Admin Images</h1>
+    {% include 'components/sidebar_menu.html' %}
 
-    <p class="muted">
-      Total: {{ page_obj.paginator.count }} &middot;
-      On this page: {{ page_obj.object_list|length }}
-      {% if not next %}&middot; (Tip: add <code>?next=...</code> to return to your form){% endif %}
-    </p>
+    <main>
+        <h1><i class="fas fa-images"></i> Choose from Admin Images</h1>
+        <p class="muted">
+            Total: {{ page_obj.paginator.count }} &middot;
+            On this page: {{ page_obj.object_list|length }}
+            {% if not next %}&middot; (Tip: add <code>?next=...</code> to return to your form){% endif %}
+        </p>
 
-    {% if page_obj.object_list %}
-      <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
-        {% for img in page_obj.object_list %}
-          <button
-            type="button"
-            class="thumb"
-            data-id="{{ img.id }}"
-            data-url="{{ img.url }}"
-            title="Click to select. Double-click to use.">
-            <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
-          </button>
-        {% endfor %}
-      </div>
+        {% if page_obj.object_list %}
+            <div class="thumb-grid" id="grid" data-next="{{ next|default:'' }}">
+                {% for img in page_obj.object_list %}
+                    <button
+                        type="button"
+                        class="thumb"
+                        data-id="{{ img.id }}"
+                        data-url="{{ img.url }}"
+                        title="Click to select. Double-click to use.">
+                        <img src="{{ img.url }}" alt="Hosted image {{ img.id }}" loading="lazy">
+                    </button>
+                {% endfor %}
+            </div>
 
-      <div class="pager">
-        {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">Prev</a>
+            <div class="pager">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </a>
+                {% endif %}
+                <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="no-images">
+                <i class="fas fa-image" style="font-size: 3rem; color: #800020; margin-bottom: 15px; display: block;"></i>
+                <p>No images found.</p>
+            </div>
         {% endif %}
-        <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if next %}&next={{ next|urlencode }}{% endif %}">Next</a>
-        {% endif %}
-      </div>
-    {% else %}
-      <p>No images found.</p>
-    {% endif %}
-  </div>
+    </main>
 
-  <div class="bar" id="bar">
-    <div class="grow" id="status">Pick an image.</div>
-    <button class="btn secondary" type="button" id="cancelBtn" onclick="history.back()">Cancel</button>
-    <button class="btn" type="button" id="useBtn" disabled>Use selected</button>
-  </div>
+    <div class="bar" id="bar">
+        <div class="grow" id="status"><i class="fas fa-hand-pointer"></i> Pick an image.</div>
+        <button class="btn secondary" type="button" id="cancelBtn" onclick="history.back()">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn" type="button" id="useBtn" disabled>
+            <i class="fas fa-check"></i> Use Selected
+        </button>
+    </div>
 
-  <script>
-    (function () {
-      const grid = document.getElementById('grid');
-      if (!grid) return;
+    <script>
+        (function () {
+            const grid = document.getElementById('grid');
+            if (!grid) return;
+            const next = grid.dataset.next || '';
+            const status = document.getElementById('status');
+            const useBtn = document.getElementById('useBtn');
+            let selected = null;
 
-      const next = grid.dataset.next || '';
-      const status = document.getElementById('status');
-      const useBtn = document.getElementById('useBtn');
-      let selected = null;
+            function appendParam(url, key, value) {
+                const sep = url.includes('?') ? '&' : '?';
+                return url + sep + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+            }
 
-      function appendParam(url, key, value) {
-        const sep = url.includes('?') ? '&' : '?';
-        return url + sep + encodeURIComponent(key) + '=' + encodeURIComponent(value);
-      }
+            function buildReturnUrl(hostedId, imageUrl) {
+                if (!next) return '';
+                let url = appendParam(next, 'hosted_id', hostedId);
+                url = appendParam(url, 'image_url', imageUrl);
+                return url;
+            }
 
-      function buildReturnUrl(hostedId, imageUrl) {
-        if (!next) return '';
-        let url = appendParam(next, 'hosted_id', hostedId);
-        url = appendParam(url, 'image_url', imageUrl);
-        return url;
-      }
+            function updateBar() {
+                if (!selected) {
+                    status.innerHTML = '<i class="fas fa-hand-pointer"></i> Pick an image.';
+                    useBtn.disabled = true;
+                    return;
+                }
+                status.innerHTML = `<i class="fas fa-check-circle"></i> Selected image #${selected.dataset.id}`;
+                useBtn.disabled = false;
+            }
 
-      function updateBar() {
-        if (!selected) {
-          status.textContent = 'Pick an image.';
-          useBtn.disabled = true;
-          return;
-        }
-        status.textContent = `Selected image #${selected.dataset.id}`;
-        useBtn.disabled = false;
-      }
+            function selectThumb(el) {
+                if (selected) selected.classList.remove('selected');
+                selected = el;
+                selected.classList.add('selected');
+                updateBar();
+            }
 
-      function selectThumb(el) {
-        if (selected) selected.classList.remove('selected');
-        selected = el;
-        selected.classList.add('selected');
-        updateBar();
-      }
+            grid.addEventListener('click', e => {
+                const el = e.target.closest('.thumb');
+                if (!el) return;
+                selectThumb(el);
+            });
 
-      grid.addEventListener('click', e => {
-        const el = e.target.closest('.thumb');
-        if (!el) return;
-        selectThumb(el);
-      });
+            grid.addEventListener('dblclick', e => {
+                const el = e.target.closest('.thumb');
+                if (!el) return;
+                selectThumb(el);
+                useBtn.click();
+            });
 
-      grid.addEventListener('dblclick', e => {
-        const el = e.target.closest('.thumb');
-        if (!el) return;
-        selectThumb(el);
-        useBtn.click(); // same action as Use button
-      });
+            useBtn.addEventListener('click', () => {
+                if (!selected) return;
+                const id = selected.dataset.id;
+                const url = selected.dataset.url;
+                const returnUrl = buildReturnUrl(id, url);
+                if (returnUrl) {
+                    window.location.assign(returnUrl);
+                } else {
+                    const md = `![image](${url})`;
+                    status.innerHTML = '<i class="fas fa-clipboard-check"></i> Copied markdown to clipboard. Returning...';
+                    navigator.clipboard?.writeText(md).catch(() => {});
+                    setTimeout(() => history.back(), 1000);
+                }
+            });
 
-      useBtn.addEventListener('click', () => {
-        if (!selected) return;
-        const id = selected.dataset.id;
-        const url = selected.dataset.url;
-        const returnUrl = buildReturnUrl(id, url);
-
-        if (returnUrl) {
-          window.location.assign(returnUrl);
-        } else {
-          // Copy markdown and then go back
-          const md = `![image](${url})`;
-          status.textContent = 'Copied markdown to clipboard. Returning...';
-          navigator.clipboard?.writeText(md).catch(()=>{});
-          setTimeout(() => history.back(), 1000);
-        }
-      });
-
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && selected && !useBtn.disabled) {
-          useBtn.click();
-        }
-      });
-    })();
-  </script>
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && selected && !useBtn.disabled) {
+                    useBtn.click();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
