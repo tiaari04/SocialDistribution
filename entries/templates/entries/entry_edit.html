@@ -22,10 +22,10 @@
             background-color: white;
             padding: 40px;
             border-radius: 20px;
-            border: 2px solid #800020;
-            box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
+            border: 1px solid #d4a5a5;
+            box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
         }
 
         h1 { 
@@ -52,7 +52,7 @@
             width: 100%; 
             padding: 12px; 
             margin-bottom: 20px;
-            border: 2px solid #800020; 
+            border: 1px solid #d4a5a5; 
             border-radius: 10px; 
             font-size: 1rem;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -92,7 +92,7 @@
         .admin-images-link {
             display: inline-block; 
             padding: 12px 20px; 
-            border: 2px solid #800020;
+            border: 1px solid #d4a5a5;
             border-radius: 10px; 
             text-decoration: none; 
             color: #800020; 
@@ -110,9 +110,8 @@
         }
 
         .button-group { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px; 
             margin-top: 10px;
         }
@@ -124,27 +123,26 @@
             border: none; 
             cursor: pointer; 
             font-weight: 600; 
-            flex: 1;
             transition: all 0.2s;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .save-btn { 
-            background-color: #800020; 
+            background-color: #2d7a3e; 
             color: white; 
         }
 
         .save-btn:hover { 
-            background-color: #a00030; 
+            background-color: #236030; 
         }
 
         .delete-btn { 
-            background-color: #dc3545; 
+            background-color: #c94747; 
             color: white; 
         }
 
         .delete-btn:hover { 
-            background-color: #a71d2a; 
+            background-color: #a73939; 
         }
 
         .back-link { 
@@ -168,6 +166,10 @@
 
             h1 {
                 font-size: 1.75rem;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
             }
         }
     </style>
