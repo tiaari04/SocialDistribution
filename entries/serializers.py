@@ -10,13 +10,29 @@ class AuthorRefSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = AuthorRefSerializer(read_only=True)
+    user_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['fqid', 'author', 'content', 'content_type', 'published', 'web', 'entry', 'likes_count']
-        read_only_fields = ['fqid', 'author', 'published', 'likes_count']
+        fields = [
+            'fqid', 'author', 'content', 'content_type', 
+            'published', 'likes_count', 'web', 'user_liked'
+        ]
 
+    def get_user_liked(self, obj):
+        """
+        Returns True if the requesting user has liked this comment.
+        """
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+
+        try:
+            author = Author.objects.get(user=request.user)
+        except Author.DoesNotExist:
+            return False
+
+        return Like.objects.filter(author=author, object_fqid=obj.fqid).exists()
 
 class LikeSerializer(serializers.ModelSerializer):
     author = AuthorRefSerializer(read_only=True)

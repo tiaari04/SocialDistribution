@@ -39,7 +39,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         qs = entry.comments.all().order_by('published', 'created')
         paginator = SmallPage()
         page = paginator.paginate_queryset(qs, request)
-        serializer = CommentSerializer(page, many=True)
+        serializer = CommentSerializer(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request, author_serial=None, entry_serial=None, entry_fqid=None):
