@@ -6,29 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ author.displayName }}'s Profile</title>
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  {% include 'components/sidebar_styles.html' %}
+  
   <style>
-    /* ----------- Base Layout ----------- */
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    .profile-wrapper {
+      width: 100%;
+      max-width: 1100px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem;
+      gap: 30px;
     }
 
-    main {
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      max-width: 800px;
-      width: 100%;
-      padding: 2rem;
+    /* Banner Section */
+    .profile-banner {
+      background: white;
+      border: 3px solid #800020;
+      border-radius: 20px;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
 
-    header {
+    .banner-content {
+      padding: 40px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -36,226 +43,332 @@
     }
 
     @media (min-width: 768px) {
-      header {
+      .banner-content {
         flex-direction: row;
         align-items: flex-start;
       }
     }
 
-    figure { margin: 0; }
+    figure { 
+      margin: 0; 
+    }
 
     figure img {
       width: 160px;
       height: 160px;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid #c7d2fe;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border: 5px solid #d4a5a5;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
 
-    section.profile-info { flex: 1; }
+    section.profile-info { 
+      flex: 1;
+      color: #800020;
+    }
 
     h1 {
-      font-size: 1.875rem;
+      font-size: 2rem;
       font-weight: 700;
-      color: #1f2937;
-      margin-bottom: 0.25rem;
+      color: #800020;
+      margin: 0 0 0.5rem 0;
     }
 
     .followers {
-      color: #4b5563;
+      color: #666;
       margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .followers a {
+      color: #800020;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .followers a:hover {
+      text-decoration: underline;
     }
 
     a.link {
-      color: #4f46e5;
+      color: #800020;
       font-weight: 500;
       text-decoration: none;
       display: block;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
     }
 
-    a.link:hover { text-decoration: underline; }
+    a.link:hover { 
+      color: #a00030;
+      text-decoration: underline; 
+    }
 
     p.bio {
       color: #374151;
       white-space: pre-line;
       margin-top: 1rem;
+      line-height: 1.6;
     }
 
-    /* ----------- Buttons ----------- */
     .button {
       display: inline-block;
-      margin-top: 1.5rem;
-      background-color: #6366f1;
+      margin-top: 0.75rem;
+      margin-right: 0.75rem;
+      background-color: #800020;
       color: white;
       font-weight: 600;
-      padding: 0.6rem 1.25rem;
+      padding: 10px 20px;
       border: none;
-      border-radius: 0.5rem;
-      box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
+      border-radius: 10px;
       cursor: pointer;
       text-decoration: none;
-      transition: background-color 0.25s ease, transform 0.1s ease;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .button:hover { background-color: #4f46e5; }
-    .button:active { transform: scale(0.98); }
+    .button:hover { 
+      background-color: #a00030;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(128, 0, 32, 0.2);
+    }
+    
+    .button:active { 
+      transform: scale(0.98);
+    }
 
-    /* pending style */
     .button.pending {
       background-color: #9ca3af !important;
-      cursor: pointer;
+      color: white !important;
     }
 
-    hr {
-      border: none;
-      border-top: 1px solid #d1d5db;
-      margin: 2rem 0;
+    /* Entries Section */
+    .entries-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
     }
 
-    /* ----------- Entries Section ----------- */
     .entries {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .entries h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #800020;
+      margin: 0 0 1.5rem 0;
     }
 
     .post {
-        max-width: 750px;
-        width: 100%;
-        background-color: #6366f1;
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      background-color: white;
+      padding: 25px;
+      border-radius: 15px;
+      border: 2px solid #800020;
+      box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
+      transition: box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+
+    .post:hover {
+      box-shadow: 2px 6px 12px rgba(128, 0, 32, 0.15);
     }
 
     .postContent {
-        background-color: white;
-        color: #374151;
-        width: full;
-        padding: 1px 15px;
-        border-radius: 10px;
+      background-color: #fff;
+      color: #374151;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    article img {
+    .postContent h2 {
+      color: #800020;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
+
+    .postContent h3 {
+      color: #666;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
+
+    .postText {
+      color: #374151;
+      line-height: 1.6;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .postText img,
+    .postContent img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: block;
+    }
+
+    .no-entries {
+      color: #666;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .profile-wrapper {
         max-width: 100%;
-        height: auto;
-    }
+      }
 
-    article.entries h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 0.75rem;
+      .banner-content {
+        padding: 30px 20px;
+      }
+
+      .entries-container {
+        padding: 25px 20px;
+      }
+
+      .post {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      figure img {
+        width: 120px;
+        height: 120px;
+      }
+
+      .button {
+        display: block;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+
+      .bio {
+        text-align: center;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Parse different content types -->
-    <script>
-        'use strict';
-        document.addEventListener("DOMContentLoaded", () => {
-            const posts = document.querySelectorAll('.postText');
-            posts.forEach(post => {
-                const contentType = post.dataset.type;
-                if (contentType === "text/markdown") {
-                    const html = marked.parse(post.dataset.content);
-                    post.innerHTML = html;
-                } else {
-
-                }
-            })
-        })
-    </script>
+  <script>
+    'use strict';
+    document.addEventListener("DOMContentLoaded", () => {
+      const posts = document.querySelectorAll('.postText');
+      posts.forEach(post => {
+        const contentType = post.dataset.type;
+        if (contentType === "text/markdown") {
+          const html = marked.parse(post.dataset.content);
+          post.innerHTML = html;
+        }
+      })
+    })
+  </script>
 </head>
 
 <body>
+  {% include 'components/sidebar_menu.html' %}
+
   <main>
-    <header>
-      <figure>
-        <img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
-      </figure>
+    <div class="profile-wrapper">
+      <!-- Banner -->
+      <div class="profile-banner">
+        <div class="banner-content">
+          <figure>
+            <img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+          </figure>
 
-      <section class="profile-info">
-        <h1>{{ author.displayName }}</h1>
-        <span class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
+          <section class="profile-info">
+            <h1>{{ author.displayName }}</h1>
+            <p class="followers">{{ follower_count }} <a href="{% url 'authors:followers' author.serial %}">Followers</a></p>
 
-        {% if author.github %}
-          <a href="{{ author.github }}" target="_blank" class="link">GitHub: {{ author.github }}</a>
-        {% endif %}
+            {% if author.github %}
+              <a href="{{ author.github }}" target="_blank" class="link"><i class="fab fa-github"></i> {{ author.github }}</a>
+            {% endif %}
 
-        {% if author.web %}
-          <a href="{{ author.web }}" target="_blank" class="link">Website: {{ author.web }}</a>
-        {% endif %}
+            {% if author.web %}
+              <a href="{{ author.web }}" target="_blank" class="link"><i class="fas fa-globe"></i> {{ author.web }}</a>
+            {% endif %}
 
-        <p class="bio">{{ author.description|default:"This author hasn’t added a bio yet." }}</p>
+            <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
 
-        {% comment %}
-          Show edit buttons if viewing own profile.
-          If authenticated and not owner: show follow button with data attributes.
-          If anonymous: show login link.
-        {% endcomment %}
+            {% if request.user.is_authenticated and request.user == author.user %}
+              <a href="{% url 'authors:edit' author.serial %}" class="button"><i class="fas fa-edit"></i> Edit Profile</a>
+              <a href="{% url 'authors:following' author.serial %}" class="button"><i class="fas fa-users"></i> Following</a>
+              <a href="{% url 'authors:follow-requests' author.serial %}" class="button"><i class="fas fa-user-plus"></i> Follow Requests ({{request_count}})</a>
 
-        {% if request.user.is_authenticated and request.user == author.user %}
-          <a href="{% url 'authors:edit' author.serial %}" class="button">Edit Profile</a>
-          <a href="{% url 'authors:following' author.serial %}" class="button">Following</a>
-          <a href="{% url 'authors:follow-requests' author.serial %}" class="button">Follow Requests ({{request_count}})</a>
+            {% elif request.user.is_authenticated %}
+              <button
+                id="follow-btn"
+                class="button {% if follow_status == 'Pending' %}pending{% endif %}"
+                data-endpoint="{% url 'api:author-inbox' author.serial %}"
+                data-initial-state="{{ follow_status|escapejs }}"
+                data-actor-id="{{ request.user.author.id|escapejs }}"
+                data-actor-host="{{ request.user.author.host|escapejs }}"
+                data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
+                data-actor-username="{{ request.user.username|escapejs }}"
+                data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
+                data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
+                data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
+                data-object-id="{{ author.id|escapejs }}"
+                data-object-host="{{ author.host|escapejs }}"
+                data-object-displayname="{{ author.displayName|escapejs }}"
+                data-object-github="{{ author.github|default:''|escapejs }}"
+                data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
+                data-object-web="{{ author.web|default:''|escapejs }}"
+              >
+                {{ follow_status }}
+              </button>
 
-        {% elif request.user.is_authenticated %}
-          {# The button uses data attributes for safe JS consumption. follow_status is set in the view. #}
-          <button
-            id="follow-btn"
-            class="button {% if follow_status == 'Pending' %}pending{% endif %}"
-            data-endpoint="{% url 'api:author-inbox' author.serial %}"
-            data-initial-state="{{ follow_status|escapejs }}"
-            data-actor-id="{{ request.user.author.id|escapejs }}"
-            data-actor-host="{{ request.user.author.host|escapejs }}"
-            data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
-            data-actor-username="{{ request.user.username|escapejs }}"
-            data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
-            data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
-            data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
-            data-object-id="{{ author.id|escapejs }}"
-            data-object-host="{{ author.host|escapejs }}"
-            data-object-displayname="{{ author.displayName|escapejs }}"
-            data-object-github="{{ author.github|default:''|escapejs }}"
-            data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
-            data-object-web="{{ author.web|default:''|escapejs }}"
-          >
-            {{ follow_status }}
-          </button>
+            {% else %}
+              <a href="{% url 'login:login' %}" class="button"><i class="fas fa-sign-in-alt"></i> Log in to follow</a>
+            {% endif %}
+          </section>
+        </div>
+      </div>
 
-        {% else %}
-          <a href="{% url 'login:login' %}" class="button">Log in to follow</a>
-        {% endif %}
-      </section>
-    </header>
-
-    <hr>
-
-    <article class="entries">
-      <h2>Public Entries</h2>
-      {% if entries %}
-        {% for entry in entries %}
-          <div class="post">
-            <div class="postContent">
-                <h2>{{ entry.title }}</h2>
-                <h3>
-                    {{ entry.description }}
-                </h3>
-                <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+      <!-- Posts -->
+      <div class="entries-container">
+        <article class="entries">
+          <h2><i class="fas fa-stream"></i> Public Entries</h2>
+          {% if entries %}
+            {% for entry in entries %}
+              <div class="post">
+                <div class="postContent">
+                  <h2>{{ entry.title }}</h2>
+                  <h3>{{ entry.description }}</h3>
+                  <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
                     {{ entry.content }}
-                </p>
-                {% if entry.image_url %}
+                  </p>
+                  {% if entry.image_url %}
                     <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
-                {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p>No entries yet — this section will display posts or GitHub activity.</p>
-      {% endif %}
-    </article>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="no-entries">No entries yet — this section will display posts or GitHub activity.</p>
+          {% endif %}
+        </article>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -263,12 +376,10 @@
       const btn = document.getElementById('follow-btn');
       if (!btn) return;
 
-      // read initial state and endpoint
       let state = (btn.dataset.initialState || "Request To Follow").trim();
       const endpoint = btn.dataset.endpoint;
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-      // actor and object built from safe data-attributes
       const actor = {
         type: "author",
         id: btn.dataset.actorId || "",
@@ -299,15 +410,9 @@
         }
       }
 
-      // initialize visual
       applyVisual(state);
 
       btn.addEventListener('click', async function () {
-        // State machine:
-        // Request To Follow -> POST -> Pending (if ok)
-        // Pending -> Cancel (optional DELETE) -> Request To Follow
-        // Unfollow -> Unfollow (optional DELETE) -> Request To Follow
-
         if (state === "Request To Follow") {
           const payload = {
             type: "follow",
@@ -341,37 +446,33 @@
           }
 
         } else if (state === "Pending" || state === "Unfollow") {
-          // Call delete API to remove pending or accepted follow requests
-          // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
-            const authorSerial = btn.dataset.actorSerial;
-            const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
-            deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
-            try{
-              const res = await fetch(deleteEndpoint, {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": csrfToken
-                }
-              });
-              if (res.ok) {
-                applyVisual("Request To Follow");
-              } else {
-                const text = await res.text();
-                console.error('Request to remove pending request failed', res.status, text);
-                alert("Failed to remove follow request.");
+          const authorSerial = btn.dataset.actorSerial;
+          const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
+          deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
+          try {
+            const res = await fetch(deleteEndpoint, {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
               }
+            });
+            if (res.ok) {
+              applyVisual("Request To Follow");
+            } else {
+              const text = await res.text();
+              console.error('Request to remove pending request failed', res.status, text);
+              alert("Failed to remove follow request.");
             }
-            catch (err) {
-              console.error(err);
-              alert("Network error while removing follow request.");
-            }
+          } catch (err) {
+            console.error(err);
+            alert("Network error while removing follow request.");
+          }
         }
       });
     })();
   </script>
   <script>
-    // When user returns to the page via back button, reload it
     window.addEventListener("pageshow", function (event) {
       if (event.persisted) {
         window.location.reload();

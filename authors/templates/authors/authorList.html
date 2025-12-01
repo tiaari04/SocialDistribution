@@ -1,8 +1,234 @@
-<h1>All Authors</h1>
-<ul>
-  {% for author in authors %}
-    {% if author.is_approved %}
-      <li>{{ author.displayName }} - <a href="{% url 'authors:detail' author.serial %}">View</a></li>
-    {% endif %}
-  {% endfor %}
-</ul>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Red Social Dist | Authors</title>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    {% include 'components/sidebar_styles.html' %}
+    
+    <style>
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fce4ea;
+            color: rgb(97, 2, 31);
+            font-weight: 600;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+        .page-header {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #800020;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #800020;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #a00030;
+            box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: #999;
+        }
+
+        .authors-list {
+            width: 100%;
+            max-width: 800px;
+            list-style: none;
+        }
+
+        .author-item {
+            background-color: white;
+            border: 2px solid #800020;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .author-item:hover {
+            box-shadow: 2px 4px 12px rgba(128, 0, 32, 0.15);
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .author-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .remote-badge {
+            background-color: #9e0027c6;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .view-profile-btn {
+            background: none;
+            color: #800020;
+            text-decoration: none;
+            padding: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-profile-btn:hover {
+            color: #a00030;
+            transform: translateX(3px);
+        }
+
+        .no-authors {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 60px;
+        }
+
+    </style>
+</head>
+<body>
+    {% include 'components/sidebar_menu.html' %}
+
+    <main>
+        <div class="page-header">
+            <h1>All Authors</h1>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Search authors...">
+        </div>
+
+        {% if authors %}
+            <ul class="authors-list" id="authorsList">
+                {% for author in authors %}
+                    {% if author.is_approved %}
+                        <li class="author-item" data-author-name="{{ author.displayName|lower }}">
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    {% if author.profileImage %}
+                                        <img src="{{ author.profileImage }}" alt="{{ author.displayName }}'s avatar">
+                                    {% else %}
+                                        <div class="avatar-initial">{{ author.displayName|slice:":1"|upper }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="author-details">
+                                    <span class="author-name">{{ author.displayName }}</span>
+                                    {% if not author.is_local %}
+                                        <span class="remote-badge">Remote</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <a href="{% url 'authors:detail' author.serial %}" class="view-profile-btn">
+                                →
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-authors">
+                <p>No authors found.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Search functionality
+        const searchBar = document.getElementById('searchBar');
+        const authorsList = document.getElementById('authorsList');
+        
+        if (searchBar && authorsList) {
+            searchBar.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const authorItems = authorsList.querySelectorAll('.author-item');
+                
+                authorItems.forEach(item => {
+                    const authorName = item.dataset.authorName;
+                    if (authorName.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

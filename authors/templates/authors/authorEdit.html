@@ -4,65 +4,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Profile</title>
-
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Red Social Dist | Edit Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  {% include 'components/sidebar_styles.html' %}
+  
   <style>
-    body {
-      min-height: 100vh;
-      margin: 0;
+    main {
       display: flex;
-      align-items: center;
       justify-content: center;
-      background: linear-gradient(to bottom right, #ebf4ff, #e0e7ff);
-      font-family: system-ui, sans-serif;
+      align-items: center;
+      padding: 40px 20px;
     }
 
-    main {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      max-width: 700px;
-      width: 90%;
-      padding: 2rem;
+    .form-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 800px;
     }
 
     h1 {
       text-align: center;
-      font-size: 1.8rem;
-      margin-bottom: 1.5rem;
-      color: #1f2937;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #800020;
     }
 
     form {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.2rem 1.5rem;
+      gap: 20px 25px;
     }
 
     label {
       font-weight: 600;
-      color: #374151;
+      color: #800020;
       display: block;
-      margin-bottom: 0.25rem;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
     }
 
     input, textarea {
       width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 0.5rem 0.1rem;
+      border: 1px solid #d4a5a5;
+      border-radius: 10px;
+      padding: 12px;
       font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
     }
 
     input:focus, textarea:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+      border-color: #a00030;
+      box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
     }
 
     textarea {
       resize: vertical;
+      min-height: 120px;
     }
 
     .full-width {
@@ -74,80 +80,105 @@
     }
 
     button {
-      background-color: #6366f1;
+      background-color: #800020;
       color: white;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     button:hover {
-      background-color: #4f46e5;
+      background-color: #a00030;
     }
 
     button:active {
       transform: scale(0.98);
     }
 
-    footer {
-      text-align: center;
-      margin-top: 1.5rem;
-      color: #4b5563;
-    }
-
-    footer a {
-      color: #6366f1;
+    .back-link {
+      display: inline-block;
+      margin-top: 25px;
       text-decoration: none;
-      font-weight: 500;
+      color: #800020;
+      font-weight: 600;
+      transition: color 0.2s;
+      text-align: center;
     }
 
-    footer a:hover {
+    .back-link:hover {
+      color: #a00030;
       text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .form-container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+
+      .full-width {
+        grid-column: span 1;
+      }
     }
   </style>
 </head>
 <body>
+  {% include 'components/sidebar_menu.html' %}
 
   <main>
-    <h1>Edit Your Profile</h1>
+    <div class="form-container">
+      <h1><i class="fas fa-user-edit"></i> Edit Your Profile</h1>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <section class="full-width">
+          <label for="displayName">Display Name</label>
+          <input type="text" name="displayName" id="displayName" value="{{ author.displayName }}" required>
+        </section>
+        
+        <section>
+          <label for="github">GitHub URL</label>
+          <input type="url" name="github" id="github" value="{{ author.github }}" placeholder="https://github.com/username">
+        </section>
+        
+        <section>
+          <label for="web">Website</label>
+          <input type="url" name="web" id="web" value="{{ author.web }}" placeholder="https://example.com">
+        </section>
+        
+        <section class="full-width">
+          <label for="profileImageFile">Upload Profile Image</label>
+          <input type="file" name="profileImageFile" id="profileImageFile" accept="image/*">
+        </section>
+        
+        <section class="full-width">
+          <label for="description">Description</label>
+          <textarea name="description" id="description" rows="4" placeholder="Tell others about yourself...">{{ author.description }}</textarea>
+        </section>
+        
+        <section class="full-width center">
+          <button type="submit"><i class="fas fa-save"></i> Save Changes</button>
+        </section>
+      </form>
 
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-
-      <section class="full-width">
-        <label for="displayName">Display Name</label>
-        <input type="text" name="displayName" id="displayName" value="{{ author.displayName }}" required>
-      </section>
-
-      <section>
-        <label for="github">GitHub URL</label>
-        <input type="url" name="github" id="github" value="{{ author.github }}" placeholder="https://github.com/username">
-      </section>
-
-      <section>
-        <label for="web">Website</label>
-        <input type="url" name="web" id="web" value="{{ author.web }}" placeholder="https://example.com">
-      </section>
-
-      <section class="full-width">
-        <label for="profileImageFile">Upload Profile Image</label>
-        <input type="file" name="profileImageFile" id="profileImageFile" accept="image/*">
-      </section>
-
-      <section class="full-width">
-        <label for="description">Description</label>
-        <textarea name="description" id="description" rows="4" placeholder="Tell others about yourself...">{{ author.description }}</textarea>
-      </section>
-
-      <section class="full-width center">
-        <button type="submit">Save Changes</button>
-      </section>
-    </form>
+      <div class="full-width center">
+        <a href="{% url 'authors:detail' author.serial %}" class="back-link">
+          <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+      </div>
+    </div>
   </main>
-
 </body>
 </html>
