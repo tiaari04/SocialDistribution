@@ -38,20 +38,22 @@ header a {
     width: 100%;
     text-align: left;
     font-size: 15px;
-    padding: 12px 20px;
+    padding: 12px 15px; 
     margin-bottom: 10px;
     border-radius: 12px;
     font-weight: 600;
     letter-spacing: 0.3px;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.3s, border-left-color 0.2s;
     border-left: 4px solid transparent;
+    box-sizing: border-box;
 }
 
 header a:hover {
-    background-color: #b81042; /* lighter red on hover */
+    background-color: #b81042; 
     border-left-color: #fff;
-    transform: translateX(5px);
+    padding-left: 18px;
 }
+
 
 main {
     flex: 1;
