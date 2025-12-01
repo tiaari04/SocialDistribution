@@ -349,7 +349,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 follow_request = FollowRequest.objects.create(
                     actor=actor,
                     author_followed = author_followed,
-                    state=FollowRequest.State.ACCEPTED
+                    state=FollowRequest.State.REQUESTING
                 ) 
                 follow_request.save()
                 return {'status': 'created', 'object': follow_request}
