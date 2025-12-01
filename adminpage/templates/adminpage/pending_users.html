@@ -3,45 +3,202 @@
 
 {% block styles %}
 {{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
-/* optional */
+  /* Mimic authors_list theme */
+  .approvals-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .approvals-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .approvals-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+  }
+  .approvals-heading p {
+    margin: 0;
+    font-size: 13px;
+    color: #7b5a65;
+  }
+
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .approvals-table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .approvals-grid,
+  .approvals-row-inner {
+    display: grid;
+    grid-template-columns:
+      minmax(180px, 2fr)    /* Username */
+      minmax(120px, 1.2fr)  /* Joined */
+      minmax(120px, 1fr);   /* Actions */
+    gap: 8px;
+    align-items: center;
+    min-width: 530px;
+  }
+
+  .approvals-header-row {
+    background-color: #fff0f4;
+    border-bottom: 1px solid rgba(128,0,32,0.12);
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b3b47;
+  }
+
+  .approvals-row {
+    border-top: 1px solid rgba(128,0,32,0.08);
+    padding: 10px 16px;
+    font-size: 13px;
+    background-color: #ffffff;
+    transition: background .12s ease;
+  }
+  .approvals-row:nth-child(even) {
+    background-color: #fdf8fa;
+  }
+  .approvals-row:hover {
+    background-color: #ffeef5;
+  }
+
+  .text-muted {
+    color: #9ca3af;
+  }
+
+  /* Icon buttons (same as authors_list) */
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    color: #800020;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+    flex-shrink: 0;
+  }
+  .icon-btn i {
+    font-size: 18px !important;
+  }
+  .icon-btn:hover {
+    background: #fff0f4;
+    transform: translateY(-2px);
+  }
+  .icon-btn.approve {
+    color: #15803d;
+  }
+  .icon-btn.approve:hover {
+    background: #e6f7ef;
+    color: #166534;
+  }
+  .icon-btn.decline {
+    color: #b00020;
+  }
+  .icon-btn.decline:hover {
+    background: #ffe6ea;
+    color: #e11d48;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Pending Users</h1></li>
+<ul class="approvals-container">
 
-  <!-- Header -->
+  <!-- Heading -->
   <li>
-    <ul class="grid cols-3 gap-2 header-row p-3 text-sm">
-      <li class="cell">Username</li>
-      <li class="cell">Joined</li>
-      <li class="cell">Actions</li>
-    </ul>
+    <section class="approvals-card">
+      <div class="approvals-heading">
+        <h1>Pending Users</h1>
+        <p>Approve or deny users waiting for activation.</p>
+      </div>
+    </section>
   </li>
 
-  <!-- Body -->
+  <!-- Table -->
   <li>
-    <ul class="border rounded shadow text-sm">
-      {% for u in pending %}
-      <li class="border-top">
-        <!-- ROW GRID -->
-        <ul class="grid cols-3 gap-2 p-3">
-          <li class="truncate">{{ u.displayName }}</li>
-          <li class="text-muted">{{ u.created }}</li>
-          <li>
-            <form action="{% url 'adminpage:approve-user' u.id %}" method="post" onsubmit="return confirm('Approve {{ u.displayName }}?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-success" style="padding:.375rem .75rem; font-size:.75rem;">Approve</button>
-            </form>
+    <section class="approvals-card approvals-table-card">
+      <div class="table-scroll">
+
+        <!-- Header Row -->
+        <div class="approvals-header-row">
+          <ul class="approvals-grid">
+            <li>Username</li>
+            <li>Joined</li>
+            <li>Actions</li>
+          </ul>
+        </div>
+
+        <!-- Body -->
+        <ul class="approvals-table-inner">
+          {% for u in pending %}
+          <li class="approvals-row">
+            <ul class="approvals-row-inner">
+
+              <li class="break-anywhere">
+                {{ u.displayName }}
+              </li>
+
+              <li class="text-muted">
+                {{ u.created }}
+              </li>
+
+              <li>
+                <div style="display:flex;gap:8px;">
+                  <!-- APPROVE -->
+                  <form action="{% url 'adminpage:approve-user' u.id %}" method="post"
+                        onsubmit="return confirm('Approve {{ u.displayName }}?');">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn approve" title="Approve user">
+                      <i class="fas fa-check"></i>
+                    </button>
+                  </form>
+
+                  <!-- DECLINE -->
+                  <form action="{% url 'adminpage:decline-user' u.id %}" method="post"
+                        onsubmit="return confirm('Decline {{ u.displayName }}?');">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn decline" title="Decline user">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </form>
+                </div>
+              </li>
+
+            </ul>
           </li>
+          {% empty %}
+          <li class="approvals-row">
+            <div class="text-muted" style="text-align:center; width:100%;">No pending users.</div>
+          </li>
+          {% endfor %}
         </ul>
-      </li>
-      {% empty %}
-      <li class="p-6 text-center text-muted">No pending users.</li>
-      {% endfor %}
-    </ul>
+
+      </div>
+    </section>
   </li>
 </ul>
 {% endblock %}
