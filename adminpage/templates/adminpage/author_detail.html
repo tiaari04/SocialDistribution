@@ -340,7 +340,7 @@
                 <div class="entry-content">
                   {% if "markdown" in e.content_type|default_if_none:"" %}
                     {# Render markdown content #}
-                    {{ e.content|markdownify }}
+                    {{ e.content|markdown }}
                   {% else %}
                     <p>{{ e.content }}</p>
                   {% endif %}
