@@ -82,6 +82,33 @@
         .page-header p {
             color: #666;
             font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #800020;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #a00030;
+            box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: #999;
         }
 
         .authors-list {
@@ -106,6 +133,26 @@
             box-shadow: 2px 4px 12px rgba(128, 0, 32, 0.15);
         }
 
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #800020, #a00030);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
         .author-name {
             font-size: 1.1rem;
             font-weight: 600;
@@ -116,11 +163,14 @@
             background-color: #800020;
             color: white;
             text-decoration: none;
-            padding: 8px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-weight: 600;
             transition: all 0.2s ease;
-            font-size: 0.95rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .view-profile-btn:hover {
@@ -182,14 +232,23 @@
             <p>Browse community members</p>
         </div>
 
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Search authors...">
+        </div>
+
         {% if authors %}
-            <ul class="authors-list">
+            <ul class="authors-list" id="authorsList">
                 {% for author in authors %}
                     {% if author.is_approved %}
-                        <li class="author-item">
-                            <span class="author-name">{{ author.displayName }}</span>
+                        <li class="author-item" data-author-name="{{ author.displayName|lower }}">
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    {{ author.displayName|first|upper }}
+                                </div>
+                                <span class="author-name">{{ author.displayName }}</span>
+                            </div>
                             <a href="{% url 'authors:detail' author.serial %}" class="view-profile-btn">
-                                View Profile
+                                →
                             </a>
                         </li>
                     {% endif %}
@@ -201,5 +260,27 @@
             </div>
         {% endif %}
     </main>
+
+    <script>
+        // Search functionality
+        const searchBar = document.getElementById('searchBar');
+        const authorsList = document.getElementById('authorsList');
+        
+        if (searchBar && authorsList) {
+            searchBar.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const authorItems = authorsList.querySelectorAll('.author-item');
+                
+                authorItems.forEach(item => {
+                    const authorName = item.dataset.authorName;
+                    if (authorName.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>
