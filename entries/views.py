@@ -278,7 +278,7 @@ def entry_create(request, author_serial):
             entry.serial = str(uuid.uuid4())
             scheme = 'https' if request.is_secure() else 'http'
             domain = request.get_host()
-            entry.fqid = f"{scheme}://{domain}/authors/{author.serial}/entries/{entry.serial}"
+            entry.fqid = f"{scheme}://{domain}/api/authors/{author.serial}/entries/{entry.serial}"
             
             hosted_id = request.POST.get("hosted_id")
             if hosted_id:
