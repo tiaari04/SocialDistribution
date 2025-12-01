@@ -580,7 +580,7 @@
                                     {{ entry.author.displayName }}
                                 </a>
                             </section>
-                            <button data-fqid="{{ entry.fqid|replace:'/api/','/' }}" class="share">
+                            <button data-fqid="{{ entry.cleaned_fqid }}/" class="share">
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>
                                 <div class="sharePoint"></div>

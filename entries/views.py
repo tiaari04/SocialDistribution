@@ -222,6 +222,9 @@ def stream_home(request, author_serial):
         remote_visible
     ).select_related("author").order_by("-published")
 
+    for e in entries:
+        e.cleaned_fqid = e.fqid.replace("/api/", "/")
+
     likes = Like.objects.filter(fqid__icontains=current_author.id)
     like_ids = []
     for like in likes: 
