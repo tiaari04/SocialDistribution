@@ -140,33 +140,33 @@ def api_author_following(request, author_serial):
 	return JsonResponse(resp, status=status_code)
 
 def api_author_following_detail(request, author_serial, foreign_serial):
-
     if request.method not in ["GET", "PUT", "DELETE"]:
         return JsonResponse({"detail": "Method not allowed"}, status=405)
-
-    # Get the local author
+    
     author = get_object_or_404(Author, serial=author_serial)
-    # Get the target author by UUID
+    
     foreign_author = get_object_or_404(Author, serial=foreign_serial)
-
-    # Make sure the authenticated user matches the author
+    
     if not request.user.is_authenticated or str(request.user.author.serial) != str(author_serial):
         return JsonResponse({"detail": "Authentication required"}, status=403)
-
+    
     if request.method == "GET":
         result = followers_services.get_followed_author(author, foreign_author)
         if result:
             return JsonResponse(result)
         return JsonResponse({"is_following": False}, status=404)
-
+    
     elif request.method == "PUT":
         response = followers_services.add_followed_author(author, foreign_author)
         if response.get("details") == "exists":
             return JsonResponse({"detail": "Follow request already exists"}, status=200)
         if response.get("details") == "created":
             return JsonResponse({"detail": "Follow request sent"}, status=201)
-
+    
     elif request.method == "DELETE":
+        if not author.is_local() or not foreign_author.is_local():
+            return JsonResponse({"detail": "Cannot unfollow remote authors"}, status=403)
+        
         response = followers_services.remove_followed_author(author, foreign_author)
         if response:
             return JsonResponse({"detail": "Author unfollowed"}, status=200)
