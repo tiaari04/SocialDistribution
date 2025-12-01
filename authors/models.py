@@ -1,72 +1,307 @@
-from django.db import models
-from django.core.validators import RegexValidator
-from django.contrib.auth.models import User
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Red Social Dist | Authors</title>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-MAX_URL = 1024
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f5f5;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-serial_validator = RegexValidator(
-    regex=r"^(?!http)(?!.*:).+$",
-    message="Serial must not start with 'http' and must not contain ':'."
-)
+        header {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 150px;
+            height: 100vh;
+            background-color: #800020;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 5px;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
 
-class TimeStampedModel(models.Model):
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated = models.DateTimeField(auto_now=True, db_index=True)
+        header h3 { 
+            margin-bottom: 30px; 
+            font-size: 20px; 
+            color: white; 
+            text-align: center; 
+        }
 
-    class Meta:
-        abstract = True
+        header a { 
+            color: white; 
+            text-decoration: none; 
+            margin: 10px 0; 
+            width: 100%; 
+            text-align: center; 
+            padding: 8px 0; 
+            border-radius: 10px; 
+            transition: background 0.2s ease; 
+            font-weight: 600; 
+        }
 
+        header a:hover { 
+            background-color: #a00030; 
+        }
 
-class Author(TimeStampedModel):
-    """
-    API identity is the fully-qualified URL (FQID). This is the PK to avoid collisions.
-    """
-    id = models.URLField(max_length=MAX_URL, primary_key=True)  # FQID
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    host = models.URLField(max_length=MAX_URL, help_text="Full API base, e.g., https://node/api/")
-    displayName = models.CharField(max_length=200, db_index=True)
-    github = models.URLField(max_length=MAX_URL, blank=True)
-    profileImage = models.URLField(max_length=MAX_URL, blank=True)
-    web = models.URLField(max_length=MAX_URL, blank=True)
-    description = models.TextField(blank=True)
-    is_approved = models.BooleanField(default=False, db_index=True)
-    # Convenience: whether this author account is hosted locally on this node
-    is_local = models.BooleanField(default=True, db_index=True)
-    is_admin = models.BooleanField(default=False, db_index=True)
-    is_active = models.BooleanField(default=True, db_index=True)
+        main {
+            flex: 1;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    # Optional: a locally convenient serial (NOT used for relations between nodes)
-    serial = models.CharField(
-        max_length=200, blank=True, null=True, validators=[serial_validator], db_index=True
-    )
+        .page-header {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
 
-    class Meta:
-        indexes = [
-            models.Index(fields=["displayName"]),
-            models.Index(fields=["host"]),
-            models.Index(fields=["is_local"]),
-            models.Index(fields=["serial"]),
-        ]
+        .page-header h1 {
+            color: #800020;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
 
-    def __str__(self) -> str:
-        return f"{self.displayName} ({self.id})"
+        .page-header p {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
 
-    def is_friend(self, other: "Author") -> bool:
-        """
-        Returns True if `self` and `other` have mutually accepted follow requests.
-        This relies on the `FollowRequest` model in the `inbox` app.
-        """
-        try:
-            from inbox.models import FollowRequest
-        except Exception:
-            return False
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
 
-        if self.id == other.id:
-            return True
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #800020;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.2s ease;
+        }
 
-        # accepted follow where self -> other and other -> self
-        accepted = FollowRequest.State.ACCEPTED
-        return (
-            FollowRequest.objects.filter(actor=self, author_followed=other, state=accepted).exists()
-            and FollowRequest.objects.filter(actor=other, author_followed=self, state=accepted).exists()
-        )
+        .search-bar:focus {
+            outline: none;
+            border-color: #a00030;
+            box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+        }
+
+        .search-bar::placeholder {
+            color: #999;
+        }
+
+        .authors-list {
+            width: 100%;
+            max-width: 800px;
+            list-style: none;
+        }
+
+        .author-item {
+            background-color: white;
+            border: 2px solid #800020;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .author-item:hover {
+            box-shadow: 2px 4px 12px rgba(128, 0, 32, 0.15);
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #800020, #a00030);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .author-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .author-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .remote-badge {
+            background-color: #800020;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .view-profile-btn {
+            background: none;
+            color: #800020;
+            text-decoration: none;
+            padding: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-profile-btn:hover {
+            color: #a00030;
+            transform: translateX(3px);
+        }
+
+        .no-authors {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 900px) {
+            header { 
+                position: relative; 
+                width: 100%; 
+                height: auto; 
+                flex-direction: row; 
+                justify-content: space-around;
+                padding: 15px 10px;
+            }
+
+            header h3 {
+                margin-bottom: 0;
+            }
+
+            main { 
+                padding: 30px 20px; 
+            }
+
+            .page-header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h3>CMPUT404</h3>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'entries:stream_home' request.user.author.serial %}"><i class="fas fa-stream"></i> Stream</a>
+        {% else %}
+            <a href="/"><i class="fas fa-stream"></i> Stream</a>
+        {% endif %}
+        {% if request.user.is_authenticated and request.user.author.is_admin %}
+            <a href="{% url 'adminpage:dashboard' %}"><i class="fas fa-user-shield"></i> Admin</a>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'authors:detail' request.user.author.serial %}"><i class="fas fa-user"></i> Profile</a>
+        {% else %}
+            <a href="{% url 'login:login' %}"><i class="fas fa-sign-in-alt"></i> Log In</a>
+        {% endif %}
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h1>All Authors</h1>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Search authors...">
+        </div>
+
+        {% if authors %}
+            <ul class="authors-list" id="authorsList">
+                {% for author in authors %}
+                    {% if author.is_approved %}
+                        <li class="author-item" data-author-name="{{ author.displayName|lower }}">
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    {{ author.displayName|first|upper }}
+                                </div>
+                                <div class="author-details">
+                                    <span class="author-name">{{ author.displayName }}</span>
+                                    {% if not author.is_local %}
+                                        <span class="remote-badge">Remote</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <a href="{% url 'authors:detail' author.serial %}" class="view-profile-btn">
+                                →
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-authors">
+                <p>No authors found.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Search functionality
+        const searchBar = document.getElementById('searchBar');
+        const authorsList = document.getElementById('authorsList');
+        
+        if (searchBar && authorsList) {
+            searchBar.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const authorItems = authorsList.querySelectorAll('.author-item');
+                
+                authorItems.forEach(item => {
+                    const authorName = item.dataset.authorName;
+                    if (authorName.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
