@@ -1,4 +1,5 @@
 {% extends "base_adminpage.html" %}
+{% load tz %}
 {% block title %}Approvals{% endblock %}
 
 {% block styles %}
@@ -124,7 +125,6 @@
     <section class="approvals-card">
       <div class="approvals-heading">
         <h1>Pending Users</h1>
-        <p>Approve users waiting for activation.</p>
       </div>
     </section>
   </li>
@@ -155,7 +155,7 @@
 
               <!-- MST conversion -->
               <li class="text-muted">
-                {{ u.created|localtime }}
+                {{ u.created|timezone:"America/Edmonton"|date:"Y-m-d H:i" }} MST
               </li>
 
               <li>
