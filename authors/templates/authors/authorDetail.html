@@ -12,7 +12,7 @@
       margin: 0;
       min-height: 100vh;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+      background: linear-gradient(to bottom right, #ebf4ff, #e0e7ff);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -20,9 +20,9 @@
     }
 
     main {
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
       max-width: 800px;
       width: 100%;
       padding: 2rem;
@@ -68,7 +68,7 @@
     }
 
     a.link {
-      color: #4f46e5;
+      color: #6366f1;
       font-weight: 500;
       text-decoration: none;
       display: block;
@@ -86,21 +86,28 @@
     /* ----------- Buttons ----------- */
     .button {
       display: inline-block;
-      margin-top: 1.5rem;
+      margin-top: 0.75rem;
+      margin-right: 0.5rem;
       background-color: #6366f1;
       color: white;
       font-weight: 600;
-      padding: 0.6rem 1.25rem;
+      padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 0.5rem;
+      border-radius: 8px;
       box-shadow: 0 2px 5px rgba(99, 102, 241, 0.3);
       cursor: pointer;
       text-decoration: none;
-      transition: background-color 0.25s ease, transform 0.1s ease;
+      transition: background-color 0.2s, transform 0.1s;
+      font-size: 1rem;
     }
 
-    .button:hover { background-color: #4f46e5; }
-    .button:active { transform: scale(0.98); }
+    .button:hover { 
+      background-color: #4f46e5;
+    }
+    
+    .button:active { 
+      transform: scale(0.98);
+    }
 
     /* pending style */
     .button.pending {
@@ -116,31 +123,32 @@
 
     /* ----------- Entries Section ----------- */
     .entries {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .post {
-        max-width: 750px;
-        width: 100%;
-        background-color: #6366f1;
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.1);
+      max-width: 750px;
+      width: 100%;
+      background-color: #6366f1;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
     }
 
     .postContent {
-        background-color: white;
-        color: #374151;
-        width: full;
-        padding: 1px 15px;
-        border-radius: 10px;
+      background-color: white;
+      color: #374151;
+      width: full;
+      padding: 1px 15px;
+      border-radius: 10px;
     }
 
     article img {
-        max-width: 100%;
-        height: auto;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
     }
 
     article.entries h2 {
@@ -149,24 +157,40 @@
       color: #1f2937;
       margin-bottom: 0.75rem;
     }
+
+    .postContent h2 {
+      color: #1f2937;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .postContent h3 {
+      color: #4b5563;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .postText {
+      color: #374151;
+      line-height: 1.6;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Parse different content types -->
-    <script>
-        'use strict';
-        document.addEventListener("DOMContentLoaded", () => {
-            const posts = document.querySelectorAll('.postText');
-            posts.forEach(post => {
-                const contentType = post.dataset.type;
-                if (contentType === "text/markdown") {
-                    const html = marked.parse(post.dataset.content);
-                    post.innerHTML = html;
-                } else {
-
-                }
-            })
-        })
-    </script>
+  <!-- Parse different content types -->
+  <script>
+    'use strict';
+    document.addEventListener("DOMContentLoaded", () => {
+      const posts = document.querySelectorAll('.postText');
+      posts.forEach(post => {
+        const contentType = post.dataset.type;
+        if (contentType === "text/markdown") {
+          const html = marked.parse(post.dataset.content);
+          post.innerHTML = html;
+        }
+      })
+    })
+  </script>
 </head>
 
 <body>
@@ -188,7 +212,7 @@
           <a href="{{ author.web }}" target="_blank" class="link">Website: {{ author.web }}</a>
         {% endif %}
 
-        <p class="bio">{{ author.description|default:"This author hasn’t added a bio yet." }}</p>
+        <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
 
         {% comment %}
           Show edit buttons if viewing own profile.
@@ -239,21 +263,19 @@
         {% for entry in entries %}
           <div class="post">
             <div class="postContent">
-                <h2>{{ entry.title }}</h2>
-                <h3>
-                    {{ entry.description }}
-                </h3>
-                <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
-                    {{ entry.content }}
-                </p>
-                {% if entry.image_url %}
-                    <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
-                {% endif %}
+              <h2>{{ entry.title }}</h2>
+              <h3>{{ entry.description }}</h3>
+              <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+                {{ entry.content }}
+              </p>
+              {% if entry.image_url %}
+                <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+              {% endif %}
             </div>
           </div>
         {% endfor %}
       {% else %}
-        <p>No entries yet — this section will display posts or GitHub activity.</p>
+        <p style="color: #4b5563;">No entries yet — this section will display posts or GitHub activity.</p>
       {% endif %}
     </article>
   </main>
@@ -303,11 +325,6 @@
       applyVisual(state);
 
       btn.addEventListener('click', async function () {
-        // State machine:
-        // Request To Follow -> POST -> Pending (if ok)
-        // Pending -> Cancel (optional DELETE) -> Request To Follow
-        // Unfollow -> Unfollow (optional DELETE) -> Request To Follow
-
         if (state === "Request To Follow") {
           const payload = {
             type: "follow",
@@ -341,31 +358,28 @@
           }
 
         } else if (state === "Pending" || state === "Unfollow") {
-          // Call delete API to remove pending or accepted follow requests
-          // Example: await fetch(cancelEndpoint, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } })
-            const authorSerial = btn.dataset.actorSerial;
-            const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
-            deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
-            try{
-              const res = await fetch(deleteEndpoint, {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": csrfToken
-                }
-              });
-              if (res.ok) {
-                applyVisual("Request To Follow");
-              } else {
-                const text = await res.text();
-                console.error('Request to remove pending request failed', res.status, text);
-                alert("Failed to remove follow request.");
+          const authorSerial = btn.dataset.actorSerial;
+          const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
+          deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
+          try {
+            const res = await fetch(deleteEndpoint, {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
               }
+            });
+            if (res.ok) {
+              applyVisual("Request To Follow");
+            } else {
+              const text = await res.text();
+              console.error('Request to remove pending request failed', res.status, text);
+              alert("Failed to remove follow request.");
             }
-            catch (err) {
-              console.error(err);
-              alert("Network error while removing follow request.");
-            }
+          } catch (err) {
+            console.error(err);
+            alert("Network error while removing follow request.");
+          }
         }
       });
     })();
