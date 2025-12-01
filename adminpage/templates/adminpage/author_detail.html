@@ -5,61 +5,153 @@
 {% block styles %}
 {{ block.super }}
 <style>
+  .author-detail-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .author-detail-container > li {
+    list-style: none;
+  }
+
+  .author-detail-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10); /* burgundy border */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .author-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .author-heading h1 {
+    margin: 0;
+  }
+
+  .muted {
+    color: #6b7280; /* nice neutral gray */
+    font-size: .9rem;
+  }
+
   .tabs {
     display: flex;
     gap: .5rem;
     flex-wrap: wrap;
-    margin: 1rem 0;
+    margin-top: .75rem;
   }
+
   .tab {
     display: inline-flex;
     align-items: center;
     gap: .5rem;
-    padding: .5rem .75rem;
-    border: 1px solid var(--gray-200);
+    padding: .4rem .75rem;
     border-radius: 999px;
+    border: 1px solid rgba(128,0,32,0.15);
     text-decoration: none;
-    color: var(--gray-800);
-    background: var(--white);
+    background: #ffffff;
+    color: #4b1a25;
+    font-size: .85rem;
+    line-height: 1.1;
   }
+
+  .tab:hover {
+    background: rgba(128,0,32,0.03);
+  }
+
   .tab.active {
-    border-color: var(--blue-600);
-    box-shadow: 0 0 0 2px var(--blue-100) inset;
-    color: var(--blue-700);
+    border-color: #800020;
+    background: rgba(128,0,32,0.06);
+    box-shadow: 0 0 0 1px rgba(128,0,32,0.15) inset;
+    color: #800020;
     font-weight: 600;
   }
+
   .badge {
     font-size: .75rem;
     line-height: 1;
-    padding: .15rem .45rem;
+    padding: .15rem .5rem;
     border-radius: 999px;
-    background: var(--blue-100);
-    color: var(--blue-700);
+    background: rgba(128,0,32,0.09);
+    color: #800020;
   }
 
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  /* Cards grid for entries */
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 1rem;
   }
+
   .card {
-    border: 1px solid var(--gray-200);
-    border-radius: .75rem;
-    background: var(--white);
-    padding: 1rem;
-    min-width: 0; /* prevent grid items from forcing overflow */
+    background-color: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(128,0,32,0.12);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    padding: 0.9rem 1rem 0.85rem;
+    min-width: 0;
   }
 
-  .muted {
-    color: var(--gray-600);
-    font-size: .9rem;
+  .card header {
+    margin-bottom: .5rem;
   }
+
   .meta {
     display: flex;
-    gap: .5rem;
+    gap: .4rem;
     flex-wrap: wrap;
     align-items: center;
     min-width: 0;
+  }
+
+  /* prevent long URLs / IDs / base64 from causing horizontal overflow */
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .content-preview {
+    margin-top: .5rem;
+    font-size: .9rem;
+  }
+
+  .card img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: .5rem;
+    margin-top: .5rem;
+  }
+
+  footer.card-footer {
+    margin-top: .75rem;
+    font-size: .8rem;
   }
 
   .pagination {
@@ -68,69 +160,51 @@
     margin-top: 1rem;
     flex-wrap: wrap;
   }
+
   .pagination a,
   .pagination span {
-    padding: .4rem .65rem;
-    border: 1px solid var(--gray-200);
+    padding: .35rem .7rem;
     border-radius: .5rem;
+    border: 1px solid rgba(128,0,32,0.18);
     text-decoration: none;
-    color: var(--gray-800);
+    font-size: .85rem;
+    color: #374151;
+    background: #ffffff;
   }
+
+  .pagination a:hover {
+    background: rgba(128,0,32,0.04);
+  }
+
   .pagination .current {
-    border-color: var(--blue-600);
-    box-shadow: 0 0 0 2px var(--blue-100) inset;
-  }
-
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin: .5rem 0 1rem;
-    gap: .75rem;
-    flex-wrap: wrap;
-  }
-  .section-head h2 {
-    margin: 0;
-    font-size: 1rem;
+    background: rgba(128,0,32,0.08);
+    border-color: #800020;
+    color: #111827;
     font-weight: 600;
-    color: var(--gray-800);
-  }
-
-  /* prevent long URLs / IDs / base64 from causing horizontal overflow */
-  .break-anywhere {
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    white-space: normal; /* override any global a { white-space: nowrap } */
-  }
-
-  .content-preview {
-    margin-top: .5rem;
-    font-size: .9rem;
-  }
-
-  /* make any images inside cards behave */
-  .card img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    border-radius: .5rem;
-    margin-top: .5rem;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">
-      {{ author.displayName }}
-      <span class="muted">·</span>
-      <span class="muted break-anywhere">{{ author.id }}</span>
-    </h1>
-  </li>
+<ul class="author-detail-container">
+  <!-- Header + tabs card -->
+  <li class="author-detail-card">
+    <div class="author-heading">
+      <h1 class="text-xl semibold text-primary">
+        {{ author.displayName }}
+        <span class="muted">·</span>
+        <span class="muted break-anywhere">{{ author.id }}</span>
+      </h1>
 
-  <!-- Tabs -->
-  <li>
+      <p class="muted">
+        {% if tab == "PUBLIC" %}Public posts{% endif %}
+        {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
+        {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
+        {% if tab == "DELETED" %}Deleted posts{% endif %}
+        · {{ blurb }}
+      </p>
+    </div>
+
     <nav class="tabs" aria-label="Entry visibility tabs">
       {% for t in tabs %}
         <a class="tab{% if t.key == tab %} active{% endif %}"
@@ -142,24 +216,26 @@
     </nav>
   </li>
 
-  <!-- Section writing -->
-  <li class="section-head">
-    <h2>
-      {% if tab == "PUBLIC" %}Public posts{% endif %}
-      {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
-      {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
-      {% if tab == "DELETED" %}Deleted posts{% endif %}
-    </h2>
-    <span class="muted">{{ blurb }}</span>
-  </li>
-
-  <!-- Entries -->
-  <li>
+  <!-- Entries card -->
+  <li class="author-detail-card">
     {% if page_obj.object_list %}
+      <div class="section-head">
+        <h2>
+          {% if tab == "PUBLIC" %}Public posts{% endif %}
+          {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
+          {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
+          {% if tab == "DELETED" %}Deleted posts{% endif %}
+        </h2>
+        <span class="muted">
+          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+          of {{ page_obj.paginator.count }} entries
+        </span>
+      </div>
+
       <div class="cards">
         {% for e in page_obj.object_list %}
           <article class="card">
-            <header style="margin-bottom:.5rem;">
+            <header>
               <div class="meta break-anywhere">
                 <strong>{{ e.title|default:"(untitled)" }}</strong>
                 <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
@@ -186,7 +262,7 @@
               {% endif %}
             </div>
 
-            <footer style="margin-top:.75rem;" class="muted break-anywhere">
+            <footer class="muted break-anywhere card-footer">
               FQID:
               <a class="break-anywhere"
                  href="{{ e.fqid }}"
