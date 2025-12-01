@@ -4,6 +4,7 @@
 
 {% block styles %}
 {{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
   .author-detail-container {
     list-style: none;
@@ -39,7 +40,7 @@
   }
 
   .muted {
-    color: #6b7280; /* nice neutral gray */
+    color: #6b7280;
     font-size: .9rem;
   }
 
@@ -182,11 +183,48 @@
     color: #111827;
     font-weight: 600;
   }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 2px solid rgba(128,0,32,0.20);
+    border-radius: 12px;
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-btn:hover {
+    background: rgba(128,0,32,0.05);
+  }
+
+  .text-preview-box {
+    background: #fafafa;
+    border: 1px solid rgba(128,0,32,0.10);
+    padding: .75rem;
+    border-radius: .5rem;
+    font-size: .88rem;
+    line-height: 1.35;
+    max-height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <ul class="author-detail-container">
+
+  <!-- Back button -->
+  <li>
+    <a href="{% url 'adminpage:authors-list' %}" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Authors
+    </a>
+  </li>
+
   <!-- Header + tabs card -->
   <li class="author-detail-card">
     <div class="author-heading">
@@ -250,15 +288,14 @@
             {% endif %}
 
             <div class="content-preview break-anywhere">
-              {# If this is an image-type entry, try to actually show the image #}
               {% if "image" in e.content_type|default_if_none:"" %}
                 {% if e.content %}
                   <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}">
                 {% endif %}
               {% else %}
-                {% if e.content %}
-                  {{ e.content|truncatechars:220 }}
-                {% endif %}
+                <div class="text-preview-box">
+                  {{ e.content|default:"(no content)"|truncatechars:240 }}
+                </div>
               {% endif %}
             </div>
 
