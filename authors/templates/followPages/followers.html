@@ -7,9 +7,9 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{{ author.displayName }}'s Followers</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-  
+
   {% include 'components/sidebar_styles.html' %}
-  
+
   <style>
     main {
       display: flex;
@@ -20,8 +20,8 @@
     .followers-container {
       background-color: white;
       padding: 40px;
-      border-radius: 20px;
-      border: 1px solid #d4a5a5;
+      border-radius: 10px;
+      border: 2px solid #800020;
       box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
       width: 100%;
       max-width: 800px;
@@ -33,19 +33,6 @@
       color: #800020;
       margin: 0 0 30px 0;
       text-align: center;
-    }
-
-    h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #800020;
-      margin: 30px 0 20px 0;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #d4a5a5;
-    }
-
-    h3:first-of-type {
-      margin-top: 0;
     }
 
     ul {
@@ -60,8 +47,8 @@
       align-items: center;
       padding: 15px 20px;
       margin-bottom: 10px;
-      background-color: #f9f5f5;
-      border: 1px solid #d4a5a5;
+      background-color: #f1e6e6;
+      box-shadow: 1px 3px 8px rgba(128, 0, 32, 0.041);
       border-radius: 12px;
       transition: all 0.2s;
     }
@@ -72,10 +59,22 @@
       transform: translateX(5px);
     }
 
-    li span {
-      font-weight: 500;
-      color: #374151;
+    .person-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #5c0320;
       font-size: 1rem;
+    }
+
+    .badge-friend {
+      background: #b3dbb2;
+      color: #56c176;
+      font-size: 0.75rem;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-weight: 700;
     }
 
     .button {
@@ -83,23 +82,22 @@
       padding: 8px 20px;
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 1.5rem;
       transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
-
     .button:active {
       transform: scale(0.98);
     }
 
-    p {
-      color: #666;
+    .empty-state {
       text-align: center;
-      padding: 20px;
+      padding: 60px 20px;
       font-style: italic;
+      color: #666;
     }
 
     .back-link {
@@ -127,10 +125,6 @@
         font-size: 1.75rem;
       }
 
-      h3 {
-        font-size: 1.25rem;
-      }
-
       li {
         flex-direction: column;
         align-items: flex-start;
@@ -149,43 +143,33 @@
 
   <main>
     <div class="followers-container">
-      <h1>{{ author.displayName }}'s Network</h1>
+      <h1>{{ author.displayName }}'s Followers</h1>
 
-      <section>
-        <h3>Friends</h3>
-        {% if friends %}
-          <ul>
-            {% for friend in friends %}
-              <li>
-                <span>{{ friend.actor.displayName }}</span>
-                <a href="{% url 'authors:detail' friend.actor.serial %}" class="button">
-                  →
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>No friends yet!</p>
-        {% endif %}
-      </section>
+      {% if friends or followers %}
+        <ul>
+          {% for friend in friends %}
+            <li>
+              <span class="person-name">
+                {{ friend.actor.displayName }}
+                <span class="badge-friend">FRIEND</span>
+              </span>
+              <a href="{% url 'authors:detail' friend.actor.serial %}" class="button">→</a>
+            </li>
+          {% endfor %}
 
-      <section>
-        <h3>Followers</h3>
-        {% if followers %}
-          <ul>
-            {% for follower in followers %}
-              <li>
-                <span>{{ follower.actor.displayName }}</span>
-                <a href="{% url 'authors:detail' follower.actor.serial %}" class="button">
-                  →
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
+          {% for follower in followers %}
+            <li>
+              <span class="person-name">{{ follower.actor.displayName }}</span>
+              <a href="{% url 'authors:detail' follower.actor.serial %}" class="button">→</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-user-slash"></i>
           <p>No followers yet!</p>
-        {% endif %}
-      </section>
+        </div>
+      {% endif %}
 
       <a href="{% url 'authors:detail' author.serial %}" class="back-link">
         <i class="fas fa-arrow-left"></i> Back to Profile
@@ -194,11 +178,8 @@
   </main>
 
   <script>
-    // When user returns to the page via back button, reload it
     window.addEventListener("pageshow", function (event) {
-      if (event.persisted) {
-        window.location.reload();
-      }
+      if (event.persisted) window.location.reload();
     });
   </script>
 </body>

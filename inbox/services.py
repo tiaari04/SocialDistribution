@@ -74,15 +74,14 @@ def add_followed_author(author, actor):
         )
         follow_request.save()
         return {"details": "created"}
-
-    follow_request = FollowRequest.objects.create(
-        actor=author,
-        author_followed=actor,
-        state=FollowRequest.State.ACCEPTED,
-    )
-    follow_request.save()
-
-    send_remote_follow_request(author, actor)
+    else: 
+        follow_request = FollowRequest.objects.create(
+            actor=author,
+            author_followed=actor,
+            state=FollowRequest.State.ACCEPTED,
+        )
+        follow_request.save()
+        send_remote_follow_request(author, actor)
 
     return {"details": "created"}
 
@@ -113,6 +112,7 @@ def send_remote_follow_request(actor, obj):
 
     inbox_url = base_url + f"/api/authors/{obj.serial}/inbox/"
     print('target url:', inbox_url)
+    print(data)
     
     node = FederatedNode.objects.get(base_url=base_url)
 
@@ -125,8 +125,6 @@ def send_remote_follow_request(actor, obj):
     
     try:
         local_node = FederatedNode.objects.get(is_local=True)
-        print(local_node.name)
-        print("do we ever get here???????")
         headers = local_node.get_auth_headers()
         # team golden checks for type "follow"
         if "golden" in obj.host: 
