@@ -1,0 +1,17 @@
+<header>
+    <h2>Team Red</h2>
+    {% if request.user.is_authenticated %}
+        <a href="{% url 'entries:stream_home' request.user.author.serial %}" class="{% if request.resolver_match.url_name == 'stream_home' %}active{% endif %}">Stream</a>
+    {% else %}
+        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Stream</a>
+    {% endif %}
+    {% if request.user.is_authenticated %}
+        <a href="{% url 'authors:detail' request.user.author.serial %}" class="{% if request.resolver_match.url_name == 'detail' %}active{% endif %}">Profile</a>
+    {% else %}
+        <a href="{% url 'login:login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Log In</a>
+    {% endif %}
+    <a href="{% url 'authors:list' %}" class="{% if request.resolver_match.url_name == 'list' %}active{% endif %}">All Authors</a>
+    {% if request.user.is_authenticated and request.user.author.is_admin %}
+        <a href="{% url 'adminpage:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Admin</a>
+    {% endif %}
+</header>

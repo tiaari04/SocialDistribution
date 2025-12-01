@@ -76,6 +76,7 @@ def node_create(request):
                 is_local=is_local,
             )
             messages.success(request, f'Node "{node.name}" created successfully!')
+            print(request.POST.get('username', ''))
             return redirect('adminpage:federation-nodes')
         except Exception as e:
             messages.error(request, f'Error creating node: {str(e)}')

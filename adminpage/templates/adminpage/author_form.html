@@ -4,52 +4,221 @@
 {% block styles %}
 {{ block.super }}
 <style>
-/* page-specific (optional) */
+  /* Layout wrapper */
+  .author-form-container {
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .author-form-header {
+    padding: 4px 2px 0;
+  }
+
+  .author-form-header h1 {
+    margin: 0;
+  }
+
+  /* Reset list styling in this page only */
+  .author-form-container ul,
+  .author-form-container li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Card */
+  .author-form-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128, 0, 32, 0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+    box-sizing: border-box;
+  }
+
+  /* Grid for fields */
+  .author-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    padding-top: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .author-form-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .author-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .author-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .author-form-help {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  .author-form-errors {
+    font-size: 0.8rem;
+    color: #b91c1c;
+  }
+
+  .author-form-nonfield {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Inputs inside the card */
+  .author-form-card input,
+  .author-form-card select,
+  .author-form-card textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+
+  .author-form-card input:focus,
+  .author-form-card select:focus,
+  .author-form-card textarea:focus {
+    outline: none;
+    border-color: #800020;
+    box-shadow: 0 0 0 1px rgba(128, 0, 32, 0.22);
+  }
+
+  /* Actions row */
+  .author-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.04);
+  }
+
+  /* Buttons in burgundy theme */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  .btn-primary {
+    background-color: #800020;
+    border-color: #800020;
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: #9f0030;
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border-color: #800020;
+    color: #800020;
+  }
+
+  .btn-outline:hover {
+    background-color: #fbe7f0;
+  }
+
+  /* Simple text utilities */
+  .text-primary {
+    color: #800020;
+  }
+
+  .text-xl {
+    font-size: 1.25rem;
+  }
+
+  .semibold {
+    font-weight: 600;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li>
-    <h1 class="text-xl semibold text-primary p-4">
+<div class="author-form-container">
+  <div class="author-form-header">
+    <h1 class="text-xl semibold text-primary">
       {% if form.instance.pk %}Edit Author{% else %}Add Author{% endif %}
     </h1>
-  </li>
+  </div>
 
-  <li class="card p-4">
+  <div class="author-form-card">
     <form method="post">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-      <ul class="p-3 border rounded" style="background:var(--gray-100);">
-        {% for err in form.non_field_errors %}<li class="text-sm text-strong">{{ err }}</li>{% endfor %}
+      <ul class="author-form-nonfield">
+        {% for err in form.non_field_errors %}
+          <li class="author-form-errors">{{ err }}</li>
+        {% endfor %}
       </ul>
       {% endif %}
 
-      <ul class="grid cols-2 gap-6 p-4">
+      <div class="author-form-grid">
         {% for field in form.visible_fields %}
-        <li>
-          <ul class="gap-3">
-            <li><label for="{{ field.id_for_label }}" class="text-sm semibold text-strong">{{ field.label }}</label></li>
-            <li>{{ field }}</li>
-            {% if field.help_text %}<li class="text-sm text-muted">{{ field.help_text|safe }}</li>{% endif %}
-            {% if field.errors %}
-              <li>
-                <ul class="text-sm" style="color:#b91c1c;">
-                  {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-              </li>
-            {% endif %}
-          </ul>
-        </li>
-        {% endfor %}
-      </ul>
+        <div class="author-form-field">
+          <label for="{{ field.id_for_label }}" class="author-form-label">
+            {{ field.label }}
+          </label>
 
-      <ul class="row p-4">
-        <li><button type="submit" class="btn btn-primary">Save</button></li>
-        <li><a href="{% url 'adminpage:authors' %}" class="btn btn-outline">Cancel</a></li>
-      </ul>
+          {{ field }}
+
+          {% if field.help_text %}
+            <span class="author-form-help">
+              {{ field.help_text|safe }}
+            </span>
+          {% endif %}
+
+          {% if field.errors %}
+            <ul class="author-form-errors">
+              {% for err in field.errors %}
+                <li>{{ err }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="author-form-actions">
+        <button type="submit" class="btn btn-primary">
+          Save
+        </button>
+        <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">
+          Cancel
+        </a>
+      </div>
     </form>
-  </li>
-</ul>
+  </div>
+</div>
 {% endblock %}

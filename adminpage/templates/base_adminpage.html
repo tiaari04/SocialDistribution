@@ -8,126 +8,128 @@
 
   {% block styles %}
   <style>
-    /* Tailwind-inspired embedded CSS (default blue theme) */
-
-    :root {
-      --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db; --gray-400:#9ca3af;
-      --gray-600:#4b5563; --gray-700:#374151; --gray-800:#1f2937; --white:#fff;
-      --blue-500:#3b82f6; --blue-600:#2563eb; --blue-700:#1d4ed8;
-      --green-500:#22c55e; --green-600:#16a34a;
-      --rose-500:#f43f5e; --rose-600:#e11d48;
-      --radius-md:.5rem; --radius-lg:.75rem;
-      --shadow-sm:0 1px 2px rgba(0,0,0,.05); --shadow:0 1px 3px rgba(0,0,0,.1);
-    }
-
-    * { box-sizing:border-box; }
-    html, body { height:100%; }
     body {
-      margin:0;
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-      background:var(--gray-50);
-      color:var(--gray-800);
-    }
-    ul, li { margin:0; padding:0; list-style:none; }
-    ul.container { max-width:72rem; margin-inline:auto; padding-inline:1rem; }
-    ul.row, li.row { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; }
-    ul.grid, li.grid { display:grid; gap:1.5rem; }
-
-    .cols-1{ grid-template-columns:repeat(1,minmax(0,1fr)); }
-    .cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .cols-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
-    .cols-6{ grid-template-columns:repeat(6,minmax(0,1fr)); }
-
-    /* ===== Spacing ===== */
-    .p-3{ padding:.75rem; } .p-4{ padding:1rem; } .p-5{ padding:1.25rem; } .p-6{ padding:1.5rem; }
-    .gap-2{ gap:.5rem; } .gap-3{ gap:.75rem; } .gap-4{ gap:1rem; } .gap-6{ gap:1.5rem; }
-
-    /* ===== Surfaces / borders ===== */
-    .card{ background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
-    .border{ border:1px solid var(--gray-200); }
-    .border-top{ border-top:1px solid var(--gray-200); }
-    .rounded{ border-radius:var(--radius-md); }
-    .rounded-lg{ border-radius:var(--radius-lg); }
-    .shadow{ box-shadow:var(--shadow); }
-
-    /* ===== Type & color ===== */
-    .text-sm{ font-size:.875rem; }
-    .text-base{ font-size:1rem; }
-    .text-xl{ font-size:1.25rem; line-height:1.75rem; }
-    .semibold{ font-weight:600; } .bold{ font-weight:700; }
-    .text-muted{ color:var(--gray-600); }
-    .text-strong{ color:var(--gray-800); }
-    .text-primary{ color:var(--blue-700); }
-
-    /* ===== Buttons & inputs ===== */
-    button, a.button{ cursor:pointer; border:none; text-decoration:none; }
-    .btn{ display:inline-block; padding:.5rem .75rem; border-radius:var(--radius-md); font-size:.875rem; }
-    .btn-primary{ background:var(--blue-600); color:var(--white); }
-    .btn-primary:hover{ background:var(--blue-500); }
-    .btn-outline{ background:var(--white); color:var(--gray-800); border:1px solid var(--gray-300); }
-    .btn-outline:hover{ background:var(--gray-100); }
-    .btn-danger{ background:var(--rose-600); color:var(--white); }
-    .btn-danger:hover{ background:var(--rose-500); }
-    .btn-success{ background:var(--green-600); color:var(--white); }
-    .btn-success:hover{ background:var(--green-500); }
-
-    input[type="text"], input[type="search"], input[type="url"], input[type="file"], select, textarea {
-      width:100%; background:var(--white); color:var(--gray-800);
-      border:1px solid var(--gray-300); border-radius:var(--radius-lg);
-      padding:.5rem .75rem; font-size:.875rem; outline:none;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        min-height: 100vh;
+        background-color: #f9f5f5;
     }
 
-    /* ===== Nav ===== */
-    ul.nav{ display:flex; gap:1rem; padding:1rem; background:var(--white); border-bottom:1px solid var(--gray-200); }
-    ul.nav > li{ padding:.25rem .5rem; }
-    ul.nav > li.active{ color:var(--blue-700); font-weight:600; }
+    header {
+        position: sticky;
+        top: 0;
+        left: 0;
+        width: 200px;
+        height: 100vh;
+        background-color: #800020;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 0px;
+        border-right: 3px solid #b81042;
+        z-index: 100;
+        box-sizing: border-box;
+    }
 
-    /* ===== Table-like headers ===== */
-    .header-row{ background:var(--gray-100); color:var(--gray-700); border:1px solid var(--gray-200); border-radius:var(--radius-lg); }
-    .header-row .cell{ font-weight:600; text-align:left; }
+    header h2 {
+        margin-bottom: 40px;
+        font-size: 22px;
+        color: #fff;
+        text-align: center;
+        letter-spacing: 1px;
+        font-weight: bold;
+    }
 
-    /* ===== Misc helpers ===== */
-    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
-    .truncate{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    header nav {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 0 0;
+        box-sizing: border-box;
+    }
+
+    header a {
+        color: #fff;
+        background-color: #9f0030;
+        text-decoration: none;
+        width: 100%;
+        text-align: left;
+        font-size: 15px;
+        padding: 15px 15px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: background 0.3s, border-left-color 0.2s, padding-left 0.2s;
+        box-sizing: border-box;
+        border-left: 4px solid transparent;
+    }
+
+    header a:hover {
+        background-color: #b40036;
+        padding-left: 18px;
+    }
+
+    /* Active link styling */
+    header a.active {
+        background-color: #f9f5f5;
+        color: #800020;
+        border-left-color: #ffd1e4;
+        padding-left: 18px;
+        font-weight: bold;
+    }
+
+    main {
+        flex: 1;
+        padding: 30px;
+        border-left: 2px solid rgba(128,0,32,0.1);
+        box-sizing: border-box;
+    }
   </style>
   {% endblock %}
 </head>
 <body>
 
-<ul class="container">
-  <!-- ===== Top navigation ===== -->
-  <li>
-    {% with current=request.resolver_match.url_name %}
-    <ul class="nav">
-      <li class="semibold"><a href="{% url 'adminpage:dashboard' %}">Admin</a></li>
+{% with current=request.resolver_match.url_name %}
+<header>
+    <h2>Admin</h2>
+    <nav>
+        <a href="{% url 'adminpage:dashboard' %}"
+           class="{% if current == 'dashboard' %}active{% endif %}">
+            Dashboard
+        </a>
 
-      <li class="{% if current == 'dashboard' %}active{% endif %}">
-        <a href="{% url 'adminpage:dashboard' %}">Dashboard</a>
-      </li>
-      <li class="{% if current == 'authors' %}active{% endif %}">
-        <a href="{% url 'adminpage:authors' %}">Authors</a>
-      </li>
-      <li class="{% if current == 'pending-users' %}active{% endif %}">
-        <a href="{% url 'adminpage:pending-users' %}">Pending</a>
-      </li>
-      <li class="{% if current == 'images' %}active{% endif %}">
-        <a href="{% url 'adminpage:images' %}">Images</a>
-      </li>
-      <li class="{% if 'federation' in current %}active{% endif %}">
-        <a href="{% url 'adminpage:federation-dashboard' %}">Federation</a>
-      </li>
-      <li class="{% if current == 'stream_home' %}active{% endif %}">
-        <a href="{% url 'entries:stream_home' request.user.author.serial %}">Stream</a>
-      </li>
-    </ul>
-    {% endwith %}
-  </li>
+        <a href="{% url 'adminpage:authors' %}"
+           class="{% if current == 'authors' %}active{% endif %}">
+            Authors
+        </a>
 
-  <!-- ===== Page content ===== -->
-  <li class="p-4">
+        <a href="{% url 'adminpage:pending-users' %}"
+           class="{% if current == 'pending-users' %}active{% endif %}">
+            Pending Users
+        </a>
+
+        <a href="{% url 'adminpage:images' %}"
+           class="{% if current == 'images' %}active{% endif %}">
+            Images
+        </a>
+
+        <a href="{% url 'adminpage:federation-dashboard' %}"
+           class="{% if 'federation' in current %}active{% endif %}">
+            Federation
+        </a>
+
+        <a href="{% url 'entries:stream_home' request.user.author.serial %}"
+           class="{% if current == 'stream_home' %}active{% endif %}">
+            Stream
+        </a>
+    </nav>
+</header>
+{% endwith %}
+
+<main>
     {% block content %}{% endblock %}
-  </li>
-</ul>
+</main>
 
 </body>
 </html>
