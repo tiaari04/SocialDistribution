@@ -206,7 +206,7 @@
     <header>
         <h3>CMPUT404</h3>
         {% if request.user.is_authenticated %}
-            <a href="{% url 'stream_home' request.user.author.serial %}"><i class="fas fa-stream"></i> Stream</a>
+            <a href="{% url 'entries:stream_home' request.user.author.serial %}"><i class="fas fa-stream"></i> Stream</a>
         {% else %}
             <a href="/"><i class="fas fa-stream"></i> Stream</a>
         {% endif %}
