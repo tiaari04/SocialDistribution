@@ -3,148 +3,436 @@
 
 {% block styles %}
 {{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
-  /* optional page tweaks */
-  .author-link { color: var(--blue-700); text-decoration: none; }
-  .author-link:hover { text-decoration: underline; }
+  .authors-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-  /* utility to prevent long strings (IDs, URLs, etc.) from causing horizontal scroll */
+  .authors-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .authors-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .authors-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+  }
+
+  .authors-heading p {
+    margin: 0;
+    font-size: 13px;
+    color: #7b5a65;
+  }
+
+  /* --- SEARCH BAR AREA --- */
+  .search-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .search-input-wrapper {
+    flex: 1 1 260px;
+    display: flex;
+    border: 2px solid rgba(128,0,32,0.25);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .search-input-wrapper input[name="q"] {
+    flex: 1;
+    border: none;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-input-wrapper button {
+    background-color: #800020;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-input-wrapper button i {
+    font-size: 14px;
+  }
+
+  .search-input-wrapper button:hover {
+    background-color: #a00030;
+  }
+
+  .add-author-btn {
+    padding: 10px 16px;
+    background: #fff0f4;
+    border: 2px solid #800020;
+    border-radius: 999px;
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+  }
+
+  .add-author-btn:hover {
+    background: #ffd2e2;
+    transform: translateY(-2px);
+  }
+
+  /* Author link styling (match theme) */
+  .author-link {
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .author-link:hover {
+    text-decoration: underline;
+  }
+
+  /* overflow protection for long IDs / URLs */
   .break-anywhere {
     word-break: break-word;
     overflow-wrap: anywhere;
-    white-space: normal; /* in case links or spans are globally nowrap */
+    white-space: normal;
   }
 
-  /* help the 6-column grid shrink nicely instead of forcing overflow */
-  .grid.cols-6 {
-    grid-template-columns:
-      minmax(0, 2.5fr)   /* Author */
-      minmax(0, 1.5fr)   /* User */
-      minmax(0, 0.8fr)   /* Local */
-      minmax(0, 0.8fr)   /* Admin */
-      minmax(0, 0.8fr)   /* Active */
-      minmax(0, 2fr);    /* Actions */
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
 
-  .grid.cols-6 > li {
-    min-width: 0; /* critical: allow content to wrap instead of expanding the grid out of viewport */
+  .text-muted {
+    color: #9ca3af;
   }
 
-  /* table wrapper */
-  .authors-table {
-    display: block;
+  /* --- TABLE CARD --- */
+  .authors-table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* scroll container so table never breaks layout */
+  .table-scroll {
     max-width: 100%;
-    /* uncomment if you want the table to scroll internally instead of the whole page
     overflow-x: auto;
-    */
+  }
+
+  .authors-table-inner {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Shared grid for header + rows */
+  .authors-grid,
+  .authors-row-inner {
+    display: grid;
+    grid-template-columns:
+      minmax(160px, 2.5fr)   /* Author */
+      minmax(100px, 1.5fr)   /* User */
+      minmax(60px, 0.9fr)    /* Local */
+      minmax(60px, 0.9fr)    /* Admin */
+      minmax(70px, 0.9fr)    /* Active */
+      minmax(120px, 2fr);    /* Actions */
+    gap: 8px;
+    align-items: center;
+    min-width: 780px; /* avoid overly squished columns; horizontal scroll instead */
+  }
+
+  .authors-grid > li,
+  .authors-row-inner > li {
+    min-width: 0;
+  }
+
+  /* kill bullets in header + rows */
+  .authors-grid li,
+  .authors-row-inner li {
+    list-style: none !important;
+  }
+
+  /* Header row */
+  .authors-header-row {
+    background-color: #fff0f4;
+    border-bottom: 1px solid rgba(128,0,32,0.12);
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b3b47;
+  }
+
+  .authors-row {
+    border-top: 1px solid rgba(128,0,32,0.08);
+    padding: 10px 16px;
+    font-size: 13px;
+    background-color: #ffffff;
+    transition: background .12s ease;
+  }
+
+  .authors-row:nth-child(even) {
+    background-color: #fdf8fa;
+  }
+
+  .authors-row:hover {
+    background-color: #ffeef5;
+  }
+
+  /* Badge styles */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-local {
+    background-color: #fff0f4;
+    color: #800020;
+    border: 1px solid rgba(128,0,32,0.18);
+  }
+
+  .badge-admin {
+    background-color: #e6f0ff;
+    color: #1d4ed8;
+    border: 1px solid rgba(37,99,235,0.3);
+  }
+
+  .badge-active {
+    background-color: #e6f7ef;
+    color: #15803d;
+    border: 1px solid rgba(34,197,94,0.4);
+  }
+
+  .badge-inactive {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+  }
+
+  /* Actions area */
+  .authors-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+.icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    color: #800020;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+    flex-shrink: 0;
+}
+
+.icon-btn i {
+    font-size: 18px !important;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+  .icon-btn:hover {
+    background: #fff0f4;
+    transform: translateY(-2px);
+  }
+
+  .icon-btn.delete {
+    border-color: rgba(220,38,38,0.4);
+    color: #b00020;
+  }
+
+  .icon-btn.delete:hover {
+    background: #ffe6ea;
+    color: #e11d48;
+  }
+
+  /* Slight tightening on very small screens */
+  @media (max-width: 600px) {
+    .authors-card {
+      padding: 14px 14px 16px;
+    }
+    .authors-heading h1 {
+      font-size: 20px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <!-- Heading -->
-  <li><h1 class="text-xl semibold text-primary p-4">Authors</h1></li>
-
-  <!-- Search -->
+<ul class="authors-container">
+  <!-- Heading + search card -->
   <li>
-    <form method="get">
-      <ul class="row p-4">
-        <li style="flex:1 1 auto; min-width:0;">
-          <input name="q" value="{{ q }}" placeholder="Search Display Name..." />
-        </li>
-        <li><button class="btn btn-primary">Search</button></li>
-        <li><a class="btn btn-outline" href="{% url 'adminpage:author-create' %}">Add Author</a></li>
-      </ul>
-    </form>
+    <section class="authors-card">
+      <div class="authors-heading">
+        <h1>Authors</h1>
+        <p>Manage local and remote authors, approvals, and access.</p>
+      </div>
+
+      <form method="get">
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <input name="q" value="{{ q }}" placeholder="Search by display name..." />
+            <button type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <a class="add-author-btn" href="{% url 'adminpage:author-create' %}">
+            <i class="fas fa-user-plus"></i>
+            <span>Add Author</span>
+          </a>
+        </div>
+      </form>
+    </section>
   </li>
 
-  <!-- Header -->
+  <!-- Authors table card -->
   <li>
-    <ul class="grid cols-6 gap-2 header-row p-3 text-sm">
-      <li class="cell">Author</li>
-      <li class="cell">User</li>
-      <li class="cell">Local</li>
-      <li class="cell">Admin</li>
-      <li class="cell">Active</li>
-      <li class="cell">Actions</li>
-    </ul>
-  </li>
+    <section class="authors-card authors-table-card">
+      <div class="table-scroll">
+        <!-- Header row -->
+        <div class="authors-header-row">
+          <ul class="authors-grid">
+            <li>Author</li>
+            <li>User</li>
+            <li>Local</li>
+            <li>Admin</li>
+            <li>Active</li>
+            <li>Actions</li>
+          </ul>
+        </div>
 
-  <!-- Body -->
-  <li>
-    <ul class="border rounded shadow text-sm authors-table">
-      {% for a in authors %}
-      <li class="border-top">
-        <ul class="grid cols-6 gap-2 p-3">
-          <!-- Author (click name to view posts: PUBLIC tab) -->
-          <li>
-            <ul class="gap-2">
-              <li class="bold break-anywhere">
-                <a
-                  class="author-link break-anywhere"
-                  href="{% url 'adminpage:author-detail-tab' a.id 'PUBLIC' %}"
-                  title="View {{ a.displayName }}'s posts"
-                >
-                  {{ a.displayName }}
-                </a>
+        <!-- Body -->
+        <ul class="authors-table-inner">
+          {% for a in authors %}
+          <li class="authors-row">
+            <ul class="authors-row-inner">
+              <!-- Author -->
+              <li>
+                <div>
+                  <div class="break-anywhere">
+                    <a
+                      class="author-link break-anywhere"
+                      href="{% url 'adminpage:author-detail-tab' a.id 'PUBLIC' %}"
+                      title="View {{ a.displayName }}'s posts"
+                    >
+                      {{ a.displayName }}
+                    </a>
+                  </div>
+                  <div class="text-muted mono break-anywhere" style="font-size: 11px; margin-top: 2px;">
+                    {{ a.id }}
+                  </div>
+                </div>
               </li>
-              <li class="text-sm text-muted mono break-anywhere">
-                {{ a.id }}
+
+              <!-- User -->
+              <li class="break-anywhere">
+                {% if a.user %}
+                  {{ a.user.username }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </li>
+
+              <!-- Local -->
+              <li>
+                {% if a.is_local %}
+                  <span class="badge badge-local">Local</span>
+                {% else %}
+                  <span class="text-muted">Remote</span>
+                {% endif %}
+              </li>
+
+              <!-- Admin -->
+              <li>
+                {% if a.is_admin %}
+                  <span class="badge badge-admin">Admin</span>
+                {% else %}
+                  <span class="text-muted">No</span>
+                {% endif %}
+              </li>
+
+              <!-- Active -->
+              <li>
+                {% if a.is_active %}
+                  <span class="badge badge-active">Active</span>
+                {% else %}
+                  <span class="badge badge-inactive">Inactive</span>
+                {% endif %}
+              </li>
+
+              <!-- Actions -->
+              <li>
+                <div class="authors-actions">
+                  <a href="{% url 'adminpage:author-update' a.pk %}" class="icon-btn" title="Edit author">
+                    <i class="fas fa-pencil-alt"></i>
+                  </a>
+
+                  <form action="{% url 'adminpage:author-delete' a.pk %}"
+                        method="post"
+                        onsubmit="return confirm('Delete this author?');">
+                    {% csrf_token %}
+                    <button type="submit" class="icon-btn delete" title="Delete author">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
               </li>
             </ul>
           </li>
-
-          <!-- User -->
-          <li class="break-anywhere">
-            {% if a.user %}
-              {{ a.user.username }}
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+          {% empty %}
+          <li class="authors-row">
+            <div class="text-muted" style="text-align:center; width:100%;">
+              No authors found.
+            </div>
           </li>
-
-          <!-- Local -->
-          <li>{{ a.is_local }}</li>
-
-          <!-- Admin -->
-          <li>
-            {% if a.is_admin %}
-              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem; color:var(--blue-700);">admin</span>
-            {% else %}
-              <span class="text-muted">no</span>
-            {% endif %}
-          </li>
-
-          <!-- Active -->
-          <li>
-            {% if a.is_active %}
-              <span class="border rounded" style="padding:.125rem .5rem; font-size:.75rem;">active</span>
-            {% else %}
-              <span class="text-muted">inactive</span>
-            {% endif %}
-          </li>
-
-          <!-- Actions -->
-          <li>
-            <ul class="row">
-              <li>
-                <a href="{% url 'adminpage:author-update' a.pk %}" class="btn btn-outline" style="padding:.375rem .75rem; font-size:.75rem;">Edit</a>
-              </li>
-              <li>
-                <form action="{% url 'adminpage:author-delete' a.pk %}" method="post" onsubmit="return confirm('Delete this author?');">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-danger" style="padding:.375rem .75rem; font-size:.75rem;">Delete</button>
-                </form>
-              </li>
-            </ul>
-          </li>
+          {% endfor %}
         </ul>
-      </li>
-      {% empty %}
-      <li class="p-6 text-center text-muted">No authors found.</li>
-      {% endfor %}
-    </ul>
+      </div>
+    </section>
   </li>
 </ul>
 {% endblock %}

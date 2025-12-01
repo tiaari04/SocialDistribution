@@ -7,6 +7,14 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from inbox.models import FollowRequest
 from entries.models import Entry
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+from entries import services as entries_services
+from authors.models import Author
+from inbox.models import FollowRequest
+from django.views.decorators.csrf import csrf_exempt
+
 
 @login_required
 def author_list(request):
@@ -144,3 +152,37 @@ def follow_requests_page(request, author_serial):
 	context = {"author": author, "requests": requests}
 
 	return render(request, "followPages/followRequests.html", context)
+
+@csrf_exempt
+def author_inbox(request, author_serial):
+
+    if request.method != 'POST':
+        return JsonResponse({'detail': 'Method not allowed'}, status=405)
+
+    print(author_serial)
+	
+    """if request.user.is_authenticated:
+		try:
+			if str(request.user.author.serial) != str(author_serial):
+				node = None
+			else:
+				return JsonResponse({"error": "Forbidden: You may only post to your own inbox."}, status=403)
+		except AttributeError:
+			return JsonResponse({"error": "Forbidden: User profile missing author mapping."}, status=403)
+	else:
+		node = check_basic_auth(request)
+		print("basic auth: ", node)
+		if not node:
+			return JsonResponse({"error": "Unauthorized"}, status=401)"""
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({'detail': 'Invalid JSON'}, status=400)
+	
+    print("REACHED ENDPOINT")
+    result = entries_services.process_inbox_for(author_serial, payload)
+    if result.get('status') in ('created', 'exists'):
+        return JsonResponse({'detail': 'ok', 'status': result.get('status')}, status=201)
+    if result.get('status') == 'ignored':
+        return JsonResponse({'detail': 'ignored'}, status=200)
+    return JsonResponse({'detail': 'error', 'error': result.get('error')}, status=400)

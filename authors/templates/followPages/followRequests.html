@@ -1,104 +1,319 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Follow Requests for {{ author.displayName }}</title>
-        <link rel="stylesheet" href="{% static 'css/followReqStyles.css' %}">
-    </head>
-    <body>
-        {% if request.user.is_authenticated and request.user == author.user %}
-            <h1>Follow Requests for {{ author.displayName }}</h1>
-            {% if requests %}
-                <ul>
-                {% for req in requests %}
-                    <li>
-                        <div class="text-div">
-                            {{ req.actor.displayName }} wants to follow you.
-                        </div>
-                        <div class="btn-div">
-                            <button class="approve-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
-                                Approve
-                            </button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Follow Requests for {{ author.displayName }}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  {% include 'components/sidebar_styles.html' %}
+  
+  <style>
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
 
-                            <button class="reject-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
-                                Reject
-                            </button>
-                        </div>
-                    </li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>No pending follow requests.</p>
-            {% endif %}
+    .requests-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #800020;
+      margin: 0 0 30px 0;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      margin-bottom: 15px;
+      background-color: #f9f5f5;
+      border: 1px solid #d4a5a5;
+      border-radius: 12px;
+      transition: all 0.2s;
+      gap: 15px;
+    }
+
+    li:hover {
+      background-color: #fff;
+      box-shadow: 1px 3px 8px rgba(128, 0, 32, 0.1);
+    }
+
+    .text-div {
+      flex: 1;
+      font-weight: 500;
+      color: #374151;
+      font-size: 1rem;
+    }
+
+    .btn-div {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .approve-btn {
+      background-color: #2d7a3e;
+      color: white;
+    }
+
+    .approve-btn:hover {
+      background-color: #236030;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(45, 122, 62, 0.3);
+    }
+
+    .approve-btn:active {
+      transform: scale(0.98);
+    }
+
+    .reject-btn {
+      background-color: #c43535;
+      color: white;
+    }
+
+    .reject-btn:hover {
+      background-color: #a73939;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(196, 53, 53, 0.3);
+    }
+
+    .reject-btn:active {
+      transform: scale(0.98);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #d4a5a5;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .empty-state p {
+      color: #666;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .access-denied {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .access-denied i {
+      font-size: 4rem;
+      color: #c43535;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .access-denied h1 {
+      color: #c43535;
+      font-size: 1.5rem;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      text-decoration: none;
+      color: #800020;
+      font-weight: 600;
+      transition: color 0.2s;
+      text-align: center;
+      width: 100%;
+    }
+
+    .back-link:hover {
+      color: #a00030;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .requests-container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .text-div {
+        margin-bottom: 10px;
+      }
+
+      .btn-div {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'components/sidebar_menu.html' %}
+
+  <main>
+    <div class="requests-container">
+      {% if request.user.is_authenticated and request.user == author.user %}
+        <h1>Follow Requests</h1>
+        
+        {% if requests %}
+          <ul>
+            {% for req in requests %}
+              <li>
+                <div class="text-div">
+                  <i class="fas fa-user"></i> {{ req.actor.displayName }} wants to follow you.
+                </div>
+                <div class="btn-div">
+                  <button class="approve-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
+                    <i class="fas fa-check"></i> Approve
+                  </button>
+                  <button class="reject-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
+                    <i class="fas fa-times"></i> Reject
+                  </button>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
         {% else %}
-        <h1>You don't have access to this page!</h1>
+          <div class="empty-state">
+            <p>No pending follow requests.</p>
+          </div>
         {% endif %}
 
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Helper function to get CSRF token from cookies
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.startsWith(name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
+        <a href="{% url 'authors:detail' author.serial %}" class="back-link">
+          <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+
+      {% else %}
+        <div class="access-denied">
+          <i class="fas fa-ban"></i>
+          <h1>You don't have access to this page!</h1>
+        </div>
+        <a href="{% url 'login:login' %}" class="back-link">
+          <i class="fas fa-sign-in-alt"></i> Go to Login
+        </a>
+      {% endif %}
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Helper function to get CSRF token from cookies
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
             }
+          }
+        }
+        return cookieValue;
+      }
 
-            // Approve buttons
-            document.querySelectorAll('.approve-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const authorSerial = this.dataset.author;
-                    const followerId = this.dataset.follower;
-
-                    console.log(getCookie('csrftoken'))
-
-                    fetch(`/api/authors/${authorSerial}/followers/${followerId}/`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        credentials: 'include' 
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        location.reload(); // Refresh to update the page
-                    });
-                });
-            });
-
-            // Reject buttons
-            document.querySelectorAll('.reject-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const authorSerial = this.dataset.author;
-                    const followerId = this.dataset.follower;
-
-                    fetch(`/api/authors/${authorSerial}/followers/${followerId}/`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        credentials: 'include' 
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        location.reload(); // Refresh to update the page
-                    });
-                });
-            });
+      // Approve buttons
+      document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const authorSerial = this.dataset.author;
+          const followerId = encodeURIComponent(this.dataset.follower);
+          
+          fetch(`/api/authors/${authorSerial}/followers/${followerId}/`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            credentials: 'include' 
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            location.reload(); // Refresh to update the page
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to approve follow request.');
+          });
         });
-        </script>
-    </body>
+      });
+
+      // Reject buttons
+      document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const authorSerial = this.dataset.author;
+          const followerId = encodeURIComponent(this.dataset.follower);
+          
+          fetch(`/api/authors/${authorSerial}/followers/${followerId}/`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            credentials: 'include' 
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            location.reload(); // Refresh to update the page
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to reject follow request.');
+          });
+        });
+      });
+    });
+  </script>
+</body>
 </html>

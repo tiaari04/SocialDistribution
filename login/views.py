@@ -1,29 +1,21 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.core.files.storage import default_storage
 from django.conf import settings
 from .forms import CustomSignupForm
-from authors.models import Author
 from django.utils.crypto import get_random_string
 from django.contrib.sites.models import Site
 from django.urls import reverse
-from adminpage.models import HostedImage
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.urls import reverse
-from authors.models import Author
-
-
-from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate, login
-from django.urls import reverse
-from authors.models import Author
 from django.contrib.sites.models import Site
 from .forms import CustomSignupForm
 from django.utils.crypto import get_random_string
+
+from authors.models import Author
+from federation.models import FederatedNode
 from adminpage.models import HostedImage
+
 import os
+import uuid
 
 def login_view(request):
     if request.method == "POST":
@@ -61,7 +53,12 @@ def signup_view(request):
 
             current_site = Site.objects.get_current()
 
-            domain = os.getenv("NODE_ID", "")
+            domain = ''
+            try:
+                local_node = FederatedNode.objects.get(is_local=True)
+                domain = local_node.base_url.rstrip('/')
+            except Exception as e:
+                print("Error getting domain: ", e)
 
             profile_url = ""
             uploaded_file = form.cleaned_data.get("profileImageFile")
@@ -75,7 +72,7 @@ def signup_view(request):
                 profile_url = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png"
 
             # Create Author instance
-            serial = get_random_string(12)
+            serial = str(uuid.uuid4())
             author = Author.objects.create(
                 id=f"{domain}/authors/{serial}",
                 user=user,
@@ -86,7 +83,7 @@ def signup_view(request):
                 web=form.cleaned_data.get('web', ''),
                 description=form.cleaned_data.get('description', ''),
                 is_local=True,
-                serial=serial.lower(),
+                serial=serial,
             )
 
             # do not log in until validated

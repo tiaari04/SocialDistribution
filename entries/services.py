@@ -104,11 +104,23 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     Returns a dict with keys: 'status' (created/ignored/error) and 'object' (Comment/Like or None).
     """
+
     # Find recipient author by serial
+    recipient = None
     try:
+        # Try the usual way
         recipient = Author.objects.get(serial=recipient_serial)
     except Author.DoesNotExist:
-        return {'status': 'error', 'error': 'recipient_not_found'}
+        author_data = payload.get('author')
+        if author_data:
+            author_id = author_data.get('id')
+            author_serial = author_id.split('/')[-1]
+            try:
+                recipient = Author.objects.get(serial=author_serial)
+            except Author.DoesNotExist:
+                return {'status': 'error', 'error': 'recipient_not_found'}
+        else:
+            return {'status': 'error', 'error': 'recipient_not_found'}
 
     print(payload)
     typ = (payload.get('type') or '').lower()
@@ -118,8 +130,11 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
     if typ == 'comment':
         direction = payload.get('direction')
-        author_payload = payload.get('author') or {}
+        author_payload = payload.get('author_data') or payload.get('author') or {}
         author = _ensure_author(author_payload)
+        
+        if not author:
+            return {'status': 'error', 'error': 'missing_author'}
 
         entry_fqid = payload.get('entry')
         if not entry_fqid:
@@ -173,8 +188,11 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         
         if direction == 'outgoing':
             print("OUTGOING")
-            author_payload = payload.get('author') or {}
+            author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
             object_fqid = payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
@@ -203,8 +221,12 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         
         elif direction == 'incoming' or direction == "" or not direction:
             print("INCOMING")
-            author_payload = payload.get('author') or {}
+            author_payload = payload.get('author_data') or payload.get('author') or {}
             author = _ensure_author(author_payload)
+            
+            if not author:
+                return {'status': 'error', 'error': 'missing_author'}
+        
             object_fqid = payload.get('object_fqid') or payload.get('object')
             if not object_fqid:
                 return {'status': 'error', 'error': 'missing_object'}
@@ -222,6 +244,43 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             like.save()
 
             return {'status': 'created', 'object': like}
+        
+    comments_block = payload.get("comments", {})
+    comments_src = comments_block.get("src", [])
+
+    created_comments = []
+
+    if typ == "entry" and comments_src:
+        for c in comments_src:
+            author_payload = c.get("author") or c.get('author_data') or {}
+            author = _ensure_author(author_payload)
+
+            entry_fqid = payload.get("id") or payload.get("fqid") or payload.get("url")
+            if not entry_fqid:
+                continue
+            try:
+                entry = Entry.objects.get(fqid=entry_fqid)
+            except Entry.DoesNotExist:
+                continue
+
+            comment_fqid = c.get("id") or f"{entry_fqid}#comment-{timezone.now().timestamp()}"
+
+            if Comment.objects.filter(fqid=comment_fqid).exists():
+                continue
+
+            comment = Comment.objects.create(
+                fqid=comment_fqid,
+                author=author,
+                entry=entry,
+                content=c.get("content", ""),
+                content_type=c.get("contentType")
+                    or c.get("content_type")
+                    or Entry.ContentType.MARKDOWN,
+                published=c.get("published") or timezone.now(),
+                web=c.get("web", "")
+            )
+
+            created_comments.append(comment)
 
     if typ == 'post' or typ == 'entry':
         # Handle incoming federated posts
@@ -234,27 +293,26 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         fqid = payload.get('fqid') or payload.get('id')
         if not fqid:
             return {'status': 'error', 'error': 'missing_fqid'}
-        
-        # Check if entry already exists (idempotent)
-        existing_entry = Entry.objects.filter(fqid=fqid).first()
-        if existing_entry:
-            return {'status': 'exists', 'object': existing_entry}
-        
-        # Create the entry
-        entry = Entry.objects.create(
-            author=author,
-            serial=payload.get('serial') or fqid.split('/')[-1],
+     
+        # Update or create the entry
+        entry, created = Entry.objects.update_or_create(
             fqid=fqid,
-            title=payload.get('title', ''),
-            content=payload.get('content', ''),
-            description=payload.get('description', ''),
-            content_type=payload.get('content_type', Entry.ContentType.MARKDOWN),
-            visibility=payload.get('visibility', Entry.Visibility.PUBLIC),
-            image_url=payload.get('image_url', ''),
-            web=payload.get('web', ''),
-            published=payload.get('published') or timezone.now(),
-            is_local=False
+            defaults={
+                "author": author,
+                "serial": payload.get('serial') or fqid.split('/')[-1],
+                "title": payload.get('title', ''),
+                "content": payload.get('content', ''),
+                "description": payload.get('description', ''),
+                "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
+                "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
+                "image_url": payload.get('image_url') or (payload.get('image', {}).get('url')) or '',
+                "web": payload.get('web', ''),
+                "published": payload.get('published') or timezone.now(),
+                "is_local": False,
+            }            
         )
+        entry.is_edited = not created
+        entry.save()
         return {'status': 'created', 'object': entry}
 
     if typ == 'follow' or typ == 'followrequest' or typ == 'followRequest':
@@ -276,6 +334,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             if not author_followed.is_local:
                 from inbox.services import send_remote_follow_request
                 try:
+                    print('sending remote follow req')
                     send_remote_follow_request(actor, author_followed)
                     follow_request = FollowRequest.objects.create(
                         actor=actor,
@@ -303,4 +362,3 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'created', 'object': follow_request}
 
     return {'status': 'ignored', 'object': None}
-

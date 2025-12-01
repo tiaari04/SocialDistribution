@@ -100,9 +100,9 @@ def remove_followed_author(author, actor):
 
 def send_remote_follow_request(actor, obj):
     data = serialize_follow_req_with_actor(actor, obj)
-    data["type"] = "followRequest"
-    inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
-    print(obj.host)
+    data["type"] = "follow"
+    # inbox_url = obj.host.rstrip("/") + f"/authors/{obj.serial}/inbox/"
+    # print(obj.host)
 
     base_url = obj.host.rstrip("/")
 
@@ -111,7 +111,10 @@ def send_remote_follow_request(actor, obj):
     elif base_url.endswith("/api/"):
         base_url = base_url[:-5]   # remove /api/
 
-    node = FederatedNode.objects.get(base_url=base_url.rstrip('/') + '/')
+    inbox_url = base_url + f"/api/authors/{obj.serial}/inbox/"
+    print('target url:', inbox_url)
+    
+    node = FederatedNode.objects.get(base_url=base_url)
 
     log_entry = FederationLog.objects.create(
         node=node,
@@ -125,6 +128,10 @@ def send_remote_follow_request(actor, obj):
         print(local_node.name)
         print("do we ever get here???????")
         headers = local_node.get_auth_headers()
+        # team golden checks for type "follow"
+        if "golden" in obj.host: 
+            data["type"] = "follow"
+            print(data)
         logger.info(f"headers: {headers}")
         
         response = requests.post(

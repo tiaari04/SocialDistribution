@@ -1,31 +1,182 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>{{ author.displayName }}'s Follow List</title>
-        <link rel="stylesheet" href="{% static 'css/followersPageStyles.css' %}">
-    </head>
-    <body>
-        <h3>{{ author.displayName }}'s Follow List</h3>
-            {% if following_list %}
-                <ul>
-                {% for author in following_list %}
-                    <li>
-                        {{ author.author_followed.displayName }} <a href="{% url 'authors:detail' author.author_followed.serial %}" class="button">View</a>
-                    </li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p>You don't follow anyone yet!</p>
-            {% endif %}
-        <script>
-            // When user returns to the page via back button, reload it
-            window.addEventListener("pageshow", function (event) {
-            if (event.persisted) {
-                window.location.reload();
-            }
-            });
-        </script>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{{ author.displayName }}'s Follow List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  {% include 'components/sidebar_styles.html' %}
+  
+  <style>
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    .following-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #800020;
+      margin: 0 0 30px 0;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      background-color: #f9f5f5;
+      border: 1px solid #d4a5a5;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    li:hover {
+      background-color: #fff;
+      box-shadow: 1px 3px 8px rgba(128, 0, 32, 0.1);
+      transform: translateX(5px);
+    }
+
+    li span {
+      font-weight: 500;
+      color: #374151;
+      font-size: 1rem;
+    }
+
+    .button {
+      color: #800020;
+      padding: 8px 20px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+
+    .button:active {
+      transform: scale(0.98);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #d4a5a5;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .empty-state p {
+      color: #666;
+      font-size: 1.1rem;
+      font-style: italic;
+      margin: 0;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      text-decoration: none;
+      color: #800020;
+      font-weight: 600;
+      transition: color 0.2s;
+      text-align: center;
+      width: 100%;
+    }
+
+    .back-link:hover {
+      color: #a00030;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .following-container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'components/sidebar_menu.html' %}
+
+  <main>
+    <div class="following-container">
+      <h1>{{ author.displayName }}'s Following</h1>
+
+      {% if following_list %}
+        <ul>
+          {% for author in following_list %}
+            <li>
+              <span>{{ author.author_followed.displayName }}</span>
+              <a href="{% url 'authors:detail' author.author_followed.serial %}" class="button">
+                →
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-user-slash"></i>
+          <p>You don't follow anyone yet!</p>
+        </div>
+      {% endif %}
+
+      <a href="{% url 'authors:detail' author.serial %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Profile
+      </a>
+    </div>
+  </main>
+
+  <script>
+    // When user returns to the page via back button, reload it
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
+</body>
 </html>
