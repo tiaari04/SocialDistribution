@@ -4,6 +4,7 @@
 <head>
     <title>Red Social Dist | Home</title>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
@@ -62,23 +63,88 @@
         .iconButton:hover { color: #a00030; }
         .iconButton .likeCount { margin-left: 4px; font-size: 0.9rem; }
 
-        /* Comment icon specifically burgundy */
-        .commentButton i { color: #800020; }
-
         #createPost { position: fixed; bottom: 20px; right: 20px; font-size: 22px; border-radius: 50%; padding: 12px 15px; background-color: #800020; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 
-        /* Inline comments */
-        .postComments { margin-top: 15px; border-top: 1px solid #800020; padding-top: 10px; }
-        .postComments .comment { padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
-        .postComments .comment:last-child { border-bottom: none; }
-        .commentAuthor { font-weight: 600; color: #800020; margin-right: 5px; }
-        .commentText { line-height: 1.4; display: inline; }
+        /* Comments panel */
+        #commentsPanel {
+            position: fixed;
+            top: 0;
+            right: -35vw; /* hidden initially */
+            width: 35vw;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            z-index: 200;
+            padding: 10px;
+            transition: right 0.3s ease;
+        }
+
+        #commentsPanel.visible {
+            right: 0;
+        }
+
+        #commentsPanel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #800020;
+            padding-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        #commentsPanel section#comments {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+
+        #commentsPanel footer {
+            display: flex;
+            gap: 5px;
+            border-top: 1px solid #800020;
+            padding-top: 5px;
+            flex-shrink: 0;
+        }
+
+        #commentInput {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #a00030;
+        }
+
+        #sendComment {
+            background-color: #800020;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
+
+        .comment {
+            border-bottom: 1px solid #800020;
+            padding: 8px 0;
+        }
+
+        .commentAuthor {
+            font-weight: 600;
+            color: #800020;
+        }
+
+        .commentText {
+            margin: 4px 0;
+            line-height: 1.4;
+        }
 
         @media (max-width: 900px) {
             header { position: relative; width: 100%; height: auto; flex-direction: row; justify-content: space-around; }
             main { padding: 20px 10px; }
             .stream { width: 95%; }
             #createPost { bottom: 20px; right: 20px; }
+            #commentsPanel { width: 90vw; }
         }
     </style>
 </head>
@@ -111,7 +177,7 @@
                                 <i class="fas fa-heart"></i>
                                 <span class="likeCount">{{ entry.likes_count }}</span>
                             </button>
-                            <button class="iconButton commentButton" title="Comment">
+                            <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Comment">
                                 <i class="fas fa-comment"></i>
                             </button>
                             {% if entry.author.id == author.id %}
@@ -129,21 +195,6 @@
                         <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
                     {% endif %}
                 </section>
-
-                <!-- Old-style inline comments -->
-                <section class="postComments">
-                    {% for comment in entry.comments %}
-                        <div class="comment">
-                            <span class="commentAuthor">
-                                <a href="{% url 'authors:detail' comment.author.serial %}">{{ comment.author.displayName }}</a>:
-                            </span>
-                            <span class="commentText">{{ comment.content }}</span>
-                        </div>
-                    {% empty %}
-                        <p>No comments yet.</p>
-                    {% endfor %}
-                </section>
-
             </li>
         {% endfor %}
     </ul>
@@ -151,9 +202,38 @@
     <a href="{% url 'entries:create' author.serial %}" id="createPost" title="New Post"><i class="fas fa-plus"></i></a>
 </main>
 
+<section id="commentsPanel">
+    <header>
+        <h3>Comments</h3>
+        <button id="closePanel">&times;</button>
+    </header>
+    <section id="comments"></section>
+    <footer>
+        <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+        <button id="sendComment">Send</button>
+    </footer>
+</section>
+
+<template id="commentTemplate">
+    <section class="comment">
+        <span class="commentAuthor"></span>
+        <p class="commentText"></p>
+        <button class="iconButton likeButton" title="Like"><i class="fas fa-heart"></i> <span class="commentLikes">0</span></button>
+    </section>
+</template>
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 'use strict';
+
+// CSRF & user info
+const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+const userFqid = '{{ author.id }}';
+const currUser = {
+    id: '{{ author.id }}',
+    displayName: '{{ author.displayName }}',
+    host: '{{ author.host }}'
+};
 
 // Parse markdown
 document.querySelectorAll('.postText').forEach(post => {
@@ -167,10 +247,10 @@ document.querySelectorAll('.likeButton').forEach(btn => {
     btn.addEventListener('click', async () => {
         const fqid = btn.dataset.fqid;
         const endpoint = btn.dataset.endpoint;
-        const payload = { type: "like", direction: "outgoing", author: { id: '{{ author.id }}', displayName: '{{ author.displayName }}', host: '{{ author.host }}' }, object: fqid };
+        const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
         const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Author-Id': '{{ author.id }}', 'X-CSRFToken': '{{ csrf_token }}' },
+            headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken },
             body: JSON.stringify(payload)
         });
         if(res.ok) window.location.reload();
@@ -185,6 +265,67 @@ document.querySelectorAll('.share').forEach(btn => {
         navigator.clipboard.writeText(link).then(() => alert('Post link copied!'));
     });
 });
+
+// Comment panel
+const commentButtons = document.querySelectorAll('.commentButton');
+const commentPanel = document.getElementById('commentsPanel');
+const closeComments = document.getElementById('closePanel');
+const commentsContent = document.getElementById('comments');
+const commentInput = document.getElementById('commentInput');
+const sendCommentBtn = document.getElementById('sendComment');
+let entryFqid = null;
+
+async function getComments(fqid){
+    const res = await fetch(`/api/entries/${encodeURIComponent(fqid)}/comments/`, {
+        method: 'GET', credentials:'same-origin',
+        headers:{'Content-Type':'application/json','X-Author-Id':userFqid}
+    });
+    return res.ok ? await res.json() : [];
+}
+
+async function postComment(fqid, text){
+    const payload = { type:"comment", direction:"outgoing", author:currUser, entry:fqid, content:text };
+    const endpoint = `/api/entries/${encodeURIComponent(fqid)}/comments/`;
+    await fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Author-Id':userFqid,"X-CSRFToken":csrftoken},
+        body: JSON.stringify(payload)
+    });
+}
+
+async function loadComments(fqid){
+    const data = await getComments(fqid);
+    commentsContent.innerHTML='';
+    if(data.results){
+        data.results.forEach(c=>{
+            const clone = document.getElementById('commentTemplate').content.cloneNode(true);
+            clone.querySelector('.commentAuthor').textContent = c.author.displayName;
+            clone.querySelector('.commentText').textContent = c.content;
+            clone.querySelector('.commentLikes').textContent = c.likes_count || 0;
+            commentsContent.appendChild(clone);
+        });
+        // scroll to bottom
+        commentsContent.scrollTop = commentsContent.scrollHeight;
+    }
+    commentPanel.classList.add('visible');
+}
+
+commentButtons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        entryFqid = btn.dataset.fqid;
+        loadComments(entryFqid);
+    });
+});
+
+sendCommentBtn.addEventListener('click', async ()=>{
+    const text = commentInput.value.trim();
+    if(!text) return;
+    commentInput.value='';
+    await postComment(entryFqid, text);
+    loadComments(entryFqid);
+});
+
+closeComments.addEventListener('click',()=>commentPanel.classList.remove('visible'));
 </script>
 </body>
 </html>
