@@ -1,46 +1,223 @@
-{% extends "base_adminpage.html" %}
-{% block title %}Dashboard{% endblock %}
+{% extends "adminpage/base_adminpage.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-/* page-specific (optional) */
+    .dashboard-header {
+        margin-bottom: 24px;
+    }
+
+    .dashboard-header h1 {
+        margin: 0;
+        font-size: 26px;
+        color: #800020;
+        letter-spacing: 0.03em;
+    }
+
+    .dashboard-header p {
+        margin: 6px 0 0;
+        color: #6b4a55;
+        font-size: 14px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background-color: #ffffff;
+        border-radius: 18px;
+        border: 2px solid rgba(128,0,32,0.10);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        padding: 16px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    }
+
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.06;
+        background: radial-gradient(circle at top right, #ffb3c9, transparent 55%);
+        pointer-events: none;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+        border-color: rgba(128,0,32,0.30);
+    }
+
+    .stat-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background-color: #fff0f4;
+        color: #800020;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-tag-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background-color: #800020;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #7b5a65;
+        margin: 0 0 4px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #800020;
+        margin: 0 0 6px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-subtext {
+        font-size: 12px;
+        color: #9a7b86;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-footer {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-footer a {
+        font-size: 12px;
+        text-decoration: none;
+        color: #800020;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background-color: #fff0f4;
+        transition: background-color 0.15s ease, padding-right 0.15s ease;
+    }
+
+    .stat-footer a:hover {
+        background-color: #ffd2e2;
+        padding-right: 11px;
+    }
+
+    .stat-footer a span.arrow {
+        margin-left: 4px;
+    }
+
+    /* Color accents per card (optional) */
+    .stat-card.authors    .stat-tag-dot { background-color: #800020; }
+    .stat-card.pending    .stat-tag-dot { background-color: #ffb400; }
+    .stat-card.images     .stat-tag-dot { background-color: #2e8b57; }
+    .stat-card.federation .stat-tag-dot { background-color: #1f78b4; }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Dashboard</h1></li>
+<div class="dashboard-header">
+    <h1>Admin Overview</h1>
+    <p>Quick snapshot of what’s happening across Red Social Dist.</p>
+</div>
 
-  <li>
-    <ul class="grid cols-4 gap-6">
-      <li class="card p-4">
-        <ul class="gap-2">
-          <li class="text-sm text-muted">Total Images</li>
-          <li class="text-xl semibold text-primary">{{ total_images }}</li>
-        </ul>
-      </li>
-      <li class="card p-4">
-        <ul class="gap-2">
-          <li class="text-sm text-muted">Total Authors</li>
-          <li class="text-xl semibold text-primary">{{ total_authors }}</li>
-        </ul>
-      </li>
-      <li class="card p-4">
-        <ul class="gap-2">
-          <li class="text-sm text-muted">Pending Users</li>
-          <li class="text-xl semibold text-primary">{{ pending_users }}</li>
-        </ul>
-      </li>
-      <li class="card p-4">
-        <a href="{% url 'adminpage:federation-dashboard' %}" style="text-decoration: none;">
-          <ul class="gap-2">
-            <li class="text-sm text-muted">Federation Nodes</li>
-            <li class="text-xl semibold" style="color: #0066cc;">{{ federation_nodes }}</li>
-          </ul>
-        </a>
-      </li>
-    </ul>
-  </li>
-</ul>
+<section class="dashboard-grid">
+    <!-- Authors -->
+    <article class="stat-card authors">
+        <div class="stat-tag">
+            <span class="stat-tag-dot"></span>
+            <span>Authors</span>
+        </div>
+        <p class="stat-label">Total approved authors</p>
+        <p class="stat-value">{{ total_authors }}</p>
+        <p class="stat-subtext">
+            Including local and remote accounts that are currently active.
+        </p>
+        <div class="stat-footer">
+            <a href="{% url 'adminpage:authors' %}">
+                Manage authors <span class="arrow">→</span>
+            </a>
+        </div>
+    </article>
+
+    <!-- Pending Users -->
+    <article class="stat-card pending">
+        <div class="stat-tag">
+            <span class="stat-tag-dot"></span>
+            <span>Pending</span>
+        </div>
+        <p class="stat-label">Awaiting approval</p>
+        <p class="stat-value">{{ pending_users }}</p>
+        <p class="stat-subtext">
+            Users who have registered but are not yet approved.
+        </p>
+        <div class="stat-footer">
+            <a href="{% url 'adminpage:pending-users' %}">
+                Review pending <span class="arrow">→</span>
+            </a>
+        </div>
+    </article>
+
+    <!-- Images -->
+    <article class="stat-card images">
+        <div class="stat-tag">
+            <span class="stat-tag-dot"></span>
+            <span>Images</span>
+        </div>
+        <p class="stat-label">Hosted images</p>
+        <p class="stat-value">{{ total_images }}</p>
+        <p class="stat-subtext">
+            Images stored via <code>HostedImage</code>, ready for posts & profiles.
+        </p>
+        <div class="stat-footer">
+            <a href="{% url 'adminpage:images' %}">
+                View library <span class="arrow">→</span>
+            </a>
+        </div>
+    </article>
+
+    <!-- Federation -->
+    <article class="stat-card federation">
+        <div class="stat-tag">
+            <span class="stat-tag-dot"></span>
+            <span>Federation</span>
+        </div>
+        <p class="stat-label">Connected nodes</p>
+        <p class="stat-value">{{ federation_nodes }}</p>
+        <p class="stat-subtext">
+            Remote servers you’re currently talking to and sharing posts with.
+        </p>
+        <div class="stat-footer">
+            <a href="{% url 'adminpage:federation-dashboard' %}">
+                Federation tools <span class="arrow">→</span>
+            </a>
+        </div>
+    </article>
+</section>
 {% endblock %}
