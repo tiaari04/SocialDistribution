@@ -499,8 +499,9 @@ applyVisual("Request to Follow");
         } else if (state === "Pending" || state === "Unfollow") {
           const authorSerial = btn.dataset.actorSerial;
           const followedAuthorId = btn.dataset.objectSerial || btn.dataset.objectId;
-          const decodedId = decodeURIComponent(followedAuthorId);
-          const deleteEndpoint = `/api/authors/${authorSerial}/following/${encodeURIComponent(decodedId)}/`;
+            const deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
+
+
 
           try {
             const res = await fetch(deleteEndpoint, {
