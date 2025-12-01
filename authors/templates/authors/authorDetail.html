@@ -7,601 +7,532 @@
 <title>{{ author.displayName }}'s Profile</title>
 <meta name="csrf-token" content="{{ csrf_token }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-{% include 'components/sidebar_styles.html' %}
+  {% include 'components/sidebar_styles.html' %}
 <style>
 main {
-  display: flex;
-  justify-content: center;
-  padding: 40px 20px 60px;
-}
-
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
 .profile-wrapper {
-  width: 100%;
-  max-width: 1100px;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
 /* Banner Section */
 .profile-banner {
-  position: relative;
-  background: rgb(240, 233, 233);
-  border-radius: 20px;
-  box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-
+      background: rgb(255, 250, 250);
+      border-radius: 20px;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
 .banner-content {
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
 @media (min-width: 768px) {
-  .banner-content {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-}
-
-/* ------------------------- */
-/* ACTION BUTTONS (NEW STYLE) */
-/* ------------------------- */
-.action-buttons {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  z-index: 20;
-}
-
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 48px;
-  height: 48px;
-
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 1.3rem;
-
-  transition: 0.2s ease;
-}
-
-.icon-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.icon-button:active {
-  transform: scale(0.96);
-}
-
-.icon-button.edit {
-  color: rgb(90, 118, 245);
-}
-
-.icon-button.requests {
-  color: #ffc561;
-  position: relative;
-}
-
-.icon-button.requests .badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background-color: #dc2626;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-}
-
-/* MOBILE: center buttons below image */
-@media (max-width: 600px) {
-  .action-buttons {
-    position: static;
-    flex-direction: row;
-    justify-content: center;
-    margin-top: 10px;
-  }
-}
-/* END ACTION BUTTONS */
-
-
-
-figure { margin: 0; }
+.banner-content {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+figure { 
+      margin: 0; 
+    }
 figure img {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #71001a;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #71001a;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 section.profile-info { 
-  flex: 1;
-  color: #800020;
-}
-
+      flex: 1;
+      color: #800020;
+    }
 h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #62192b;
-  margin: 0 0 0.5rem 0;
-}
+      font-size: 2rem;
+      font-weight: 700;
+      color: #62192b;
+      margin: 0 0 0.5rem 0;
+    }
 
 .stats {
-  display: flex;
-  gap: 25px;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
+      display: flex;
+      gap: 25px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
 
 .stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
 
 .stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #8b233d;
-  line-height: 1;
-}
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #8b233d;
+      line-height: 1;
+    }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: #62192b;
-  margin-top: 2px;
-}
+      font-size: 0.85rem;
+      color: #62192b;
+      margin-top: 2px;
+    }
 
 .stat-label a {
-  color: #62192b;
-  text-decoration: none;
-  font-weight: 600;
-}
+      color: #62192b;
+      text-decoration: none;
+      font-weight: 600;
+    }
 
 .stat-label a:hover {
-  color: #8c223d;
-}
+      color: #8c223d;
+    }
 
 a.link {
-  color: #1c2535;
-  font-weight: 500;
-  text-decoration: none;
-  display: block;
-  margin-bottom: 0.5rem;
-  transition: color 0.2s;
-}
-
+      color: #1c2535;
+      font-weight: 500;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
 a.link:hover { 
-  color: #a00030;
-  text-decoration: underline; 
-}
-
+      color: #a00030;
+      text-decoration: underline; 
+    }
 p.bio {
-  color: #1c2535;
-  white-space: pre-line;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
-}
+      color: #1c2535;
+      white-space: pre-line;
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+.action-buttons {
+      display: flex;
+      justify-self: end;
+      gap: 12px;
+      margin-top: 1rem;
+    }
+
+.icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 55px;
+      height: 55px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1.5rem;
+    }
+
+.icon-button:active {
+      transform: scale(0.95);
+    }
+
+.icon-button.edit {
+      color: rgb(90, 118, 245);
+    }
+
+.icon-button.edit:hover {
+      color: #2563eb;
+    }
+
+.icon-button.requests {
+      color: #ffc561;
+      position: relative;
+    }
+
+.icon-button.requests:hover {
+      color: #d97706;
+    }
+
+.icon-button.requests .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background-color: #dc2626;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgb(251, 238, 238);
+    }
 
 .button {
-  display: inline-block;
-  background-color: #800020;
-  color: white;
-  font-weight: 600;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s;
-  font-size: 0.95rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+      display: inline-block;
+      background-color: #800020;
+      color: white;
+      font-weight: 600;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
 .button:hover { 
-  background-color: #a00030;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(128, 0, 32, 0.2);
-}
+      background-color: #a00030;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(128, 0, 32, 0.2);
+    }
 
 .button:active { 
-  transform: scale(0.98);
-}
+      transform: scale(0.98);
+    }
 
 .button.pending {
-  background-color: #9ca3af !important;
-  color: white !important;
-}
-
-
+      background-color: #9ca3af !important;
+      color: white !important;
+    }
 
 /* Entries Section */
 .entries-container {
-  background-color: white;
-  padding: 40px;
-  border-radius: 20px;
-  border: 1px solid #d4a5a5;
-  box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
-}
-
+      background-color: white;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #d4a5a5;
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.05);
+    }
 .entries {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 .entries h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1c2535;
-  margin: 0 0 1.5rem 0;
-}
-
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1c2535;
+      margin: 0 0 1.5rem 0;
+    }
 .post {
-  width: 100%;
-  background-color: white;
-  padding: 25px;
-  border-radius: 15px;
-  border: 2px solid #800020;
-  box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s;
-  box-sizing: border-box;
-}
-
+      width: 100%;
+      background-color: white;
+      padding: 25px;
+      border-radius: 15px;
+      border: 2px solid #800020;
+      box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
+      transition: box-shadow 0.2s;
+      box-sizing: border-box;
+    }
 .post:hover {
-  box-shadow: 2px 6px 12px rgba(128, 0, 32, 0.15);
-}
-
+      box-shadow: 2px 6px 12px rgba(128, 0, 32, 0.15);
+    }
 .postContent {
-  background-color: #fff;
-  color: #1c2535;
-}
-
+      background-color: #fff;
+      color: #1c2535;
+      width: 100%;
+      box-sizing: border-box;
+    }
 .postContent h2 {
-  color: #1c2535;
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  margin-top: 0;
-}
-
+      color: #1c2535;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
 .postContent h3 {
-  color: #666;
-  font-size: 1rem;
-  font-weight: 500;
-  margin-bottom: 1rem;
-  margin-top: 0;
-}
-
+      color: #666;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
 .postText {
-  color: #374151;
-  line-height: 1.6;
-  overflow-wrap: break-word;
-}
-
+      color: #374151;
+      line-height: 1.6;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
 .postText img,
 .postContent img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin-top: 15px;
-  display: block;
-}
-
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: block;
+    }
 .no-entries {
-  color: #666;
-  text-align: center;
-  padding: 40px 20px;
-  font-size: 1rem;
-}
-
+      color: #666;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 1rem;
+    }
 @media (max-width: 900px) {
-  .profile-wrapper {
-    max-width: 100%;
-  }
-
-  .banner-content {
-    padding: 30px 20px;
-  }
-
-  .entries-container {
-    padding: 25px 20px;
-  }
-
-  .post {
-    padding: 20px;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    text-align: center;
-  }
-
-  figure img {
-    width: 120px;
-    height: 120px;
-  }
-
-  .stats {
-    justify-content: center;
-  }
-
-  .button {
-    display: block;
-    width: 100%;
-    text-align: center;
-  }
-
-  .bio {
-    text-align: center;
-  }
-}
+.profile-wrapper {
+        max-width: 100%;
+      }
+.banner-content {
+        padding: 30px 20px;
+      }
+.entries-container {
+        padding: 25px 20px;
+      }
+.post {
+        padding: 20px;
+      }
+h1 {
+        font-size: 1.5rem;
+        text-align: center;
+      }
+figure img {
+        width: 120px;
+        height: 120px;
+      }
+.stats {
+        justify-content: center;
+      }
+.action-buttons {
+        justify-content: center;
+      }
+.button {
+        display: block;
+        width: 100%;
+        text-align: center;
+      }
+.bio {
+        text-align: center;
+      }
+    }
 </style>
-
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 'use strict';
 document.addEventListener("DOMContentLoaded", () => {
-  const posts = document.querySelectorAll('.postText');
-  posts.forEach(post => {
-    const contentType = post.dataset.type;
-    if (contentType === "text/markdown") {
-      const html = marked.parse(post.dataset.content);
-      post.innerHTML = html;
-    }
-  })
-})
+const posts = document.querySelectorAll('.postText');
+posts.forEach(post => {
+const contentType = post.dataset.type;
+if (contentType === "text/markdown") {
+const html = marked.parse(post.dataset.content);
+post.innerHTML = html;
+        }
+      })
+    })
 </script>
 </head>
-
 <body>
-{% include 'components/sidebar_menu.html' %}
-
+  {% include 'components/sidebar_menu.html' %}
 <main>
 <div class="profile-wrapper">
-
 <!-- Banner -->
 <div class="profile-banner">
-
-{% if request.user.is_authenticated and request.user == author.user %}
-<div class="action-buttons">
-  <a href="{% url 'authors:edit' author.serial %}" class="icon-button edit" title="Edit Profile">
-    <i class="fas fa-edit"></i>
-  </a>
-
-  <a href="{% url 'authors:follow-requests' author.serial %}" class="icon-button requests" title="Follow Requests">
-    <i class="fas fa-inbox"></i>
-    {% if request_count > 0 %}
-      <span class="badge">{{ request_count }}</span>
-    {% endif %}
-  </a>
-</div>
-{% endif %}
-
 <div class="banner-content">
-  <figure>
-    <img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
-  </figure>
+<figure>
+<img src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
+</figure>
+<section class="profile-info">
+<h1>{{ author.displayName }}</h1>
+            
+            <div class="stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ follower_count|default:0 }}</span>
+                <span class="stat-label"><a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
+              </div>
+              {% if request.user.is_authenticated and request.user == author.user %}
+              <div class="stat-item">
+                <span class="stat-number">{{ following_count|default:0 }}</span>
+                <span class="stat-label"><a href="{% url 'authors:following' author.serial %}">Following</a></span>
+              </div>
+              {% endif %}
+            </div>
 
-  <section class="profile-info">
-    <h1>{{ author.displayName }}</h1>
+            {% if author.github %}
+<a href="{{ author.github }}" target="_blank" class="link"><i class="fab fa-github"></i> {{ author.github }}</a>
+            {% endif %}
+            {% if author.web %}
+<a href="{{ author.web }}" target="_blank" class="link"><i class="fas fa-globe"></i> {{ author.web }}</a>
+            {% endif %}
+<p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
+            
+            {% if request.user.is_authenticated and request.user == author.user %}
+              <div class="action-buttons">
+                <a href="{% url 'authors:edit' author.serial %}" class="icon-button edit" title="Edit Profile">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'authors:follow-requests' author.serial %}" class="icon-button requests" title="Follow Requests">
+                  <i class="fas fa-inbox"></i>
+                  {% if request_count > 0 %}
+                    <span class="badge">{{ request_count }}</span>
+                  {% endif %}
+                </a>
+              </div>
 
-    <div class="stats">
-      <div class="stat-item">
-        <span class="stat-number">{{ follower_count|default:0 }}</span>
-        <span class="stat-label"><a href="{% url 'authors:followers' author.serial %}">Followers</a></span>
-      </div>
-
-      {% if request.user.is_authenticated and request.user == author.user %}
-      <div class="stat-item">
-        <span class="stat-number">{{ following_count|default:0 }}</span>
-        <span class="stat-label"><a href="{% url 'authors:following' author.serial %}">Following</a></span>
-      </div>
-      {% endif %}
-    </div>
-
-    {% if author.github %}
-      <a href="{{ author.github }}" target="_blank" class="link"><i class="fab fa-github"></i> {{ author.github }}</a>
-    {% endif %}
-    {% if author.web %}
-      <a href="{{ author.web }}" target="_blank" class="link"><i class="fas fa-globe"></i> {{ author.web }}</a>
-    {% endif %}
-
-    <p class="bio">{{ author.description|default:"This author hasn't added a bio yet." }}</p>
-
-    {% if request.user.is_authenticated and request.user != author.user %}
-      <button
-      id="follow-btn"
-      class="button {% if follow_status == 'Pending' %}pending{% endif %}"
-      data-endpoint="{% url 'api:author-inbox' author.serial %}"
-      data-initial-state="{{ follow_status|escapejs }}"
-      data-actor-id="{{ request.user.author.id|escapejs }}"
-      data-actor-host="{{ request.user.author.host|escapejs }}"
-      data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
-      data-actor-username="{{ request.user.username|escapejs }}"
-      data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
-      data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
-      data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
-      data-object-id="{{ author.id|escapejs }}"
-      data-object-host="{{ author.host|escapejs }}"
-      data-object-displayname="{{ author.displayName|escapejs }}"
-      data-object-github="{{ author.github|default:''|escapejs }}"
-      data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
-      data-object-web="{{ author.web|default:''|escapejs }}"
-      >
-        {{ follow_status }}
-      </button>
-
-    {% elif not request.user.is_authenticated %}
-      <a href="{% url 'login:login' %}" class="button"><i class="fas fa-sign-in-alt"></i> Log in to follow</a>
-    {% endif %}
-
-  </section>
+            {% elif request.user.is_authenticated %}
+<button
+id="follow-btn"
+class="button {% if follow_status == 'Pending' %}pending{% endif %}"
+data-endpoint="{% url 'api:author-inbox' author.serial %}"
+data-initial-state="{{ follow_status|escapejs }}"
+data-actor-id="{{ request.user.author.id|escapejs }}"
+data-actor-host="{{ request.user.author.host|escapejs }}"
+data-actor-serial="{{ request.user.author.serial|default:''|escapejs }}"
+data-actor-username="{{ request.user.username|escapejs }}"
+data-actor-github="{{ request.user.author.github|default:''|escapejs }}"
+data-actor-profileimage="{{ request.user.author.profileImage|default:''|escapejs }}"
+data-actor-web="{{ request.user.author.web|default:''|escapejs }}"
+data-object-id="{{ author.id|escapejs }}"
+data-object-host="{{ author.host|escapejs }}"
+data-object-displayname="{{ author.displayName|escapejs }}"
+data-object-github="{{ author.github|default:''|escapejs }}"
+data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
+data-object-web="{{ author.web|default:''|escapejs }}"
+>
+                {{ follow_status }}
+</button>
+            {% else %}
+<a href="{% url 'login:login' %}" class="button"><i class="fas fa-sign-in-alt"></i> Log in to follow</a>
+            {% endif %}
+</section>
 </div>
 </div>
-
 <!-- Posts -->
 <div class="entries-container">
-  <article class="entries">
-    <h2>- Public Entries -</h2>
-
-    {% if entries %}
-      {% for entry in entries %}
-      <div class="post">
-        <div class="postContent">
-          <h2>{{ entry.title }}</h2>
-          <h3>{{ entry.description }}</h3>
-          <p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">{{ entry.content }}</p>
-          {% if entry.image_url %}
-            <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
-          {% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    {% else %}
-      <p class="no-entries">No entries yet — this section will display posts or GitHub activity.</p>
-    {% endif %}
-
-  </article>
+<article class="entries">
+<h2>- Public Entries -</h2>
+          {% if entries %}
+            {% for entry in entries %}
+<div class="post">
+<div class="postContent">
+<h2>{{ entry.title }}</h2>
+<h3>{{ entry.description }}</h3>
+<p class="postText" data-type="{{ entry.content_type }}" data-content="{{ entry.content }}">
+                    {{ entry.content }}
+</p>
+                  {% if entry.image_url %}
+<img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                  {% endif %}
 </div>
-
+</div>
+            {% endfor %}
+          {% else %}
+<p class="no-entries">No entries yet — this section will display posts or GitHub activity.</p>
+          {% endif %}
+</article>
+</div>
 </div>
 </main>
-
 <script>
-/* FOLLOW BUTTON LOGIC */
-(function () {
-  const btn = document.getElementById('follow-btn');
-  if (!btn) return;
-
-  let state = (btn.dataset.initialState || "Request To Follow").trim();
-  const endpoint = btn.dataset.endpoint;
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-  const actor = {
-    type: "author",
-    id: btn.dataset.actorId || "",
-    host: btn.dataset.actorHost || "",
-    displayName: btn.dataset.actorUsername || "",
-    github: btn.dataset.actorGithub || "",
-    profileImage: btn.dataset.actorProfileimage || "",
-    web: btn.dataset.actorWeb || ""
-  };
-
-  const objectAuthor = {
-    type: "author",
-    id: btn.dataset.objectId || "",
-    host: btn.dataset.objectHost || "",
-    displayName: btn.dataset.objectDisplayname || "",
-    github: btn.dataset.objectGithub || "",
-    profileImage: btn.dataset.objectProfileimage || "",
-    web: btn.dataset.objectWeb || ""
-  };
-
-  function applyVisual(newState) {
-    state = newState;
-    btn.textContent = newState;
-
-    if (newState === "Pending") btn.classList.add('pending');
-    else btn.classList.remove('pending');
-  }
-
-  applyVisual(state);
-
-  btn.addEventListener('click', async function () {
-    if (state === "Request To Follow") {
-      const payload = {
-        type: "follow",
-        summary: actor.displayName + " wants to follow " + objectAuthor.displayName,
-        actor: actor,
-        object: objectAuthor
+    (function () {
+const btn = document.getElementById('follow-btn');
+if (!btn) return;
+let state = (btn.dataset.initialState || "Request To Follow").trim();
+const endpoint = btn.dataset.endpoint;
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const actor = {
+        type: "author",
+        id: btn.dataset.actorId || "",
+        host: btn.dataset.actorHost || "",
+        displayName: btn.dataset.actorUsername || "",
+        github: btn.dataset.actorGithub || "",
+        profileImage: btn.dataset.actorProfileimage || "",
+        web: btn.dataset.actorWeb || ""
       };
-
-      try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) applyVisual("Pending");
-        else {
-          const text = await res.text();
-          console.error('Follow request failed', res.status, text);
-          alert(`Failed to send follow request. (Status: ${res.status}).`);
-          applyVisual("Request To Follow");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Network error while sending follow request.");
-        applyVisual("Request To Follow");
-      }
-
-    } else if (state === "Pending" || state === "Unfollow") {
-      const authorSerial = btn.dataset.actorSerial;
-
-      const followedAuthorId = btn.dataset.objectSerial || btn.dataset.objectId;
-
-      const deleteEndpoint = `/api/authors/${authorSerial}/following/${encodeURIComponent(followedAuthorId)}/`;
-
-      try {
-        const res = await fetch(deleteEndpoint, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-          }
-        });
-
-        if (res.ok) {
-          applyVisual("Request To Follow");
+const objectAuthor = {
+        type: "author",
+        id: btn.dataset.objectId || "",
+        host: btn.dataset.objectHost || "",
+        displayName: btn.dataset.objectDisplayname || "",
+        github: btn.dataset.objectGithub || "",
+        profileImage: btn.dataset.objectProfileimage || "",
+        web: btn.dataset.objectWeb || ""
+      };
+function applyVisual(newState) {
+        state = newState;
+btn.textContent = newState;
+if (newState === "Pending") {
+btn.classList.add('pending');
         } else {
-          const text = await res.text();
-          console.error('Failed to remove follow request', res.status, text);
-          alert("Failed to remove follow request.");
+btn.classList.remove('pending');
         }
-      } catch (err) {
-        console.error(err);
-        alert("Network error while removing follow request.");
       }
-    }
-  });
-})();
-</script>
+applyVisual(state);
+btn.addEventListener('click', async function () {
+if (state === "Request To Follow") {
+const payload = {
+            type: "follow",
+            summary: actor.displayName + " wants to follow " + objectAuthor.displayName,
+            actor: actor,
+            object: objectAuthor
+          };
+try {
+const res = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+"Content-Type": "application/json",
+"X-CSRFToken": csrfToken
+              },
+              body: JSON.stringify(payload)
+            });
+if (res.ok) {
+applyVisual("Pending");
+            } else {
+const text = await res.text();
+console.error('Follow request failed', res.status, text);
+alert(`Failed to send follow request. (Status: ${res.status}). Please try again.`);
+applyVisual("Request to Follow");
+            }
+          } catch (err) {
+console.error(err);
+alert("Network error while sending follow request.");
+applyVisual("Request to Follow");
+          }
+        } else if (state === "Pending" || state === "Unfollow") {
+          const authorSerial = btn.dataset.actorSerial;
+          const followedAuthorId = btn.dataset.objectSerial || btn.dataset.objectId;
 
+          const deleteEndpoint = `/api/authors/${authorSerial}/following/${encodeURIComponent(followedAuthorId)}/`;
+
+          try {
+            const res = await fetch(deleteEndpoint, {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+              }
+            });
+
+            if (res.ok) {
+              applyVisual("Request To Follow");
+            } else {
+              const text = await res.text();
+              console.error('Failed to remove follow request', res.status, text);
+              alert("Failed to remove follow request.");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Network error while removing follow request.");
+          }
+        }
+
+      });
+    })();
+</script>
 <script>
 window.addEventListener("pageshow", function (event) {
-  if (event.persisted) window.location.reload();
-});
+if (event.persisted) {
+window.location.reload();
+      }
+    });
 </script>
-
 </body>
 </html>
