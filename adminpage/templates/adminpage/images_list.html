@@ -3,8 +3,6 @@
 
 {% block styles %}
 {{ block.super }}
-
-<!-- ADD FONT AWESOME (fix invisible icons) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
@@ -19,14 +17,8 @@
     gap: 20px;
   }
 
-  .images-container > li,
-  .images-card ul,
-  .images-grid li,
-  .images-row-inner li,
-  .list li {
-    list-style: none !important;   /* ← remove all bullets everywhere */
-    margin: 0;
-    padding: 0;
+  .images-container > li {
+    list-style: none;
   }
 
   .images-card {
@@ -35,6 +27,11 @@
     border: 2px solid rgba(128,0,32,0.10);
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 18px 20px 20px;
+  }
+
+  .images-card.table-card {
+    padding: 0;
+    overflow: hidden;
   }
 
   .images-heading h1 {
@@ -107,18 +104,26 @@
     transform: translateY(-2px);
   }
 
+  /* Thumbnail */
   .thumb {
-    height: 4rem;
-    width: 4rem;
+    display: block;
+    width: 56px;
+    height: 56px;
     object-fit: cover;
-    border-radius: .5rem;
+    border-radius: 12px;
   }
 
-  /* Table layout matching Authors UI */
+  .preview-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* Table layout */
   .images-header-row {
     background-color: #fff0f4;
     border-bottom: 1px solid rgba(128,0,32,0.12);
-    padding: 10px 16px;
+    padding: 12px 20px;
     font-size: 12px;
     font-weight: 600;
     color: #5b3b47;
@@ -128,17 +133,17 @@
   .images-row-inner {
     display: grid;
     grid-template-columns:
-      minmax(90px, 1fr)
-      minmax(240px, 3fr)
-      minmax(160px, 2fr);
-    gap: 12px;
+      minmax(80px, 0.8fr)   /* Preview */
+      minmax(260px, 3fr)    /* URL */
+      minmax(130px, 1.4fr); /* Actions */
+    gap: 16px;
     align-items: center;
     min-width: 680px;
   }
 
   .images-row {
     border-top: 1px solid rgba(128,0,32,0.08);
-    padding: 10px 16px;
+    padding: 10px 20px;
     background-color: #ffffff;
     transition: background .12s ease;
   }
@@ -151,6 +156,15 @@
     background-color: #ffeef5;
   }
 
+  .list,
+  .list li,
+  .images-grid li,
+  .images-row-inner li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
   .break-anywhere {
     word-break: break-word;
     overflow-wrap: anywhere;
@@ -160,7 +174,19 @@
     font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
   }
 
-  /* Icon buttons (matching Authors) */
+  .url-cell {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Icon buttons */
+  .actions-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
   .icon-btn {
     width: 34px;
     height: 34px;
@@ -172,6 +198,10 @@
     justify-content: center;
     cursor: pointer;
     transition: background .15s ease, color .15s ease, transform .1s ease;
+  }
+
+  .icon-btn i {
+    font-size: 16px;
   }
 
   .icon-btn:hover {
@@ -217,7 +247,7 @@
 
   <!-- Table -->
   <li>
-    <section class="images-card" style="padding:0;">
+    <section class="images-card table-card">
       <div class="images-header-row">
         <ul class="images-grid">
           <li>Preview</li>
@@ -226,16 +256,23 @@
         </ul>
       </div>
 
-      <ul class="list" style="margin:0; padding:0;">
+      <ul class="list">
         {% for i in images %}
         <li class="images-row">
           <ul class="images-row-inner">
-            <li><img class="thumb" src="{{ i.url }}" alt="image"></li>
+            <!-- Preview -->
+            <li class="preview-cell">
+              <img class="thumb" src="{{ i.url }}" alt="image">
+            </li>
 
-            <li class="mono break-anywhere text-muted">{{ i.url }}</li>
+            <!-- URL -->
+            <li class="mono break-anywhere url-cell text-muted">
+              {{ i.url }}
+            </li>
 
+            <!-- Actions -->
             <li>
-              <div style="display:flex; gap:8px;">
+              <div class="actions-wrap">
                 <a href="{% url 'adminpage:image-send' i.id %}"
                    class="icon-btn"
                    title="Send to other nodes">
@@ -246,7 +283,7 @@
                       method="post"
                       onsubmit="return confirm('Delete this image?');">
                   {% csrf_token %}
-                  <button type="submit" class="icon-btn delete">
+                  <button type="submit" class="icon-btn delete" title="Delete image">
                     <i class="fas fa-trash"></i>
                   </button>
                 </form>
