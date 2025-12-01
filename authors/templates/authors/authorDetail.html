@@ -396,6 +396,7 @@ data-object-displayname="{{ author.displayName|escapejs }}"
 data-object-github="{{ author.github|default:''|escapejs }}"
 data-object-profileimage="{{ author.profileImage|default:''|escapejs }}"
 data-object-web="{{ author.web|default:''|escapejs }}"
+data-object-serial="{{ author.serial|escapejs }}"
 >
                 {{ follow_status }}
 </button>
@@ -499,9 +500,7 @@ applyVisual("Request to Follow");
         } else if (state === "Pending" || state === "Unfollow") {
           const authorSerial = btn.dataset.actorSerial;
           const followedAuthorSerial = btn.dataset.objectSerial;
-          const deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorSerial}/`;
-
-
+          const deleteEndpoint = `/api/authors/${encodeURIComponent(authorSerial)}/following/${encodeURIComponent(followedAuthorSerial)}/`;
 
           try {
             const res = await fetch(deleteEndpoint, {
