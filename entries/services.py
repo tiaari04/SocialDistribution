@@ -121,7 +121,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     print(payload)
     typ = (payload.get('type') or '').lower()
-    print(typ)
     object_fqid = payload.get('id') or payload.get('object')
 
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
@@ -135,18 +134,15 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'error', 'error': 'missing_entry'}
 
         normalized_entry_fqid = entry_fqid
-        print("here1")
 
         if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
             # If so, replace the first instance of '/authors/' with '/api/authors/'
             normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1).rstrip('/')
 
         try:
-            print(normalized_entry_fqid)
             entry = Entry.objects.get(fqid=normalized_entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
-        print("here2")
         # Ensure comment has an fqid
         comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
 
@@ -185,7 +181,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
-        print(payload)
         direction = payload.get('direction')
         object_fqid = payload.get('object_fqid') or payload.get('object')
         if not object_fqid:
