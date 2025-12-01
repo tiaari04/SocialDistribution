@@ -140,6 +140,11 @@
             line-height: 1.4;
         }
 
+        .commentLikes {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
         @media (max-width: 900px) {
             header { position: relative; width: 100%; height: auto; flex-direction: row; justify-content: space-around; }
             main { padding: 20px 10px; }
@@ -178,7 +183,7 @@
                                 <i class="fas fa-heart"></i>
                                 <span class="likeCount">{{ entry.likes_count }}</span>
                             </button>
-                            <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" title="Comment">
+                            <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:entries-comments' entry.fqid %}" title="Comment">
                                 <i class="fas fa-comment"></i>
                             </button>
                             {% if entry.author.id == author.id %}
@@ -219,7 +224,7 @@
     <section class="comment">
         <span class="commentAuthor"></span>
         <p class="commentText"></p>
-        <button class="iconButton likeButton" title="Like"><i class="fas fa-heart"></i> <span class="commentLikes">0</span></button>
+        <button class="iconButton likeButton"><i class="fas fa-heart"></i> <span class="commentLikes">0</span></button>
     </section>
 </template>
 
@@ -227,60 +232,48 @@
 <script>
 'use strict';
 
-// CSRF & user info
-const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
-const userFqid = '{{ author.id }}';
-const currUser = {
-    id: '{{ author.id }}',
-    displayName: '{{ author.displayName }}',
-    host: '{{ author.host }}'
-};
-
-// Parse markdown
-document.querySelectorAll('.postText').forEach(post => {
-    if (post.dataset.type === "text/markdown") {
-        post.innerHTML = marked.parse(post.dataset.content);
-    }
+// Markdown parsing
+document.querySelectorAll('.postText').forEach(post=>{
+    if(post.dataset.type==="text/markdown") post.innerHTML = marked.parse(post.dataset.content);
 });
 
-// Like posts
-document.querySelectorAll('.likeButton').forEach(btn => {
-    btn.addEventListener('click', async () => {
+const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+const currUser = { id: '{{ author.id }}', displayName: '{{ author.displayName }}', host: '{{ author.host }}' };
+
+// Likes
+document.querySelectorAll('.likeButton').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
         const fqid = btn.dataset.fqid;
         const endpoint = btn.dataset.endpoint;
         if(!fqid || !endpoint) return;
-        const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken },
-            body: JSON.stringify(payload)
-        });
+        const payload = { type:"like", direction:"outgoing", author:currUser, object:fqid };
+        const res = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Author-Id':currUser.id, 'X-CSRFToken':csrftoken }, body:JSON.stringify(payload) });
         if(res.ok) window.location.reload();
     });
 });
 
-// Share posts
-document.querySelectorAll('.share').forEach(btn => {
-    btn.addEventListener('click', e => {
+// Share
+document.querySelectorAll('.share').forEach(btn=>{
+    btn.addEventListener('click', e=>{
         e.stopPropagation();
-        const link = window.location.origin + '/posts/' + btn.dataset.fqid;
-        navigator.clipboard.writeText(link).then(() => alert('Post link copied!'));
+        navigator.clipboard.writeText(window.location.origin+'/posts/'+btn.dataset.fqid).then(()=>alert('Post link copied!'));
     });
 });
 
-// Comment panel
-const commentButtons = document.querySelectorAll('.commentButton');
+// Comments
 const commentPanel = document.getElementById('commentsPanel');
-const closeComments = document.getElementById('closePanel');
+const closePanel = document.getElementById('closePanel');
+const commentButtons = document.querySelectorAll('.commentButton');
 const commentsContent = document.getElementById('comments');
 const commentInput = document.getElementById('commentInput');
 const sendCommentBtn = document.getElementById('sendComment');
+const commentTemplate = document.getElementById('commentTemplate');
 let entryFqid = null;
 
 async function getComments(fqid){
     const res = await fetch(`/api/entries/${encodeURIComponent(fqid)}/comments/`, {
-        method: 'GET', credentials:'same-origin',
-        headers:{'Content-Type':'application/json','X-Author-Id':userFqid}
+        method:'GET', credentials:'same-origin',
+        headers:{ 'Content-Type':'application/json', 'X-Author-Id':currUser.id }
     });
     return res.ok ? await res.json() : [];
 }
@@ -288,11 +281,14 @@ async function getComments(fqid){
 async function postComment(fqid, text){
     const payload = { type:"comment", direction:"outgoing", author:currUser, entry:fqid, content:text };
     const endpoint = `/api/entries/${encodeURIComponent(fqid)}/comments/`;
-    await fetch(endpoint,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Author-Id':userFqid,"X-CSRFToken":csrftoken},
-        body: JSON.stringify(payload)
-    });
+    await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Author-Id':currUser.id, 'X-CSRFToken':csrftoken }, body:JSON.stringify(payload) });
+}
+
+async function likeComment(fqid, commentFqid){
+    const payload = { type:"like", direction:"outgoing", author:currUser, object:commentFqid };
+    const endpoint = `/api/entries/${encodeURIComponent(fqid)}/comments/`;
+    await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Author-Id':currUser.id, 'X-CSRFToken':csrftoken }, body:JSON.stringify(payload) });
+    loadComments(fqid);
 }
 
 async function loadComments(fqid){
@@ -300,10 +296,11 @@ async function loadComments(fqid){
     commentsContent.innerHTML='';
     if(data.results){
         data.results.forEach(c=>{
-            const clone = document.getElementById('commentTemplate').content.cloneNode(true);
+            const clone = commentTemplate.content.cloneNode(true);
             clone.querySelector('.commentAuthor').textContent = c.author.displayName;
             clone.querySelector('.commentText').textContent = c.content;
             clone.querySelector('.commentLikes').textContent = c.likes_count || 0;
+            clone.querySelector('.likeButton').addEventListener('click', ()=>likeComment(fqid, c.fqid));
             commentsContent.appendChild(clone);
         });
         commentsContent.scrollTop = commentsContent.scrollHeight;
@@ -312,7 +309,7 @@ async function loadComments(fqid){
 }
 
 commentButtons.forEach(btn=>{
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click', ()=>{
         entryFqid = btn.dataset.fqid;
         loadComments(entryFqid);
     });
@@ -326,7 +323,7 @@ sendCommentBtn.addEventListener('click', async ()=>{
     loadComments(entryFqid);
 });
 
-closeComments.addEventListener('click',()=>commentPanel.classList.remove('visible'));
+closePanel.addEventListener('click', ()=>commentPanel.classList.remove('visible'));
 </script>
 </body>
 </html>
