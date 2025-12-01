@@ -119,13 +119,13 @@
     border-radius: 12px;
     border: 1px solid rgba(128,0,32,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    padding: .55rem .6rem;
+    padding: .5rem .6rem .4rem;
     display: flex;
     flex-direction: column;
-    gap: .35rem;
+    gap: .25rem;
     min-width: 0;
     transition: box-shadow 0.2s, transform 0.2s;
-    height: auto; /* let content grow */
+    /* NO fixed height or min-height — shrink-wrap to content */
   }
 
   .entry-card *:not(img) {
@@ -177,13 +177,10 @@
   }
 
   .content-preview {
-    margin-top: .15rem;
+    margin-top: .1rem;
     font-size: .7rem;
     color: #374151;
     line-height: 1.3;
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
   }
 
   .content-preview p {
@@ -191,16 +188,18 @@
   }
 
   .entry-image {
-    height: 120px;
-    width: 100%;
-    object-fit: cover;
+    margin-top: .25rem;
     border-radius: .4rem;
-    flex-shrink: 0;
+    display: block;
+    max-width: 100%;
+    height: auto;              /* show full image, no cropping */
+    max-height: 260px;         /* sensible cap so huge images don't dominate */
+    object-fit: contain;
   }
 
   footer.entry-footer {
-    margin-top: .35rem;
-    padding-top: .3rem;
+    margin-top: .25rem;
+    padding-top: .25rem;
     border-top: 1px solid rgba(128,0,32,0.08);
     font-size: .6rem;
     color: #9ca3af;
@@ -394,7 +393,7 @@
   </li>
 </ul>
 
-{# Markdown renderer #}
+{# Markdown renderer (same pattern you use elsewhere) #}
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   'use strict';
