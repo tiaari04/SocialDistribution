@@ -1,6 +1,6 @@
 {% load static %}
 <header>
-    <h3>Team Red</h3>
+    <h2>Team Red</h2>
     {% if request.user.is_authenticated %}
         <a href="{% url 'entries:stream_home' request.user.author.serial %}">Stream</a>
     {% else %}
