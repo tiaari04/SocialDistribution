@@ -12,13 +12,14 @@
     list-style: none;
   }
 
-  /* Same theme as authors_list */
+  /* EXPAND FULL-WIDTH (fix left margin issue) */
   .approvals-container {
     list-style: none;
     margin: 0;
     padding: 0;
-    max-width: 960px;
-    margin-inline: auto;
+    width: 100%;
+    max-width: none;     /* no centered max width */
+    margin-inline: 0;    /* remove auto-centering */
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -30,6 +31,7 @@
     border: 2px solid rgba(128,0,32,0.10);
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 18px 20px 20px;
+    width: 100%;        /* ensure full width */
   }
 
   .approvals-heading h1 {
