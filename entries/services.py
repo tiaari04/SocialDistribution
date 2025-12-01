@@ -30,6 +30,9 @@ def process_federated_public_post(payload: dict) -> dict:
     existing_entry = Entry.objects.filter(fqid=fqid).first()
     content_type = payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN
     visibility = payload.get('visibility', Entry.Visibility.PUBLIC)
+
+    # get image url
+    image_url = (payload.get("image_url") or (payload.get("image") or {}).get("url") or "")
     
     if existing_entry:
         # Update existing entry
@@ -38,7 +41,7 @@ def process_federated_public_post(payload: dict) -> dict:
         existing_entry.description = payload.get('description', existing_entry.description)
         existing_entry.content_type = content_type
         existing_entry.visibility = visibility
-        existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.image_url = image_url or existing_entry.image_url
         existing_entry.is_local = False
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
@@ -58,7 +61,7 @@ def process_federated_public_post(payload: dict) -> dict:
         description=payload.get('description', ''),
         content_type=content_type,
         visibility=visibility,
-        image_url=payload.get('image_url', ''),
+        image_url=image_url,
         is_local=False,
         web=payload.get('web', ''),
         published=parse_datetime(payload.get('published')) if payload.get('published') else timezone.now(),
@@ -245,6 +248,8 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         fqid = payload.get('fqid') or payload.get('id')
         if not fqid:
             return {'status': 'error', 'error': 'missing_fqid'}
+
+        image_url = (payload.get("image_url") or (payload.get("image") or {}).get("url") or "")
      
         # Update or create the entry
         entry, created = Entry.objects.update_or_create(
@@ -257,7 +262,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 "description": payload.get('description', ''),
                 "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
                 "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
-                "image_url": payload.get('image_url', ''),
+                "image_url": image_url,
                 "web": payload.get('web', ''),
                 "published": payload.get('published') or timezone.now(),
                 "is_local": False,
