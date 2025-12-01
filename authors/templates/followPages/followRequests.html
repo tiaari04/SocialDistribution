@@ -209,7 +209,7 @@
             {% for req in requests %}
               <li>
                 <div class="text-div">
-                  <i class="fas fa-user"></i> {{ req.actor.displayName }} wants to follow you.
+                  {{ req.actor.displayName }} wants to follow you.
                 </div>
                 <div class="btn-div">
                   <button class="approve-btn" data-author="{{ author.serial }}" data-follower="{{ req.actor.id }}">
