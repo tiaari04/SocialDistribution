@@ -1,11 +1,10 @@
 {% extends "base_adminpage.html" %}
-
-{% block title %}{{ author.displayName }} · Entries{% endblock %}
+{% block title %}Federation Dashboard{% endblock %}
 
 {% block styles %}
 {{ block.super }}
 <style>
-  .author-detail-container {
+  .federation-container {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -16,11 +15,31 @@
     gap: 20px;
   }
 
-  .author-detail-container > li {
+  .federation-container > li {
     list-style: none;
   }
 
-  .author-detail-card {
+  .federation-header {
+    padding: 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .federation-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #800020;
+    font-weight: 700;
+  }
+
+  .federation-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .federation-card {
     background-color: #ffffff;
     border-radius: 18px;
     border: 2px solid rgba(128,0,32,0.10);
@@ -28,315 +47,302 @@
     padding: 18px 20px 20px;
   }
 
-  .muted {
-    color: #6b7280;
-    font-size: .9rem;
+  .federation-card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .author-heading {
+  .federation-card h2 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    color: #800020;
+  }
+
+  .federation-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  /* Stats grid */
+  .federation-stats-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(128,0,32,0.12);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
-  .author-heading h1 {
-    margin: 0;
+  .stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #999;
   }
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: .5rem;
-    flex-wrap: wrap;
-    margin-top: .75rem;
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #800020;
   }
 
-  .tab {
+  .stat-value--success {
+    color: #137b35;
+  }
+
+  /* Buttons */
+  .btn {
     display: inline-flex;
     align-items: center;
-    gap: .5rem;
-    padding: .4rem .75rem;
+    justify-content: center;
+    padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid rgba(128,0,32,0.15);
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
     text-decoration: none;
-    background: #ffffff;
-    color: #4b1a25;
-    font-size: .85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    white-space: nowrap;
   }
 
-  .tab:hover {
-    background: rgba(128,0,32,0.03);
+  .btn-primary {
+    background-color: #800020;
+    color: #ffffff;
   }
 
-  .tab.active {
-    border-color: #800020;
-    background: rgba(128,0,32,0.06);
-    box-shadow: 0 0 0 1px rgba(128,0,32,0.15) inset;
-    color: #800020;
-    font-weight: 600;
-  }
-
-  .badge {
-    font-size: .75rem;
-    line-height: 1;
-    padding: .15rem .5rem;
-    border-radius: 999px;
-    background: rgba(128,0,32,0.09);
-    color: #800020;
-  }
-
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1rem;
-    gap: .75rem;
-    flex-wrap: wrap;
-  }
-
-  .section-head h2 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #111827;
-  }
-
-  /* Cards grid */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: .875rem;
-  }
-
-  .entry-card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    border: 1px solid rgba(128,0,32,0.08);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    padding: .7rem .75rem;
-    display: flex;
-    flex-direction: column;
-    gap: .35rem;
-    min-width: 0;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .entry-card *:not(img) {
-    background-color: transparent !important;
-    background-image: none !important;
-    border-left: none !important;
-    border-right: none !important;
-  }
-
-  .entry-card:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  .btn-primary:hover {
+    background-color: #9b1538;
     transform: translateY(-1px);
   }
 
-  .meta {
+  .btn-success {
+    background-color: #198754;
+    color: #ffffff;
+  }
+
+  .btn-success:hover {
+    background-color: #147245;
+    transform: translateY(-1px);
+  }
+
+  .quick-actions-row {
     display: flex;
-    gap: .4rem;
     flex-wrap: wrap;
-    align-items: center;
-    font-size: .8rem;
-    color: #111827;
-    min-width: 0;
+    gap: 10px;
+    margin-top: 8px;
   }
 
-  .meta strong {
-    font-weight: 600;
-    color: #111827;
-  }
-
-  .meta .muted {
-    color: #9ca3af;
-    font-size: .78rem;
-  }
-
-  .break-anywhere {
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    white-space: normal;
-  }
-
-  .description-text {
-    font-size: .8rem;
-    color: #6b7280;
-    margin: 0;
-  }
-
-  .content-preview {
-    margin-top: .4rem;
-    font-size: .8rem;
-    color: #374151;
-  }
-
-  .entry-image {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    border-radius: .5rem;
-    margin-top: .4rem;
-  }
-
-  footer.entry-footer {
-    margin-top: .6rem;
-    padding-top: .4rem;
-    border-top: 1px solid rgba(128,0,32,0.08);
-    font-size: .7rem;
-    color: #9ca3af;
+  /* Nodes table */
+  .nodes-header-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
   }
 
-  .entry-footer a {
+  .nodes-table-wrapper {
+    margin-top: 6px;
+    overflow-x: auto;
+  }
+
+  .nodes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .nodes-table th,
+  .nodes-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(128,0,32,0.08);
+  }
+
+  .nodes-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+  }
+
+  .nodes-table tbody tr:hover {
+    background-color: #faf0f4;
+  }
+
+  .node-name-link {
     color: #800020;
+    font-weight: 600;
     text-decoration: none;
-    font-size: .7rem;
   }
 
-  .entry-footer a:hover {
+  .node-name-link:hover {
     text-decoration: underline;
   }
 
-  /* Pagination */
-  .pagination {
-    display: flex;
-    gap: .5rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
+  .node-url {
+    font-size: 0.85rem;
+    color: #666;
+    word-break: break-all;
   }
 
-  .pagination a,
-  .pagination span {
-    padding: .35rem .7rem;
-    border-radius: .5rem;
-    border: 1px solid rgba(128,0,32,0.18);
-    text-decoration: none;
-    font-size: .85rem;
-    color: #374151;
-    background: #ffffff;
-  }
-
-  .pagination a:hover {
-    background: rgba(128,0,32,0.04);
-  }
-
-  .pagination .current {
-    background: rgba(128,0,32,0.08);
-    border-color: #800020;
-    color: #111827;
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
     font-weight: 600;
+  }
+
+  .status-pill--active {
+    background-color: rgba(19,123,53,0.08);
+    color: #137b35;
+  }
+
+  .status-pill--inactive {
+    background-color: rgba(204,0,0,0.06);
+    color: #b3261e;
+  }
+
+  .status-dot {
+    font-size: 0.7rem;
+  }
+
+  .nodes-empty {
+    font-size: 0.9rem;
+    color: #777;
+  }
+
+  .nodes-empty a {
+    color: #800020;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .nodes-empty a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .federation-card {
+      padding: 14px 14px 16px;
+    }
+
+    .nodes-table th,
+    .nodes-table td {
+      padding: 8px 6px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="author-detail-container">
-  <!-- Heading -->
-  <li class="author-detail-card">
-    <div class="author-heading">
-      <h1 class="text-xl semibold text-primary">
-        {{ author.displayName }}
-        <span class="muted">·</span>
-        <span class="muted break-anywhere">{{ author.id }}</span>
-      </h1>
-
-      <p class="muted">
-        {% if tab == "PUBLIC" %}Public posts{% endif %}
-        {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
-        {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
-        {% if tab == "DELETED" %}Deleted posts{% endif %}
-        · {{ blurb }}
-      </p>
-    </div>
-
-    <!-- Tabs -->
-    <nav class="tabs" aria-label="Entry visibility tabs">
-      {% for t in tabs %}
-        <a class="tab{% if t.key == tab %} active{% endif %}"
-           href="{% url 'adminpage:author-detail-tab' author.id t.key %}">
-          <span>{{ t.label }}</span>
-          <span class="badge">{{ t.count }}</span>
-        </a>
-      {% endfor %}
-    </nav>
+<ul class="federation-container">
+  <!-- Page header -->
+  <li class="federation-header">
+    <h1>Federation Dashboard</h1>
+    <p>Monitor and manage the nodes connected to your Project Red instance.</p>
   </li>
 
-  <!-- Entries -->
-  <li class="author-detail-card">
-    {% if page_obj.object_list %}
-      <div class="section-head">
-        <h2>
-          {% if tab == "PUBLIC" %}Public posts{% endif %}
-          {% if tab == "FRIENDS" %}Friends-only posts{% endif %}
-          {% if tab == "UNLISTED" %}Unlisted posts{% endif %}
-          {% if tab == "DELETED" %}Deleted posts{% endif %}
-        </h2>
-        <span class="muted">
-          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
-          of {{ page_obj.paginator.count }} entries
-        </span>
-      </div>
+  <!-- Stats cards -->
+  <li>
+    <ul class="federation-stats-grid">
+      <li class="stat-card">
+        <span class="stat-label">Total Nodes</span>
+        <span class="stat-value">{{ status.total_nodes }}</span>
+      </li>
+      <li class="stat-card">
+        <span class="stat-label">Active Nodes</span>
+        <span class="stat-value stat-value--success">{{ status.active_nodes }}</span>
+      </li>
+    </ul>
+  </li>
 
-      <div class="cards">
-        {% for e in page_obj.object_list %}
-          <article class="entry-card">
-            <header>
-              <div class="meta break-anywhere">
-                <strong>{{ e.title|default:"(untitled)" }}</strong>
-                <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
-              </div>
-            </header>
+  <!-- Quick Actions -->
+  <li class="federation-card">
+    <ul>
+      <li>
+        <h2>Quick Actions</h2>
+        <p>Jump directly to managing or adding federation nodes.</p>
+      </li>
+      <li class="quick-actions-row">
+        <a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-primary">
+          Manage Nodes
+        </a>
+        <a href="{% url 'adminpage:federation-node-create' %}" class="btn btn-success">
+          Add New Node
+        </a>
+      </li>
+    </ul>
+  </li>
 
-            {% if e.description %}
-              <p class="description-text break-anywhere">
-                {{ e.description|truncatechars:140 }}
-              </p>
-            {% endif %}
+  <!-- Node Status Overview -->
+  <li class="federation-card">
+    <ul>
+      <li class="nodes-header-row">
+        <h2>Connected Nodes</h2>
+        <p>Overview of all configured federation nodes and their current status.</p>
+      </li>
 
-            <div class="content-preview break-anywhere">
-              {# Image entries: either content_type contains "image" OR image_url is set #}
-              {% if "image" in e.content_type|default_if_none:"" or e.image_url %}
-                {% if e.image_url %}
-                  <img src="{{ e.image_url }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
-                {% elif e.content %}
-                  <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
-                {% endif %}
-              {% else %}
-                {% if e.content %}
-                  {{ e.content|truncatechars:220 }}
-                {% endif %}
-              {% endif %}
-            </div>
-
-            <footer class="entry-footer">
-              <span>❤️ {{ e.likes_count }}</span>
-              <a class="break-anywhere"
-                 href="{{ e.fqid }}"
-                 target="_blank"
-                 rel="noopener noreferrer">
-                View →
-              </a>
-            </footer>
-          </article>
-        {% endfor %}
-      </div>
-
-      <!-- Pagination -->
-      <div class="pagination">
-        {% if page_obj.has_previous %}
-          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.previous_page_number }}">Prev</a>
-        {% endif %}
-        <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-          <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.next_page_number }}">Next</a>
-        {% endif %}
-      </div>
-    {% else %}
-      <p class="muted">No entries for {{ tab|title }}.</p>
-    {% endif %}
+      {% if status.nodes %}
+        <li class="nodes-table-wrapper">
+          <table class="nodes-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th style="text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for node in status.nodes %}
+              <tr>
+                <td>
+                  <a href="{% url 'adminpage:federation-node-detail' node.id %}" class="node-name-link">
+                    {{ node.name }}
+                  </a>
+                </td>
+                <td class="node-url">{{ node.url }}</td>
+                <td style="text-align: center;">
+                  {% if node.is_active %}
+                    <span class="status-pill status-pill--active">
+                      <span class="status-dot">●</span> Active
+                    </span>
+                  {% else %}
+                    <span class="status-pill status-pill--inactive">
+                      <span class="status-dot">●</span> Inactive
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </li>
+      {% else %}
+        <li class="nodes-empty">
+          No nodes configured yet.
+          <a href="{% url 'adminpage:federation-node-create' %}">Add your first node</a>.
+        </li>
+      {% endif %}
+    </ul>
   </li>
 </ul>
 {% endblock %}
