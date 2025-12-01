@@ -567,8 +567,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } else if (state === "Pending" || state === "Unfollow") {
       const authorSerial = btn.dataset.actorSerial;
-      const followedAuthorId = encodeURIComponent(btn.dataset.objectId);
-      const deleteEndpoint = `/api/authors/${authorSerial}/following/${followedAuthorId}/`;
+
+      const followedAuthorId = btn.dataset.objectSerial || btn.dataset.objectId;
+
+      const deleteEndpoint = `/api/authors/${authorSerial}/following/${encodeURIComponent(followedAuthorId)}/`;
 
       try {
         const res = await fetch(deleteEndpoint, {
@@ -579,8 +581,9 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        if (res.ok) applyVisual("Request To Follow");
-        else {
+        if (res.ok) {
+          applyVisual("Request To Follow");
+        } else {
           const text = await res.text();
           console.error('Failed to remove follow request', res.status, text);
           alert("Failed to remove follow request.");
