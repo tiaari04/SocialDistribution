@@ -69,102 +69,69 @@
 
         .page-header {
             width: 100%;
-            max-width: 1200px;
-            margin-bottom: 40px;
-            text-align: center;
+            max-width: 800px;
+            margin-bottom: 30px;
         }
 
         .page-header h1 {
             color: #800020;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 5px;
         }
 
         .page-header p {
             color: #666;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
-        .authors-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
+        .authors-list {
             width: 100%;
-            max-width: 1200px;
+            max-width: 800px;
             list-style: none;
         }
 
-        .author-card {
+        .author-item {
             background-color: white;
             border: 2px solid #800020;
-            border-radius: 15px;
-            padding: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .author-card:hover {
-            box-shadow: 2px 6px 16px rgba(128, 0, 32, 0.2);
-            transform: translateY(-5px);
-        }
-
-        .author-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #800020, #a00030);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
+            border-radius: 10px;
+            padding: 20px 25px;
             margin-bottom: 15px;
-            border: 3px solid #f9f5f5;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .author-item:hover {
+            box-shadow: 2px 4px 12px rgba(128, 0, 32, 0.15);
         }
 
         .author-name {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #800020;
-            margin-bottom: 15px;
+            color: #333;
         }
 
         .view-profile-btn {
             background-color: #800020;
             color: white;
             text-decoration: none;
-            padding: 10px 25px;
-            border-radius: 10px;
+            padding: 8px 20px;
+            border-radius: 8px;
             font-weight: 600;
             transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 0.95rem;
         }
 
         .view-profile-btn:hover {
             background-color: #a00030;
-            transform: scale(1.05);
         }
 
         .no-authors {
             text-align: center;
             padding: 60px 20px;
             color: #666;
-            font-size: 1.2rem;
-        }
-
-        .no-authors i {
-            font-size: 4rem;
-            color: #800020;
-            margin-bottom: 20px;
-            display: block;
+            font-size: 1.1rem;
         }
 
         @media (max-width: 900px) {
@@ -186,18 +153,7 @@
             }
 
             .page-header h1 {
-                font-size: 2rem;
-            }
-
-            .authors-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 20px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .authors-grid {
-                grid-template-columns: 1fr;
+                font-size: 1.75rem;
             }
         }
     </style>
@@ -222,22 +178,18 @@
 
     <main>
         <div class="page-header">
-            <h1>Discover Authors</h1>
-            <p>Connect with fellow content creators in our community</p>
+            <h1>All Authors</h1>
+            <p>Browse community members</p>
         </div>
 
         {% if authors %}
-            <ul class="authors-grid">
+            <ul class="authors-list">
                 {% for author in authors %}
                     {% if author.is_approved %}
-                        <li class="author-card">
-                            <div class="author-avatar">
-                                {{ author.displayName|first|upper }}
-                            </div>
-                            <div class="author-name">{{ author.displayName }}</div>
+                        <li class="author-item">
+                            <span class="author-name">{{ author.displayName }}</span>
                             <a href="{% url 'authors:detail' author.serial %}" class="view-profile-btn">
                                 View Profile
-                                <i class="fas fa-arrow-right"></i>
                             </a>
                         </li>
                     {% endif %}
@@ -245,8 +197,7 @@
             </ul>
         {% else %}
             <div class="no-authors">
-                <i class="fas fa-users"></i>
-                <p>No authors found at the moment.</p>
+                <p>No authors found.</p>
             </div>
         {% endif %}
     </main>
