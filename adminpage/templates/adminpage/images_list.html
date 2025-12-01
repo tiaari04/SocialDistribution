@@ -112,18 +112,21 @@
     transform: translateY(-2px);
   }
 
-  /* Larger thumbnails */
+  /* Thumbnail (size unchanged) */
   .thumb {
     display: block;
-    width: 64px;       /* larger */
-    height: 64px;      /* larger */
+    width: 64px;
+    height: 64px;
     object-fit: cover;
     border-radius: 14px;
+    margin-right: 8px; /* space between image and URL column */
   }
 
+  /* Cell that holds the image: add breathing room */
   .preview-cell {
     display: flex;
     align-items: center;
+    padding: 8px 4px 8px 6px; /* top, right, bottom, left */
   }
 
   /* Table / Grid */
@@ -148,10 +151,10 @@
     min-width: 680px;
   }
 
-  /* Larger row height */
+  /* Bigger rows (but image size unchanged) */
   .images-row {
     border-top: 1px solid rgba(128,0,32,0.08);
-    padding: 14px 22px; /* increased */
+    padding: 20px 24px; /* taller row */
     background-color: #ffffff;
     transition: background .12s ease;
   }
@@ -185,10 +188,9 @@
     align-items: center;
   }
 
-  /* Slightly larger buttons */
   .icon-btn {
-    width: 38px;    /* was 34 */
-    height: 38px;   /* was 34 */
+    width: 38px;
+    height: 38px;
     border: none;
     color: #800020;
     background: transparent;
@@ -200,7 +202,7 @@
   }
 
   .icon-btn i {
-    font-size: 18px;   /* was 16 */
+    font-size: 18px;
   }
 
   .icon-btn:hover {
@@ -273,7 +275,6 @@
             <!-- Actions -->
             <li>
               <div class="actions-wrap">
-
                 <a href="{% url 'adminpage:image-send' i.id %}"
                    class="icon-btn"
                    title="Send to other nodes">
@@ -288,7 +289,6 @@
                     <i class="fas fa-trash"></i>
                   </button>
                 </form>
-
               </div>
             </li>
 
