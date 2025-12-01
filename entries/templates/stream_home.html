@@ -87,8 +87,9 @@
 
         #commentsPanel header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
+            gap: 15px;
             border-bottom: 2px solid #800020;
             padding: 15px 20px;
             flex-shrink: 0;
@@ -96,6 +97,7 @@
             color: #800020;
             height: 60px;
             box-sizing: border-box;
+            width: 100%;
         }
 
         #commentsPanel header h3 {
@@ -118,6 +120,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            flex-shrink: 0;
         }
 
         #closePanel:hover {
@@ -289,8 +292,8 @@
 
 <section id="commentsPanel">
     <header>
-        <h3>Comments</h3>
         <button id="closePanel">&times;</button>
+        <h3>Comments</h3>
     </header>
     <section id="comments"></section>
     <footer>
