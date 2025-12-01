@@ -111,7 +111,7 @@
   .entry-card {
     background-color: #ffffff !important;
     border-radius: 12px;
-    border: 1px solid rgba(128,0,32,0.12);
+    border: 1px solid rgba(128,0,32,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     padding: .75rem;
     display: flex;
@@ -119,7 +119,6 @@
     gap: .375rem;
     min-width: 0;
     transition: box-shadow 0.2s, transform 0.2s;
-    max-height: 280px;
   }
 
   /* Force white background on all children */
@@ -334,18 +333,30 @@
               </p>
             {% endif %}
 
-            {# Check if there's an image_url field first #}
+            {# Display image if image_url exists #}
             {% if e.image_url %}
               <img
                 class="entry-image"
                 src="{{ e.image_url }}"
                 alt="{{ e.title|default:"Entry image" }}"
               >
+            
+            {# Display text content based on content_type #}
             {% elif e.content %}
-              {# Only show content if it's not an image URL stored in content #}
-              <div class="entry-content">
-                {{ e.content|truncatechars:120 }}
-              </div>
+              {% if e.content_type == "text/markdown" %}
+                <div class="entry-content">
+                  {{ e.content|truncatechars:150|linebreaksbr }}
+                </div>
+              {% elif e.content_type == "text/plain" %}
+                <div class="entry-content">
+                  {{ e.content|truncatechars:150|linebreaksbr }}
+                </div>
+              {% else %}
+                {# Fallback for any other content type #}
+                <div class="entry-content">
+                  {{ e.content|truncatechars:150 }}
+                </div>
+              {% endif %}
             {% endif %}
 
             <footer class="entry-footer">
