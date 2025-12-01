@@ -4,7 +4,7 @@
 {% block styles %}
 {{ block.super }}
 <style>
-  /* Page wrapper aligned with other admin pages */
+  /* Layout wrapper */
   .author-form-container {
     max-width: 960px;
     margin-inline: auto;
@@ -14,7 +14,7 @@
   }
 
   .author-form-header {
-    padding: 0.75rem 0.5rem;
+    padding: 4px 2px 0;
   }
 
   .author-form-header h1 {
@@ -29,12 +29,22 @@
     padding: 0;
   }
 
+  /* Card */
+  .author-form-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128, 0, 32, 0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+    box-sizing: border-box;
+  }
+
   /* Grid for fields */
   .author-form-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 20px;
-    padding: 0.75rem 0.25rem 0;
+    padding-top: 8px;
   }
 
   @media (max-width: 768px) {
@@ -52,10 +62,12 @@
   .author-form-label {
     font-size: 0.875rem;
     font-weight: 600;
+    color: #111827;
   }
 
   .author-form-help {
     font-size: 0.8rem;
+    color: #6b7280;
   }
 
   .author-form-errors {
@@ -67,8 +79,87 @@
     margin-bottom: 12px;
     padding: 10px 12px;
     border-radius: 12px;
-    background: var(--gray-100, #f3f4f6);
-    border: 1px solid var(--gray-200, #e5e7eb);
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Inputs inside the card */
+  .author-form-card input,
+  .author-form-card select,
+  .author-form-card textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+
+  .author-form-card input:focus,
+  .author-form-card select:focus,
+  .author-form-card textarea:focus {
+    outline: none;
+    border-color: #800020;
+    box-shadow: 0 0 0 1px rgba(128, 0, 32, 0.22);
+  }
+
+  /* Actions row */
+  .author-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.04);
+  }
+
+  /* Buttons in burgundy theme */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  .btn-primary {
+    background-color: #800020;
+    border-color: #800020;
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: #9f0030;
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border-color: #800020;
+    color: #800020;
+  }
+
+  .btn-outline:hover {
+    background-color: #fbe7f0;
+  }
+
+  /* Simple text utilities */
+  .text-primary {
+    color: #800020;
+  }
+
+  .text-xl {
+    font-size: 1.25rem;
+  }
+
+  .semibold {
+    font-weight: 600;
   }
 </style>
 {% endblock %}
@@ -81,8 +172,8 @@
     </h1>
   </div>
 
-  <div class="card p-4">
-    <form method="post" class="column gap-4">
+  <div class="author-form-card">
+    <form method="post">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
@@ -96,14 +187,14 @@
       <div class="author-form-grid">
         {% for field in form.visible_fields %}
         <div class="author-form-field">
-          <label for="{{ field.id_for_label }}" class="author-form-label text-strong">
+          <label for="{{ field.id_for_label }}" class="author-form-label">
             {{ field.label }}
           </label>
 
           {{ field }}
 
           {% if field.help_text %}
-            <span class="author-form-help text-muted">
+            <span class="author-form-help">
               {{ field.help_text|safe }}
             </span>
           {% endif %}
@@ -119,19 +210,14 @@
         {% endfor %}
       </div>
 
-      <!-- Actions row — uses your existing button + row theme -->
-      <ul class="row p-4">
-        <li>
-          <button type="submit" class="btn btn-primary">
-            Save
-          </button>
-        </li>
-        <li>
-          <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">
-            Cancel
-          </a>
-        </li>
-      </ul>
+      <div class="author-form-actions">
+        <button type="submit" class="btn btn-primary">
+          Save
+        </button>
+        <a href="{% url 'adminpage:authors' %}" class="btn btn-outline">
+          Cancel
+        </a>
+      </div>
     </form>
   </div>
 </div>
