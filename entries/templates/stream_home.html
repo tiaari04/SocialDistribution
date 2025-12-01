@@ -556,7 +556,15 @@
 
                     const likeButton = clone.querySelector('.likeButton');
                     likeButton.dataset.liked = comment.user_liked ? "true" : "false";
-                    if(comment.user_liked) likeButton.querySelector('i').classList.replace('far','fas');
+
+                    const icon = likeButton.querySelector('i');
+                    if(comment.user_liked){
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
 
                     likeButton.addEventListener('click', async () => {
                         if(likeButton.dataset.liked === "true") return;
