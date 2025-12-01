@@ -3,94 +3,303 @@
 
 {% block styles %}
 {{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
-.thumb{ height:4rem; width:4rem; object-fit:cover; border-radius:.5rem; }
+  /* Container */
+  .images-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .images-container > li,
+  .images-card ul,
+  .images-grid li,
+  .images-row-inner li,
+  .list li {
+    list-style: none !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Card */
+  .images-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .images-card.table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .images-heading h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #800020;
+    letter-spacing: 0.03em;
+  }
+
+  /* Search bar */
+  .search-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .search-input-wrapper {
+    flex: 1 1 260px;
+    display: flex;
+    border: 2px solid rgba(128,0,32,0.25);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .search-input-wrapper input[name="q"] {
+    flex: 1;
+    border: none;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-input-wrapper button {
+    background-color: #800020;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-input-wrapper button:hover {
+    background-color: #a00030;
+  }
+
+  .add-btn {
+    padding: 10px 16px;
+    background: #fff0f4;
+    border: 2px solid #800020;
+    border-radius: 999px;
+    color: #800020;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+  }
+
+  .add-btn:hover {
+    background: #ffd2e2;
+    transform: translateY(-2px);
+  }
+
+
+  .preview-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px !important;
+  }
+
+  .thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 14px;
+    display: block;
+  }
+
+
+  /* Table / Grid */
+  .images-header-row {
+    background-color: #fff0f4;
+    border-bottom: 1px solid rgba(128,0,32,0.12);
+    padding: 12px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b3b47;
+  }
+
+  .images-grid,
+  .images-row-inner {
+    display: grid;
+    grid-template-columns:
+      minmax(90px, 0.9fr)
+      minmax(260px, 3fr)
+      minmax(160px, 1.4fr);
+    gap: 16px;
+    align-items: center;
+    min-width: 680px;
+  }
+
+  /* Bigger rows (but image size unchanged) */
+  .images-row {
+    border-top: 1px solid rgba(128,0,32,0.08);
+    padding: 20px 24px; /* taller row */
+    background-color: #ffffff;
+    transition: background .12s ease;
+  }
+
+  .images-row:nth-child(even) {
+    background-color: #fdf8fa;
+  }
+
+  .images-row:hover {
+    background-color: #ffeef5;
+  }
+
+  .break-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .mono {
+    font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .url-cell {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Actions */
+  .actions-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    color: #800020;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+  }
+
+  .icon-btn i {
+    font-size: 18px;
+  }
+
+  .icon-btn:hover {
+    background: #fff0f4;
+    transform: translateY(-2px);
+  }
+
+  .icon-btn.delete {
+    color: #b00020;
+  }
+
+  .icon-btn.delete:hover {
+    background: #ffe6ea;
+    color: #e11d48;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Hosted Images</h1></li>
+<ul class="images-container">
 
-  <!-- Search / Upload -->
+  <!-- Heading -->
   <li>
-    <form method="get">
-      <ul class="row">
-        <li style="flex:1 1 auto; min-width:0;">
-          <input name="q" value="{{ q }}" placeholder="Search images..." />
-        </li>
-        <li><button class="btn btn-primary">Search</button></li>
-        <li><a href="{% url 'adminpage:image-upload' %}" class="btn btn-outline">Upload</a></li>
-      </ul>
-    </form>
+    <section class="images-card">
+      <div class="images-heading">
+        <h1>Hosted Images</h1>
+      </div>
+
+      <form method="get">
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <input name="q" value="{{ q }}" placeholder="Search images..." />
+            <button type="submit"><i class="fas fa-search"></i></button>
+          </div>
+
+          <a href="{% url 'adminpage:image-upload' %}" class="add-btn">
+            <i class="fas fa-upload"></i> Upload
+          </a>
+        </div>
+      </form>
+    </section>
   </li>
 
-  <!-- Header -->
+  <!-- Table -->
   <li>
-    <ul class="grid cols-3 gap-2 header-row p-3 text-sm">
-      <li class="cell">Preview</li>
-      <li class="cell">URL</li>
-      <li class="cell">Actions</li>
-    </ul>
-  </li>
+    <section class="images-card table-card">
+      <div class="images-header-row">
+        <ul class="images-grid">
+          <li>Preview</li>
+          <li>URL</li>
+          <li>Actions</li>
+        </ul>
+      </div>
 
-  <!-- Body -->
-  <li>
-    <ul class="border rounded shadow text-sm">
-      {% for i in images %}
-      <li class="border-top">
-        <!-- ROW GRID -->
-        <ul class="grid cols-3 gap-2 p-3">
-          <!-- Preview -->
-          <li>
-            <ul>
-              <li>
-                <img class="thumb" src="{{ i.url }}" alt="image">
-              </li>
-            </ul>
-          </li>
+      <ul class="list">
+        {% for i in images %}
+        <li class="images-row">
+          <ul class="images-row-inner">
 
-          <!-- URL -->
-          <li class="text-muted mono" style="word-break:break-all;">
-            {{ i.url }}
-          </li>
+            <!-- Preview -->
+            <li class="preview-cell">
+              <img class="thumb" src="{{ i.url }}" alt="image">
+            </li>
 
-          <!-- Actions -->
-          <li>
-            <ul class="row gap-2">
-              <li>
-                <a
-                  href="{% url 'adminpage:image-send' i.id %}"
-                  class="btn btn-primary"
-                  style="padding:.375rem .75rem; font-size:.75rem;"
-                >
-                  Send to other nodes
+            <!-- URL -->
+            <li class="mono break-anywhere url-cell text-muted">
+              {{ i.url }}
+            </li>
+
+            <!-- Actions -->
+            <li>
+              <div class="actions-wrap">
+                <a href="{% url 'adminpage:image-send' i.id %}"
+                   class="icon-btn"
+                   title="Send to other nodes">
+                  <i class="fas fa-paper-plane"></i>
                 </a>
-              </li>
-              <li>
-                <form
-                  action="{% url 'adminpage:image-delete' i.id %}"
-                  method="post"
-                  onsubmit="return confirm('Delete this image?');"
-                >
+
+                <form action="{% url 'adminpage:image-delete' i.id %}"
+                      method="post"
+                      onsubmit="return confirm('Delete this image?');">
                   {% csrf_token %}
-                  <button
-                    type="submit"
-                    class="btn btn-danger"
-                    style="padding:.375rem .75rem; font-size:.75rem;"
-                  >
-                    Delete
+                  <button type="submit" class="icon-btn delete" title="Delete image">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </form>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      {% empty %}
-      <li class="p-6 text-center text-muted">No images yet.</li>
-      {% endfor %}
-    </ul>
+              </div>
+            </li>
+
+          </ul>
+        </li>
+        {% empty %}
+        <li class="p-6 text-center text-muted">No images found.</li>
+        {% endfor %}
+      </ul>
+    </section>
   </li>
+
 </ul>
 {% endblock %}

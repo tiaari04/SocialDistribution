@@ -1,4 +1,5 @@
 {% extends "base_adminpage.html" %}
+{% load tz %}
 {% block title %}Approvals{% endblock %}
 
 {% block styles %}
@@ -6,9 +7,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-  /* REMOVE BULLET POINTS */
+  /* REMOVE BULLET POINTS + FIX LEFT GAP */
   ul, li {
     list-style: none;
+    padding-left: 0;   /* <-- FIXES LEFT GAP */
+    margin-left: 0;    /* <-- FIXES LEFT GAP */
   }
 
   /* Same theme as authors_list */
@@ -124,7 +127,6 @@
     <section class="approvals-card">
       <div class="approvals-heading">
         <h1>Pending Users</h1>
-        <p>Approve users waiting for activation.</p>
       </div>
     </section>
   </li>
@@ -155,7 +157,7 @@
 
               <!-- MST conversion -->
               <li class="text-muted">
-                {{ u.created|localtime }}
+                {{ u.created|timezone:"America/Edmonton"|date:"Y-m-d H:i" }} MST
               </li>
 
               <li>
