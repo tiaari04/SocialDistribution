@@ -20,7 +20,6 @@ header {
     align-items: center;
     padding: 30px 10px;
     border-right: 3px solid #b81042; 
-    box-shadow: 3px 0 10px rgba(0,0,0,0.1);
     z-index: 100;
 }
 
@@ -30,6 +29,7 @@ header h2 {
     color: #fff;
     text-align: center;
     letter-spacing: 1px;
+    font-weight: bold;
 }
 
 header a {
@@ -46,7 +46,6 @@ header a {
     font-weight: 600;
     letter-spacing: 0.3px;
     transition: background 0.3s, border-left-color 0.2s;
-    border-left: 4px solid transparent;
     box-sizing: border-box;
 }
 
@@ -62,27 +61,4 @@ main {
     border-left: 2px solid rgba(128,0,32,0.1); 
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
-    header {
-        position: relative;
-        width: 100%;
-        height: auto;
-        flex-direction: row;
-        justify-content: space-around;
-        padding: 15px 10px;
-        border-right: none;
-        border-bottom: 3px solid #b81042;
-    }
-
-    main {
-        padding: 20px 10px;
-        border-left: none;
-    }
-
-    header a {
-        border-left: none;
-        padding: 10px 15px;
-    }
-}
 </style>
