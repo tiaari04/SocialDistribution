@@ -1,69 +1,334 @@
 {% extends "base_adminpage.html" %}
 {% block title %}Federation Dashboard{% endblock %}
 
-{% block content %}
-<ul class="container gap-6">
-  <li><h1 class="text-xl semibold text-primary p-4">Federation Dashboard</h1></li>
+{% block styles %}
+{{ block.super }}
+<style>
+  .federation-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 960px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-  <!-- Stats Cards -->
+  .federation-container > li {
+    list-style: none;
+  }
+
+  .federation-header {
+    padding: 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .federation-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #800020;
+    font-weight: 700;
+  }
+
+  .federation-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .federation-card {
+    background-color: #ffffff;
+    border-radius: 18px;
+    border: 2px solid rgba(128,0,32,0.10);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 18px 20px 20px;
+  }
+
+  .federation-card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .federation-card h2 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    color: #800020;
+  }
+
+  .federation-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  /* Stats grid */
+  .federation-stats-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(128,0,32,0.12);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #999;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #800020;
+  }
+
+  .stat-value--success {
+    color: #137b35;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background-color: #800020;
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: #9b1538;
+    transform: translateY(-1px);
+  }
+
+  .btn-success {
+    background-color: #198754;
+    color: #ffffff;
+  }
+
+  .btn-success:hover {
+    background-color: #147245;
+    transform: translateY(-1px);
+  }
+
+  .quick-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  /* Nodes table */
+  .nodes-header-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .nodes-table-wrapper {
+    margin-top: 6px;
+    overflow-x: auto;
+  }
+
+  .nodes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .nodes-table th,
+  .nodes-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(128,0,32,0.08);
+  }
+
+  .nodes-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+  }
+
+  .nodes-table tbody tr:hover {
+    background-color: #faf0f4;
+  }
+
+  .node-name-link {
+    color: #800020;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .node-name-link:hover {
+    text-decoration: underline;
+  }
+
+  .node-url {
+    font-size: 0.85rem;
+    color: #666;
+    word-break: break-all;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .status-pill--active {
+    background-color: rgba(19,123,53,0.08);
+    color: #137b35;
+  }
+
+  .status-pill--inactive {
+    background-color: rgba(204,0,0,0.06);
+    color: #b3261e;
+  }
+
+  .status-dot {
+    font-size: 0.7rem;
+  }
+
+  .nodes-empty {
+    font-size: 0.9rem;
+    color: #777;
+  }
+
+  .nodes-empty a {
+    color: #800020;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .nodes-empty a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .federation-card {
+      padding: 14px 14px 16px;
+    }
+
+    .nodes-table th,
+    .nodes-table td {
+      padding: 8px 6px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<ul class="federation-container">
+  <!-- Page header -->
+  <li class="federation-header">
+    <h1>Federation Dashboard</h1>
+    <p>Monitor and manage the nodes connected to your Project Red instance.</p>
+  </li>
+
+  <!-- Stats cards -->
   <li>
-    <ul class="grid cols-2 gap-6">
-      <li class="card p-4">
-        <ul class="gap-2">
-          <li class="text-sm text-muted">Total Nodes</li>
-          <li class="text-xl semibold text-primary">{{ status.total_nodes }}</li>
-        </ul>
+    <ul class="federation-stats-grid">
+      <li class="stat-card">
+        <span class="stat-label">Total Nodes</span>
+        <span class="stat-value">{{ status.total_nodes }}</span>
       </li>
-      <li class="card p-4">
-        <ul class="gap-2">
-          <li class="text-sm text-muted">Active Nodes</li>
-          <li class="text-xl semibold" style="color: green;">{{ status.active_nodes }}</li>
-        </ul>
+      <li class="stat-card">
+        <span class="stat-label">Active Nodes</span>
+        <span class="stat-value stat-value--success">{{ status.active_nodes }}</span>
       </li>
     </ul>
   </li>
 
   <!-- Quick Actions -->
-  <li class="card p-4">
-    <ul class="gap-4">
-      <li><h2 class="text-lg semibold">Quick Actions</h2></li>
+  <li class="federation-card">
+    <ul>
       <li>
-        <ul class="row gap-2">
-          <li><a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-primary">Manage Nodes</a></li>
-          <li><a href="{% url 'adminpage:federation-node-create' %}" class="btn btn-success">Add New Node</a></li>
-        </ul>
+        <h2>Quick Actions</h2>
+        <p>Jump directly to managing or adding federation nodes.</p>
+      </li>
+      <li class="quick-actions-row">
+        <a href="{% url 'adminpage:federation-nodes' %}" class="btn btn-primary">
+          Manage Nodes
+        </a>
+        <a href="{% url 'adminpage:federation-node-create' %}" class="btn btn-success">
+          Add New Node
+        </a>
       </li>
     </ul>
   </li>
 
   <!-- Node Status Overview -->
-  <li class="card p-4">
-    <ul class="gap-4">
-      <li><h2 class="text-lg semibold">Connected Nodes</h2></li>
+  <li class="federation-card">
+    <ul>
+      <li class="nodes-header-row">
+        <h2>Connected Nodes</h2>
+        <p>Overview of all configured federation nodes and their current status.</p>
+      </li>
+
       {% if status.nodes %}
-        <li>
-          <table style="width: 100%; border-collapse: collapse;">
+        <li class="nodes-table-wrapper">
+          <table class="nodes-table">
             <thead>
-              <tr style="border-bottom: 1px solid #ddd;">
-                <th style="text-align: left; padding: 8px;">Name</th>
-                <th style="text-align: left; padding: 8px;">URL</th>
-                <th style="text-align: center; padding: 8px;">Status</th>
+              <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th style="text-align: center;">Status</th>
               </tr>
             </thead>
             <tbody>
               {% for node in status.nodes %}
-              <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 8px;">
-                  <a href="{% url 'adminpage:federation-node-detail' node.id %}" style="color: #0066cc;">
+              <tr>
+                <td>
+                  <a href="{% url 'adminpage:federation-node-detail' node.id %}" class="node-name-link">
                     {{ node.name }}
                   </a>
                 </td>
-                <td style="padding: 8px; font-size: 0.875rem; color: #666;">{{ node.url }}</td>
-                <td style="text-align: center; padding: 8px;">
+                <td class="node-url">{{ node.url }}</td>
+                <td style="text-align: center;">
                   {% if node.is_active %}
-                    <span style="color: green;">● Active</span>
+                    <span class="status-pill status-pill--active">
+                      <span class="status-dot">●</span> Active
+                    </span>
                   {% else %}
-                    <span style="color: red;">● Inactive</span>
+                    <span class="status-pill status-pill--inactive">
+                      <span class="status-dot">●</span> Inactive
+                    </span>
                   {% endif %}
                 </td>
               </tr>
@@ -72,10 +337,12 @@
           </table>
         </li>
       {% else %}
-        <li class="text-muted">No nodes configured yet. <a href="{% url 'adminpage:federation-node-create' %}">Add your first node</a></li>
+        <li class="nodes-empty">
+          No nodes configured yet.
+          <a href="{% url 'adminpage:federation-node-create' %}">Add your first node</a>.
+        </li>
       {% endif %}
     </ul>
   </li>
-
 </ul>
 {% endblock %}
