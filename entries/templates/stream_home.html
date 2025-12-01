@@ -467,8 +467,14 @@
         document.querySelectorAll('.share').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                const link = window.location.origin + '/posts/' + btn.dataset.fqid;
-                navigator.clipboard.writeText(link).then(() => alert('Post link copied!'));
+                const fqid = btn.dataset.fqid; // full URL
+                const parts = fqid.split('/entries/');
+                const authorPart = parts[0].split('/authors/')[1];
+                const entrySerial = parts[1];
+
+                const link = `/authors/${authorPart}/entries/${entrySerial}/`;
+                navigator.clipboard.writeText(window.location.origin + link)
+                    .then(() => alert('Post link copied!'));
             });
         });
 
