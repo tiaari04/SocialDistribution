@@ -109,15 +109,22 @@
   }
 
   .entry-card {
-    background-color: #ffffff;
     border-radius: 14px;
     border: 1px solid rgba(128,0,32,0.12);
     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    padding: 0.85rem 1rem 0.8rem;
+    padding: 0.75rem 0.9rem 0.75rem;
     display: flex;
     flex-direction: column;
     gap: .35rem;
     min-width: 0;
+
+    /* HARD RESET: always white */
+    background-color: #ffffff !important;
+  }
+
+  /* Also nuke weird backgrounds inside, for text posts */
+  .entry-card * {
+    background-color: transparent;
   }
 
   .entry-meta {
@@ -134,7 +141,6 @@
     margin: 0;
   }
 
-  /* Just let content be content; no backgrounds */
   .entry-content {
     margin-top: .25rem;
     font-size: .9rem;
@@ -144,16 +150,15 @@
     white-space: pre-wrap;
   }
 
-  /* Images */
   .entry-image {
-    margin-top: .35rem;
+    margin-top: .3rem;
     border-radius: 10px;
     max-width: 100%;
-    height: auto;
+    max-height: 220px;
+    object-fit: cover;
     display: block;
   }
 
-  /* Break long URLs / ids */
   .break-anywhere {
     word-break: break-word;
     overflow-wrap: anywhere;
@@ -285,19 +290,22 @@
               </p>
             {% endif %}
 
-            {# CONTENT #}
             {% if e.content %}
-              {# 1. IMAGE POSTS (e.g., image/png, image/jpeg) #}
+              {# IMAGE POSTS: content_type starts with image/ #}
               {% if e.content_type and e.content_type|slice:":6" == "image/" %}
-                <img class="entry-image" src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}">
+                <img
+                  class="entry-image"
+                  src="{{ e.content }}"
+                  alt="{{ e.title|default:"Entry image" }}"
+                >
 
-              {# 2. MARKDOWN POSTS (render with simple linebreaks; swap to markdown filter if you have one) #}
+              {# MARKDOWN POSTS: render with simple linebreaks (swap to markdown filter if you have one) #}
               {% elif e.content_type and "markdown" in e.content_type %}
                 <div class="entry-content break-anywhere">
                   {{ e.content|linebreaksbr }}
                 </div>
 
-              {# 3. PLAIN TEXT OR OTHER TYPES #}
+              {# EVERYTHING ELSE (text/plain, text/html, etc.) #}
               {% else %}
                 <div class="entry-content break-anywhere">
                   {{ e.content|truncatechars:260 }}
