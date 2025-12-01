@@ -27,6 +27,7 @@ main {
       border-radius: 20px;
       box-shadow: 2px 6px 12px rgba(0,0,0,0.1);
       overflow: hidden;
+      position: relative;
     }
 .banner-content {
       padding: 40px;
@@ -120,10 +121,12 @@ p.bio {
     }
 
 .action-buttons {
+      position: absolute;
+      top: 20px;
+      right: 20px;
       display: flex;
-      justify-self: end;
+      flex-direction: column;
       gap: 12px;
-      margin-top: 1rem;
     }
 
 .icon-button {
@@ -135,6 +138,15 @@ p.bio {
       cursor: pointer;
       text-decoration: none;
       font-size: 1.5rem;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+
+.icon-button:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
     }
 
 .icon-button:active {
@@ -303,7 +315,10 @@ figure img {
         justify-content: center;
       }
 .action-buttons {
+        position: static;
         justify-content: center;
+        flex-direction: row;
+        margin-top: 1rem;
       }
 .button {
         display: block;
