@@ -74,15 +74,14 @@ def add_followed_author(author, actor):
         )
         follow_request.save()
         return {"details": "created"}
-
-    follow_request = FollowRequest.objects.create(
-        actor=author,
-        author_followed=actor,
-        state=FollowRequest.State.ACCEPTED,
-    )
-    follow_request.save()
-
-    send_remote_follow_request(author, actor)
+    else: 
+        follow_request = FollowRequest.objects.create(
+            actor=author,
+            author_followed=actor,
+            state=FollowRequest.State.ACCEPTED,
+        )
+        follow_request.save()
+        send_remote_follow_request(author, actor)
 
     return {"details": "created"}
 
