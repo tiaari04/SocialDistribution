@@ -110,7 +110,7 @@
         }
 
         .button-group { 
-            display: grid;
+            display: flex;
             grid-template-columns: 1fr 1fr;
             gap: 15px; 
             margin-top: 10px;
@@ -128,16 +128,16 @@
         }
 
         .save-btn { 
-            background-color: #2d7a3e; 
+            background-color: #46a45b; 
             color: white; 
         }
 
         .save-btn:hover { 
-            background-color: #236030; 
+            background-color: #307840; 
         }
 
         .delete-btn { 
-            background-color: #c94747; 
+            background-color: #c43535; 
             color: white; 
         }
 
@@ -225,10 +225,6 @@
                     </button>
                 </div>
             </form>
-
-            <a href="{% url 'entries:stream_home' author_serial=entry.author.serial %}" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to Stream
-            </a>
         </div>
     </main>
 </body>
