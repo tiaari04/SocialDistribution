@@ -318,7 +318,7 @@
                         </div>
 
                         <div class="actions">
-                            <button class="iconButton share" data-fqid="{{ entry.fqid }}/" title="Share">
+                            <button class="iconButton share" data-fqid="{{ entry.cleaned_fqid }}/" title="Share">
                                 <i class="fas fa-share-alt"></i>
                             </button>
 
@@ -422,7 +422,7 @@
         document.querySelectorAll('.share').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                const link = window.location.origin + '/posts/' + btn.dataset.fqid;
+                const link = btn.dataset.fqid;
                 navigator.clipboard.writeText(link).then(() => alert('Post link copied!'));
             });
         });
