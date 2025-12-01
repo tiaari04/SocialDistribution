@@ -187,8 +187,7 @@
 <body>
   <main>
     <header>
-      <h1><i class="fas fa-user-plus"></i> Create an Account</h1>
-      <p class="subtitle">Join Red Social Dist today</p>
+      <h1>Create an Account</h1>
     </header>
 
     <form method="post" enctype="multipart/form-data">
@@ -197,7 +196,7 @@
       {% if form.non_field_errors %}
         <ul class="errorlist">
           {% for error in form.non_field_errors %}
-            <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+            <li> {{ error }}</li>
           {% endfor %}
         </ul>
       {% endif %}
@@ -206,7 +205,7 @@
         {% if field.name == "description" %}
           <fieldset class="description-field">
             <label for="{{ field.id_for_label }}">
-              <i class="fas fa-align-left"></i> {{ field.label }}
+              {{ field.label }}
             </label>
             {{ field }}
             {% if field.errors %}
@@ -235,13 +234,12 @@
 
       <section class="button-row">
         <button type="submit">
-          <i class="fas fa-paper-plane"></i> Request Sign Up Approval
+          Request Sign Up Approval
         </button>
       </section>
     </form>
 
     <footer>
-      Already have an account?
       <a href="{% url 'login:login' %}">Log in</a>
     </footer>
   </main>
