@@ -1,648 +1,326 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Red Social Dist | Home</title>
-        <meta charset="UTF-8">
-        <meta name="csrf-token" content="{{ csrf_token }}">
-        <style>
-            body {
-                margin: 0;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f9f5f5;
-                display: flex;
-                min-height: 100vh;
-                overflow-x: hidden;
-            }
+<head>
+    <title>Red Social Dist | Home</title>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f5f5;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-            /* Sidebar menu */
+        /* Sidebar menu */
+        header {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            width: 150px;
+            height: 100vh;
+            background-color: #800020;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 5px;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+        }
+
+        header h3 {
+            margin-bottom: 30px;
+            font-size: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin: 10px 0;
+            width: 100%;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 10px;
+            transition: background 0.2s ease;
+            font-weight: 600;
+        }
+
+        header a:hover {
+            background-color: #a00030;
+        }
+
+        main {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .stream {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 75%;
+        }
+
+        .stream li {
+            list-style: none;
+        }
+
+        .post {
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            padding: 20px 25px;
+            border-radius: 20px;
+            border: 2px solid #800020;
+            box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .post:hover {
+            transform: translateY(-2px);
+            box-shadow: 2px 6px 12px rgba(0,0,0,0.12);
+        }
+
+        .postContent {
+            background-color: #fff;
+            color: #374151;
+            padding: 15px 20px;
+            border-radius: 12px;
+        }
+
+        .postContent img,
+        .postText img {
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            object-fit: contain;
+            margin: 5px 0;
+        }
+
+        .user {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .username a {
+            font-weight: 600;
+            color: #800020;
+            text-decoration: none;
+        }
+
+        .username a:hover {
+            text-decoration: underline;
+        }
+
+        /* Buttons as icons */
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .iconButton {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #800020;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .iconButton:hover {
+            color: #a00030;
+        }
+
+        #createPost {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 22px;
+            border-radius: 50%;
+            padding: 12px 15px;
+            background-color: #800020;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Comments panel */
+        #commentsPanel {
+            position: fixed;
+            top: 0;
+            right: -35vw;
+            width: 35vw;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: right 0.3s ease;
+            z-index: 200;
+            padding: 10px;
+        }
+
+        #commentsPanel.visible {
+            right: 0;
+        }
+
+        #commentsPanel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #800020;
+            padding-bottom: 5px;
+        }
+
+        #commentsPanel footer {
+            display: flex;
+            gap: 5px;
+            border-top: 1px solid #800020;
+            padding-top: 5px;
+        }
+
+        #commentInput {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #a00030;
+        }
+
+        #sendComment {
+            background-color: #800020;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
+
+        /* Comments template */
+        .comment {
+            border-bottom: 1px solid #800020;
+            padding: 8px 0;
+        }
+
+        .commentAuthor {
+            font-weight: 600;
+            color: #800020;
+        }
+
+        .commentText {
+            margin: 4px 0;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 900px) {
             header {
-                position: sticky;
-                top: 0;
-                left: 0;
-                z-index: 100;
-                width: 150px; /* narrower */
-                height: 100vh;
-                background-color: #800020;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 20px 5px;
-                box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-            }
-
-            header h3 {
-                margin-bottom: 30px;
-                font-size: 20px;
-                color: white;
-                text-align: center;
-            }
-
-            header a {
-                color: white;
-                text-decoration: none;
-                margin: 10px 0;
-                width: 100%;
-                text-align: center;
-                padding: 8px 0;
-                border-radius: 10px;
-                transition: background 0.2s ease;
-            }
-
-            header a:hover {
-                background-color: #a00030;
-            }
-
-            main {
-                flex: 1;
-                padding: 30px;
-                display: flex;
-                justify-content: center;
-            }
-
-            /* Posts stream */
-            .stream {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 30px;
-                width: 75%;
-                padding-left: 10px;
-            }
-
-            .stream li {
-                list-style: none; /* remove bullet points */
-            }
-
-            .post {
-                width: 100%;
-                max-width: 900px;
-                background-color: white;
-                padding: 20px 25px;
-                border-radius: 20px;
-                border: 2px solid #800020; /* thin burgundy border */
-                box-shadow: 1px 3px 8px rgba(0,0,0,0.08);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-
-            .post:hover {
-                transform: translateY(-2px);
-                box-shadow: 2px 6px 12px rgba(0,0,0,0.12);
-            }
-
-            .post.comment {
-                background-color: #f5e5e5;
-            }
-
-            .postContent {
-                background-color: #fff;
-                color: #374151;
-                padding: 15px 20px;
-                border-radius: 12px;
-            }
-
-            .postContent img,
-            .postText img {
-                max-width: 100%;
+                position: relative;
                 width: 100%;
                 height: auto;
-                border-radius: 8px;
-                object-fit: contain;
-                margin: 5px 0;
+                flex-direction: row;
+                justify-content: space-around;
             }
-
-            .reactions {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding-top: 10px;
-                gap: 10px;
+            main {
+                padding: 20px 10px;
             }
-
-            button {
-                background-color: #800020;
-                border: none;
-                color: white;
-                font-weight: 600;
-                border-radius: 12px;
-                padding: 5px 10px;
-                margin: 3px 5px 3px 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: background 0.2s ease;
+            .stream {
+                width: 95%;
             }
-
-            button:hover {
-                background-color: #a00030;
-                cursor: pointer;
-            }
-
-            .share {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                cursor: pointer;
-            }
-
-            .sharePoint {
-                background-color: #800020;
-                width: 3px;
-                height: 3px;
-                border-radius: 50%;
-            }
-
-            .reactions p {
-                color: #800020;
-                margin: 0;
-            }
-
-            .user {
-                display: flex;
-                justify-content: space-between;
-                margin: 10px 0;
-            }
-
-            .user a {
-                text-decoration: none;
-                color: #800020;
-                font-weight: 600;
-            }
-
-            .user a:hover {
-                text-decoration: underline;
-            }
-
-            .username a {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .profilePhoto {
-                width: 40px;
-                height: 40px;
-                object-fit: cover;
-                border-radius: 50%;
-            }
-
-            .profilePhoto:hover {
-                box-shadow: 0px 3px #a00030;
-            }
-
-            /* Comments */
-            .comment {
-                width: 100%;
-                max-width: 600px;
-                border: 1px solid #800020;
-                padding: 10px 15px;
-                border-radius: 20px;
-                background-color: #f5e5e5;
-            }
-
-            #commentsPanel {
-                position: fixed;
-                top: 0;
-                right: -35vw;
-                width: 35vw;
-                height: 100vh;
-                background: #fff;
-                box-shadow: -4px 0 12px rgba(0,0,0,0.15);
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                transition: right 0.3s ease;
-                z-index: 200;
-                padding: 10px;
-            }
-
-            #commentsPanel.visible {
-                right: 0;
-            }
-
-            #commentInput {
-                flex: 1;
-                padding: 5px;
-                border-radius: 10px;
-                border: 1px solid #a00030;
-                margin-right: 10px;
-            }
-
-            #sendComment {
-                padding: 8px 12px;
-                background-color: #800020;
-                color: white;
-                border: none;
-                border-radius: 10px;
-            }
-
-            .likeButton {
-                background-color: #800020;
-                border: none;
-                color: white;
-                padding: 5px 10px;
-                border-radius: 8px;
-            }
-
             #createPost {
-                position: fixed;
                 bottom: 20px;
-                right: 20px; /* move to right side */
-                font-size: 22px;
-                border-radius: 50%;
-                padding: 12px 15px;
-                background-color: #800020;
-                color: white;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                right: 20px;
             }
-
-            @media (max-width: 900px) {
-                header {
-                    position: relative;
-                    width: 100%;
-                    height: auto;
-                    flex-direction: row;
-                    justify-content: space-around;
-                }
-                main {
-                    padding: 20px 10px;
-                }
-                .stream {
-                    width: 95%;
-                }
-                #createPost {
-                    bottom: 20px;
-                    right: 20px;
-                }
+            #commentsPanel {
+                width: 90vw;
             }
-        </style>
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <!-- Parse different content types -->
-        <script>
-            'use strict';
-            document.addEventListener("DOMContentLoaded", () => {
-                const posts = document.querySelectorAll('.postText');
-                posts.forEach(post => {
-                    const contentType = post.dataset.type;
-                    if (contentType === "text/markdown") {
-                        const html = marked.parse(post.dataset.content);
-                        post.innerHTML = html;
-                    }
-                })
-            })
-        </script>
-        <!-- User session info -->
-        <script>
-            'use strict';
-            const userName = '{{ author.displayName }}';
-            const userFqid = '{{ author.id }}';
-            const currUser = {
-                type: "author",
-                id: userFqid || "",
-                host: '{{ author.host }}' || "",
-                displayName: '{{ author.displayName }}' || "",
-                github: '{{ author.github }}' || "",
-                profileImage: '{{ author.profileImage }}' || "",
-                web: '{{ author.web }}' || ""
-            };
-            const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
-        </script>
-        <!-- Handle like functionality -->
-        <script>
-            'use strict';
-            document.addEventListener("DOMContentLoaded", () => {
-                const likeButtons = document.querySelectorAll('.likeButton');
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header>
+        <h3>CMPUT404</h3>
+        <a href="{% url 'authors:list' %}">All Authors</a>
+        {% if request.user.is_authenticated and request.user.author.is_admin %}
+            <a href="{% url 'adminpage:dashboard' %}">Admin</a>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'authors:detail' author.serial %}">Profile</a>
+        {% else %}
+            <a href="{% url 'login:login' %}">Log In</a>
+        {% endif %}
+    </header>
 
-                // like functions 
-                async function likeEntry(entryFqid, endpoint) {
-                    const payload = {
-                        type: "like",
-                        direction: "outgoing",
-                        author: currUser,
-                        object: entryFqid,
-                    };
-
-                    const res = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the post
-                        body: JSON.stringify(payload),
-                    }) .then(() => window.location.reload());
-                    if (!res.ok) throw new Error(await res.text());
-                    return res.json();
-                }
-                
-                likeButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        likeEntry(button.dataset.fqid, button.dataset.endpoint);
-                    });
-                });
-            })
-        </script>
-        <!-- Handle share functionality -->
-        <script>
-            'use strict';
-            document.addEventListener("DOMContentLoaded", () => {
-                const shareButtons = document.querySelectorAll('.share')
-                let activeShare = null;
-
-                // share popup functions 
-                function closeShare() {
-                    if (activeShare) {
-                        activeShare.remove();
-                        activeShare = null;
-                        document.body.classList.remove('no-scroll');
-                        document.removeEventListener('click', handleShareOutside);
-                    }
-                }
-
-                function handleShareOutside() {
-                    if (activeShare) {
-                        closeShare();
-                    }
-                }
-
-                shareButtons.forEach(button => {
-                    button.addEventListener('click', e => {
-                        e.stopPropagation();
-
-                        closeShare(); 
-                        // don't allow multiple share popups to appear at the same time
-
-                        const sharePopup = document.createElement('div');
-                        sharePopup.className = 'sharePopup';
-                        sharePopup.innerHTML = '<button class="copyLink">Share</button>';
-
-                        button.parentElement.appendChild(sharePopup);
-
-                        const buttonPos = button.getBoundingClientRect();
-                        sharePopup.style.top = `${button.offsetTop - sharePopup.offsetHeight-10}px`;
-                        sharePopup.style.left = `${button.offsetLeft}px`;
-
-                        sharePopup.style.display = 'flex';
-                        document.body.classList.add('no-scroll');
-                        activeShare = sharePopup;
-
-                        sharePopup.querySelector('.copyLink').addEventListener('click', () => {
-                            const link = button.dataset.fqid;
-                            navigator.clipboard.writeText(link).then(() => {
-                                alert('Post link copied!');
-                                closeShare();
-                            })
-                        })
-
-                        document.addEventListener('click', handleShareOutside);
-                    });
-                });
-            })
-        </script>
-        <!-- Handle comment functionality -->
-        <script>
-            'use strict';
-            document.addEventListener("DOMContentLoaded", () => {
-                // comment panel variables 
-                const commentButtons = document.querySelectorAll('.commentButton');
-                const commentPanel = document.getElementById('commentsPanel');
-                const closeComments = document.getElementById('closePanel');
-                const commentsContent = document.getElementById('comments');
-                const commentInput = document.getElementById('commentInput');
-                const sendCommentBtn = document.getElementById('sendComment');
-                const commentTemplate = document.getElementById('commentTemplate');
-                const stream = document.getElementById("stream");
-                let currentPost = null;
-
-                // author/entry specific variables for (local) API calls
-                let authorSerial = null;
-                let entrySerial = null;
-                let entryFqid = null;
-                let endpoint = null;
-
-                // comment panel functions 
-                async function getComments(entryFqid) {
-                    const eEncoded = encodeURIComponent(entryFqid);
-                    const res = await fetch(`/api/entries/${eEncoded}/comments/`, {
-                        method: 'GET',
-                        credentials: 'same-origin',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
-                    })
-                    if (!res.ok) throw new Error(await res.text());
-                    return res.json();
-                }
-
-                async function postComment(entryFqid, text) {
-                    const payload = {
-                        type: "comment",
-                        direction: "outgoing",
-                        author: currUser,
-                        entry: entryFqid,
-                        content: text,
-                    }
-
-                    const res = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that sent the comment
-                        body: JSON.stringify(payload),
-                    })
-                    if (!res.ok) throw new Error(await res.text());
-                    return res.json();
-                }
-
-                async function likeComment(entryFqid, commentFqid) {
-                    const payload = {
-                        type: "like",
-                        direction: "outgoing",
-                        author: currUser,
-                        object: commentFqid,
-                    }
-
-                    const res = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid, "X-CSRFToken": csrftoken }, //author that liked the comment
-                        body: JSON.stringify(payload),
-                    }) .then(() => openComments(entryFqid));
-                    if (!res.ok) throw new Error(await res.text());
-                    return res.json();
-                }
-
-                async function openComments(postId) {
-                    currentPost = document.getElementById(`post_${postId}`);
-
-                    let commentRes = await getComments(postId);
-                    commentsContent.innerHTML = '';
-                    while (commentRes) {
-                        const comments = commentRes.results;
-
-                        comments.forEach(comment => {
-                            const clone = commentTemplate.content.cloneNode(true);
-                            clone.id = comment.fqid;
-                            clone.querySelector('.commentAuthor').textContent = comment.author.displayName;
-                            clone.querySelector('.commentText').textContent = comment.content; 
-                            clone.querySelector('.commentLikes').textContent = `${comment.likes_count} ${comment.likes_count === 1 ? "like" : "likes"}`; 
-
-                            const likeButton = clone.querySelector('.likeButton');
-                            likeButton.addEventListener('click', async () => {
-                                await likeComment(postId, clone.id, userFqid);
-                            });
-
-                            commentsContent.appendChild(clone);
-                        })
-                        if (commentRes.next) {
-                            const res = await fetch(commentRes.next, {
-                                method: 'GET',
-                                headers: { 'Content-Type': 'application/json', 'X-Author-Id': userFqid },
-                            });
-                            if (!res.ok) throw new Error(await res.text());
-                            commentRes = await res.json();
-                        } else {
-                            commentRes = null; // No more pages, exit loop
-                        }
-                    }
-                    
-                    commentPanel.classList.add('visible');
-                    document.body.classList.add('no-scroll');
-                    currentPost.classList.add('comment');
-                    stream.classList.add('comment');
-                }
-
-                function closeCommPanel() {
-                    commentPanel.classList.remove('visible');
-                    document.body.classList.remove('no-scroll');
-                    currentPost.classList.remove('comment');
-                    stream.classList.remove('comment');
-                }
-
-                commentButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        // store entryFqid for handling adding comments
-                        entryFqid = button.dataset.fqid;
-                        endpoint = button.dataset.endpoint;
-                        openComments(button.dataset.fqid);
-                    });
-                });
-                
-                // adding comments
-                // on submission: must POST comment info AND update comment panel
-                sendCommentBtn.addEventListener('click', async () => {
-                    const text = commentInput.value.trim();
-                    commentInput.value = '';
-                    if (!text) return;
-                    await postComment(entryFqid, text);
-                    openComments(entryFqid);
-                });
-
-                closeComments.addEventListener('click', closeCommPanel);
-
-            });
-        </script>
-    </head>
-    <body>
-        <header>
-            <h3>CMPUT404</h3>
-            <a href="{% url 'authors:list' %}">All Authors</a>
-            {% if request.user.is_authenticated and request.user.author.is_admin %}
-                <a href="{% url 'adminpage:dashboard' %}">Admin</a>
-            {% endif %}
-            {% if request.user.is_authenticated %}
-                <a href="{% url 'authors:detail' author.serial %}">
-                    <img class='profilePhoto' src="{{ author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ author.displayName }}">
-                </a>   
-            {% else %}
-                <a href="{% url 'login:login' %}" class="button">Log In</a>
-            {% endif %}
-        </header>
-        <main>
-            <ul class="stream" id="stream">
-                {% for entry in entries %}
-                    <li id="post_{{ entry.fqid }}" class="post">
-                        <section class="user">
-                            <section class="username">
-                                <a href="{% url 'authors:detail' entry.author.serial %}">
-                                    <img class='profilePhoto' src="{{ entry.author.profileImage|default:'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png' }}" alt="{{ entry.author.displayName }}">
-                                    {{ entry.author.displayName }}
-                                </a>
-                            </section>
-                            <button data-fqid="{{ entry.fqid }}/" class="share">
-                                <div class="sharePoint"></div>
-                                <div class="sharePoint"></div>
-                                <div class="sharePoint"></div>
-                            </button>
-                        </section>
-
-                        <section class="postContent">
-                            <h2>{{ entry.title }}</h2>
-                            <h3>
-                                {{ entry.description }}
-                            </h3>
-                            <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">
-                                {{ entry.content|striptags }}
-                            </p>
-
-                            {% if entry.image_url %}
-                                <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
-                            {% endif %}
-                            
-                            
-                        </section> 
-
-                        <section class="reactions">
-                            <p>{{ entry.likes_count }} {% if entry.likes_count == 1 %}like{% else %}likes{% endif %}</p>
+    <main>
+        <ul class="stream" id="stream">
+            {% for entry in entries %}
+                <li id="post_{{ entry.fqid }}" class="post">
+                    <section class="user">
+                        <div class="username">
+                            <a href="{% url 'authors:detail' entry.author.serial %}">{{ entry.author.displayName }}</a>
+                        </div>
+                        <div class="actions">
+                            <button class="iconButton share" data-fqid="{{ entry.fqid }}/" title="Share"><i class="fas fa-share-alt"></i></button>
                             {% if request.user.is_authenticated %}
-                            <div>
-                                <button 
-                                data-fqid="{{ entry.fqid }}" 
-                                data-author="{{ entry.author.id }}" 
-                                data-endpoint="{% url 'api:author-inbox' author.serial %}" 
-                                class="likeButton">
-                                    Like
-                                </button>
-                                <button 
-                                data-fqid="{{ entry.fqid }}" 
-                                data-author="{{ entry.author.id }}" 
-                                data-endpoint="{% url 'api:author-inbox' author.serial %}"
-                                class="commentButton">
-                                    Comment
-                                </button>
-
+                                <button class="iconButton likeButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Like"><i class="fas fa-heart"></i></button>
+                                <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Comment"><i class="fas fa-comment"></i></button>
                                 {% if entry.author.id == author.id %}
-                                    <!-- Show only for your own posts -->
-                                    <button>
-                                        <a id='editButton' href="{% url 'entries:edit' entry.author.serial entry.serial %}">Edit</a>
-                                    </button>
+                                    <a href="{% url 'entries:edit' entry.author.serial entry.serial %}" class="iconButton" title="Edit"><i class="fas fa-edit"></i></a>
                                 {% endif %}
-                            </div>
                             {% endif %}
-                        </section>
-                    </li>
-                {% endfor %}
-            </ul>
-            
-            <button id="createPost"><a href="{% url 'entries:create' author.serial %}" id="createPost" class="button">New Post</a></button>
-        </main>
-        <!-- Comments panel -->
-        <section id="commentsPanel">
-            <header>
-                <h3>Comments</h3>
-                <button id="closePanel">&times;</button>
-            </header>
+                        </div>
+                    </section>
 
-            <!-- dynamically insert comments -->
-            <section id="comments"></section>   
+                    <section class="postContent">
+                        <h2>{{ entry.title }}</h2>
+                        <h3>{{ entry.description }}</h3>
+                        <p data-type="{{ entry.content_type }}" data-content="{{ entry.content }}" class="postText">{{ entry.content|striptags }}</p>
+                        {% if entry.image_url %}
+                            <img src="{{ entry.image_url }}" alt="{{ entry.title }}">
+                        {% endif %}
+                    </section>
+                </li>
+            {% endfor %}
+        </ul>
 
-            <footer>
-                <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
-                <button id="sendComment">Send</button>
-            </footer>
+        <a href="{% url 'entries:create' author.serial %}" id="createPost" title="New Post"><i class="fas fa-plus"></i></a>
+    </main>
+
+    <!-- Comments panel -->
+    <section id="commentsPanel">
+        <header>
+            <h3>Comments</h3>
+            <button id="closePanel">&times;</button>
+        </header>
+        <section id="comments"></section>
+        <footer>
+            <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+            <button id="sendComment">Send</button>
+        </footer>
+    </section>
+
+    <!-- Comment template -->
+    <template id="commentTemplate">
+        <section class="comment">
+            <span class="commentAuthor"></span>
+            <p class="commentText"></p>
+            <button class="iconButton likeButton" title="Like"><i class="fas fa-heart"></i> <span class="commentLikes"></span></button>
         </section>
-
-        <!-- Comment template -->
-        <template id="commentTemplate" class="comment">
-            <section class="comment">
-                <strong class="commentAuthor"></strong>
-                <p class="commentText"></p>
-                <section class="reactions">
-                    <p class="commentLikes"></p>
-                    <button class="likeButton">Like</button>
-                </section>
-            </section>
-        </template>
-    </body>
+    </template>
+</body>
 </html>
