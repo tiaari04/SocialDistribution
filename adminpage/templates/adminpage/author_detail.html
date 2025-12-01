@@ -104,53 +104,72 @@
   /* Entries grid */
   .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: .875rem;
   }
 
   .entry-card {
-    background-color: #ffffff;
-    border-radius: 14px;
+    background-color: #ffffff !important;
+    border-radius: 12px;
     border: 1px solid rgba(128,0,32,0.12);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: .75rem;
     display: flex;
     flex-direction: column;
-    gap: .5rem;
+    gap: .375rem;
     min-width: 0;
     transition: box-shadow 0.2s, transform 0.2s;
+    max-height: 280px;
+  }
+
+  /* Force white background on all children */
+  .entry-card,
+  .entry-card *:not(.entry-image) {
+    background-color: transparent !important;
+    background-image: none !important;
   }
 
   .entry-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
   }
 
   .entry-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: .4rem;
+    gap: .3rem;
     align-items: center;
-    font-size: .85rem;
+    font-size: .8rem;
+    color: #111827 !important;
+    line-height: 1.3;
   }
 
   .entry-meta strong {
-    color: #111827;
+    color: #111827 !important;
+    font-weight: 600;
+  }
+
+  .entry-meta .muted {
+    color: #9ca3af !important;
   }
 
   .entry-description {
-    font-size: .86rem;
-    color: #4b5563;
+    font-size: .8rem;
+    color: #6b7280 !important;
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .entry-content {
-    font-size: .88rem;
-    color: #374151;
-    line-height: 1.5;
+    font-size: .8rem;
+    color: #4b5563 !important;
+    line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 6;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -159,9 +178,9 @@
 
   .entry-image {
     width: 100%;
-    height: 180px;
+    height: 140px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 6px;
     display: block;
   }
 
@@ -172,19 +191,28 @@
 
   footer.entry-footer {
     margin-top: auto;
-    padding-top: .5rem;
+    padding-top: .375rem;
     border-top: 1px solid rgba(128,0,32,0.08);
-    font-size: .8rem;
-    color: #6b7280;
+    font-size: .7rem;
+    color: #9ca3af !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .entry-footer a {
-    color: #800020;
+    color: #800020 !important;
     text-decoration: none;
+    font-size: .7rem;
   }
 
   .entry-footer a:hover {
     text-decoration: underline;
+  }
+
+  .content-type-label {
+    font-size: .7rem;
+    color: #9ca3af !important;
   }
 
   .pagination {
@@ -296,45 +324,33 @@
             <header>
               <div class="entry-meta break-anywhere">
                 <strong>{{ e.title|default:"(untitled)" }}</strong>
-                <span class="muted">· {{ e.published|date:"Y-m-d H:i" }}</span>
-              </div>
-              <div class="muted" style="font-size: .8rem; margin-top: .25rem;">
-                {{ e.content_type }}
+                <span class="muted">{{ e.published|date:"m/d/y" }}</span>
               </div>
             </header>
 
             {% if e.description %}
               <p class="entry-description break-anywhere">
-                {{ e.description|truncatechars:120 }}
+                {{ e.description|truncatechars:80 }}
               </p>
             {% endif %}
 
-            {% if e.content %}
-              {# IMAGE POSTS: content_type starts with image/ #}
-              {% if e.content_type and e.content_type|slice:":6" == "image/" %}
-                <img
-                  class="entry-image"
-                  src="{{ e.content }}"
-                  alt="{{ e.title|default:"Entry image" }}"
-                >
-
-              {# TEXT/MARKDOWN POSTS #}
-              {% else %}
-                <div class="entry-content">
-                  {{ e.content|truncatechars:200|linebreaksbr }}
-                </div>
-              {% endif %}
+            {# Check if there's an image_url field first #}
+            {% if e.image_url %}
+              <img
+                class="entry-image"
+                src="{{ e.image_url }}"
+                alt="{{ e.title|default:"Entry image" }}"
+              >
+            {% elif e.content %}
+              {# Only show content if it's not an image URL stored in content #}
+              <div class="entry-content">
+                {{ e.content|truncatechars:120 }}
+              </div>
             {% endif %}
 
             <footer class="entry-footer">
-              <div style="margin-bottom: .25rem;">
-                Likes: {{ e.likes_count }}
-              </div>
-              <div style="font-size: .75rem; word-break: break-all;">
-                <a href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">
-                  View post →
-                </a>
-              </div>
+              <span>❤️ {{ e.likes_count }}</span>
+              <a href="{{ e.fqid }}" target="_blank" rel="noopener noreferrer">View →</a>
             </footer>
           </article>
         {% endfor %}
