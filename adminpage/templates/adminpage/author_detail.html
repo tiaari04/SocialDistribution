@@ -118,6 +118,7 @@
     flex-direction: column;
     gap: .375rem;
     min-width: 0;
+    max-height: 200px;
     transition: box-shadow 0.2s, transform 0.2s;
   }
 
@@ -171,18 +172,25 @@
     color: #374151 !important;
     line-height: 1.45;
     word-break: break-word;
-    white-space: pre-wrap;
     display: -webkit-box;
-    -webkit-line-clamp: 5;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
+  .entry-content.markdown {
+    white-space: pre-wrap;
+  }
+
+  .entry-content.plain {
+    white-space: pre-wrap;
+  }
+
   .entry-image {
     width: 100%;
-    max-height: 120px;
-    min-height: 120px;
-    height: 120px;
+    max-height: 110px;
+    min-height: 110px;
+    height: 110px;
     object-fit: cover;
     border-radius: 6px;
     display: block;
@@ -349,15 +357,13 @@
             
             {# Display text content based on content_type #}
             {% elif e.content %}
-              <div class="entry-content">
-                {% if e.content_type == "text/markdown" %}
-                  {{ e.content|linebreaksbr }}
-                {% elif e.content_type == "text/plain" %}
-                  {{ e.content }}
-                {% else %}
-                  {{ e.content }}
-                {% endif %}
-              </div>
+              {% if e.content_type == "text/markdown" %}
+                <div class="entry-content markdown">{{ e.content|linebreaksbr }}</div>
+              {% elif e.content_type == "text/plain" %}
+                <div class="entry-content plain">{{ e.content }}</div>
+              {% else %}
+                <div class="entry-content">{{ e.content }}</div>
+              {% endif %}
             {% endif %}
 
             <footer class="entry-footer">
