@@ -11,6 +11,54 @@
   {% include 'components/sidebar_styles.html' %}
   
   <style>
+
+  .people-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .person-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 14px 18px;
+    border: 2px solid #800020;
+    border-radius: 10px;
+  }
+
+  .name {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .badge-friend {
+    background: #fff7c4;
+    color: #9a7c00;
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-left: 10px;
+  }
+
+  .button {
+    background: #800020;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .button:hover {
+    background: #a00030;
+  }
+
     main {
       display: flex;
       justify-content: center;
@@ -149,43 +197,29 @@
 
   <main>
     <div class="followers-container">
-      <h1>{{ author.displayName }}'s Network</h1>
+      <h1>{{ author.displayName }}'s Followers</h1>
 
-      <section>
-        <h3>Friends</h3>
-        {% if friends %}
-          <ul>
-            {% for friend in friends %}
-              <li>
-                <span>{{ friend.actor.displayName }}</span>
-                <a href="{% url 'authors:detail' friend.actor.serial %}" class="button">
-                  →
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>No friends yet!</p>
-        {% endif %}
-      </section>
+      <ul class="people-list">
 
-      <section>
-        <h3>Followers</h3>
-        {% if followers %}
-          <ul>
-            {% for follower in followers %}
-              <li>
-                <span>{{ follower.actor.displayName }}</span>
-                <a href="{% url 'authors:detail' follower.actor.serial %}" class="button">
-                  →
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
+        {% for friend in friends %}
+          <li class="person-item">
+            <span class="name">{{ friend.actor.displayName }}</span>
+            <span class="badge-friend">FRIEND</span>
+            <a href="{% url 'authors:detail' friend.actor.serial %}" class="button">→</a>
+          </li>
+        {% endfor %}
+
+        {% for follower in followers %}
+          <li class="person-item">
+            <span class="name">{{ follower.actor.displayName }}</span>
+            <a href="{% url 'authors:detail' follower.actor.serial %}" class="button">→</a>
+          </li>
+        {% endfor %}
+
+        {% if not friends and not followers %}
           <p>No followers yet!</p>
         {% endif %}
-      </section>
+      </ul>
 
       <a href="{% url 'authors:detail' author.serial %}" class="back-link">
         <i class="fas fa-arrow-left"></i> Back to Profile
@@ -194,11 +228,8 @@
   </main>
 
   <script>
-    // When user returns to the page via back button, reload it
     window.addEventListener("pageshow", function (event) {
-      if (event.persisted) {
-        window.location.reload();
-      }
+      if (event.persisted) window.location.reload();
     });
   </script>
 </body>
