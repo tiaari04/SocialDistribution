@@ -324,7 +324,11 @@
 
                             {% if request.user.is_authenticated %}
                                 <button class="iconButton likeButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Like">
-                                    <i class="fas fa-heart"></i>
+                                    {% if entry.liked_by_user %}
+                                        <i class="fas fa-heart"></i>  {# Solid heart if liked #}
+                                    {% else %}
+                                        <i class="far fa-heart"></i>  {# Lined heart if not liked #}
+                                    {% endif %}
                                     <span class="likeCount">{{ entry.likes_count }}</span>
                                 </button>
 
@@ -375,7 +379,14 @@
             <p class="commentText"></p>
             <section class="reactions">
                 <p class="commentLikes"></p>
-                <button class="likeButton"><i class="fas fa-heart"></i></button>
+                <button class="likeButton" data-liked="{{ liked|default:False }}">
+                    {% if liked %}
+                        <i class="fas fa-heart"></i>  <!-- Solid heart if liked -->
+                    {% else %}
+                        <i class="far fa-heart"></i>  <!-- Lined heart if not liked -->
+                    {% endif %}
+                </button>
+
             </section>
         </section>
     </template>
