@@ -69,43 +69,44 @@
         #commentsPanel {
             position: fixed;
             top: 0;
-            right: -35vw; /* hidden initially */
+            right: -35vw;
             width: 35vw;
             height: 100vh;
-            background: #fff;
+            background-color: #fff;
             box-shadow: -4px 0 12px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             z-index: 200;
-            padding: 10px;
+            padding: 0;
             transition: right 0.3s ease;
+            overflow: hidden;
         }
 
-        #commentsPanel.visible {
-            right: 0;
-        }
+        #commentsPanel.visible { right: 0; }
 
         #commentsPanel header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #800020;
-            padding-bottom: 5px;
+            padding: 10px 15px;
             flex-shrink: 0;
+            background-color: #f1f1f1;
         }
 
         #commentsPanel section#comments {
             flex: 1;
             overflow-y: auto;
-            margin: 10px 0;
+            padding: 10px 15px;
         }
 
         #commentsPanel footer {
             display: flex;
             gap: 5px;
             border-top: 1px solid #800020;
-            padding-top: 5px;
+            padding: 10px 15px;
             flex-shrink: 0;
+            background-color: #f1f1f1;
         }
 
         #commentInput {
@@ -117,8 +118,8 @@
 
         #sendComment {
             background-color: #800020;
-            border: none;
             color: white;
+            border: none;
             border-radius: 10px;
             padding: 5px 12px;
             cursor: pointer;
@@ -177,7 +178,7 @@
                                 <i class="fas fa-heart"></i>
                                 <span class="likeCount">{{ entry.likes_count }}</span>
                             </button>
-                            <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" data-endpoint="{% url 'api:author-inbox' author.serial %}" title="Comment">
+                            <button class="iconButton commentButton" data-fqid="{{ entry.fqid }}" title="Comment">
                                 <i class="fas fa-comment"></i>
                             </button>
                             {% if entry.author.id == author.id %}
@@ -209,7 +210,7 @@
     </header>
     <section id="comments"></section>
     <footer>
-        <input id="commentInput" type="text" placeholder="Add your thoughts..."/>
+        <input id="commentInput" type="text" placeholder="Add your thoughts..." />
         <button id="sendComment">Send</button>
     </footer>
 </section>
@@ -247,6 +248,7 @@ document.querySelectorAll('.likeButton').forEach(btn => {
     btn.addEventListener('click', async () => {
         const fqid = btn.dataset.fqid;
         const endpoint = btn.dataset.endpoint;
+        if(!fqid || !endpoint) return;
         const payload = { type: "like", direction: "outgoing", author: currUser, object: fqid };
         const res = await fetch(endpoint, {
             method: 'POST',
@@ -304,7 +306,6 @@ async function loadComments(fqid){
             clone.querySelector('.commentLikes').textContent = c.likes_count || 0;
             commentsContent.appendChild(clone);
         });
-        // scroll to bottom
         commentsContent.scrollTop = commentsContent.scrollHeight;
     }
     commentPanel.classList.add('visible');
