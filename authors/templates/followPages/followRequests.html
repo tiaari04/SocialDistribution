@@ -202,7 +202,7 @@
   <main>
     <div class="requests-container">
       {% if request.user.is_authenticated and request.user == author.user %}
-        <h1><i class="fas fa-user-clock"></i> Follow Requests</h1>
+        <h1>Follow Requests</h1>
         
         {% if requests %}
           <ul>
@@ -224,7 +224,6 @@
           </ul>
         {% else %}
           <div class="empty-state">
-            <i class="fas fa-inbox"></i>
             <p>No pending follow requests.</p>
           </div>
         {% endif %}
