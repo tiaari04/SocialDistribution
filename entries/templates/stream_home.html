@@ -270,7 +270,7 @@
         {% endfor %}
     </ul>
 
-    <button id="createPost" onclick="window.location.href='{% url 'entries:create' author.serial %}';" title="New Post"><i class="fas fa-plus"></i></button>
+    <a href="{% url 'entries:create' author.serial %}" id="createPost" title="New Post"><i class="fas fa-plus"></i></a>
 </main>
 
 <section id="commentsPanel">
