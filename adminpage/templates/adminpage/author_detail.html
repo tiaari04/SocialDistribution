@@ -107,10 +107,10 @@
     color: #111827;
   }
 
-  /* Cards grid – ONE CARD PER ROW */
+  /* Cards grid – ONE PER ROW */
   .cards {
     display: grid;
-    grid-template-columns: 1fr; /* single column layout */
+    grid-template-columns: 1fr;
     gap: .75rem;
   }
 
@@ -119,20 +119,13 @@
     border-radius: 12px;
     border: 1px solid rgba(128,0,32,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    padding: .5rem .6rem .4rem;
+    padding: .6rem .75rem .55rem;
     display: flex;
     flex-direction: column;
-    gap: .25rem;
+    gap: .45rem;
     min-width: 0;
+    height: auto; /* shrink-wrap as needed */
     transition: box-shadow 0.2s, transform 0.2s;
-    /* NO fixed height or min-height — shrink-wrap to content */
-  }
-
-  .entry-card *:not(img) {
-    background-color: transparent !important;
-    background-image: none !important;
-    border-left: none !important;
-    border-right: none !important;
   }
 
   .entry-card:hover {
@@ -145,13 +138,13 @@
     gap: .25rem;
     flex-wrap: wrap;
     align-items: center;
-    font-size: .7rem;
+    font-size: .75rem;
     color: #111827;
     min-width: 0;
   }
 
   .meta strong {
-    font-size: .75rem;
+    font-size: .8rem;
     font-weight: 600;
     color: #111827;
     display: -webkit-box;
@@ -162,12 +155,12 @@
   }
 
   .meta .muted {
-    font-size: .65rem;
+    font-size: .7rem;
     color: #9ca3af;
   }
 
   .description-text {
-    font-size: .7rem;
+    font-size: .75rem;
     color: #6b7280;
     margin: 0;
     display: -webkit-box;
@@ -178,7 +171,7 @@
 
   .content-preview {
     margin-top: .1rem;
-    font-size: .7rem;
+    font-size: .75rem;
     color: #374151;
     line-height: 1.3;
   }
@@ -187,13 +180,14 @@
     margin: 0;
   }
 
+  /* Image fits naturally */
   .entry-image {
-    margin-top: .25rem;
-    border-radius: .4rem;
+    margin-top: .3rem;
+    border-radius: .45rem;
     display: block;
     max-width: 100%;
-    height: auto;              /* show full image, no cropping */
-    max-height: 260px;         /* sensible cap so huge images don't dominate */
+    height: auto;
+    max-height: 260px; /* prevents giant cards */
     object-fit: contain;
   }
 
@@ -201,7 +195,7 @@
     margin-top: .25rem;
     padding-top: .25rem;
     border-top: 1px solid rgba(128,0,32,0.08);
-    font-size: .6rem;
+    font-size: .65rem;
     color: #9ca3af;
     display: flex;
     justify-content: space-between;
@@ -211,7 +205,6 @@
   .entry-footer a {
     color: #800020;
     text-decoration: none;
-    font-size: .6rem;
   }
 
   .entry-footer a:hover {
@@ -269,14 +262,12 @@
 
 {% block content %}
 <ul class="author-detail-container">
-  <!-- Back button -->
   <li>
     <a href="{% url 'adminpage:authors' %}" class="back-btn">
       ← Back to Authors
     </a>
   </li>
 
-  <!-- Heading + Tabs card -->
   <li class="author-detail-card">
     <div class="author-heading">
       <h1 class="text-xl semibold text-primary">
@@ -305,7 +296,6 @@
     </nav>
   </li>
 
-  <!-- Entries card -->
   <li class="author-detail-card">
     {% if page_obj.object_list %}
       <div class="section-head">
@@ -338,13 +328,11 @@
             {% endif %}
 
             <div class="content-preview break-anywhere">
-              {# Text / markdown block (handled by JS if markdown) #}
               <div
                 class="postText"
                 data-type="{{ e.content_type|default_if_none:'' }}"
                 data-content="{{ e.content|default_if_none:''|escapejs }}"
               >
-                {# Server-side fallback for non-markdown or no JS #}
                 {% if e.content_type == "text/markdown" %}
                   <p class="muted">Rendering markdown…</p>
                 {% else %}
@@ -358,11 +346,9 @@
                 {% endif %}
               </div>
 
-              {# Image content, separate so JS doesn't overwrite it #}
               {% if e.image_url %}
                 <img src="{{ e.image_url }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
               {% elif "image" in e.content_type|default_if_none:"" and e.content %}
-                {# Fallback: some image posts might store URL in `content` #}
                 <img src="{{ e.content }}" alt="{{ e.title|default:"Entry image" }}" class="entry-image">
               {% endif %}
             </div>
@@ -377,7 +363,6 @@
         {% endfor %}
       </div>
 
-      <!-- Pagination -->
       <div class="pagination">
         {% if page_obj.has_previous %}
           <a href="{% url 'adminpage:author-detail-tab' author.id tab %}?page={{ page_obj.previous_page_number }}">Prev</a>
@@ -388,25 +373,23 @@
         {% endif %}
       </div>
     {% else %}
-      <p class="muted">No entries for {{ tab|title }}.</p>
+      <p class="muted">No entries for {{ tab|title }}</p>
     {% endif %}
   </li>
 </ul>
 
-{# Markdown renderer (same pattern you use elsewhere) #}
+<!-- Markdown Rendering -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   'use strict';
   document.addEventListener("DOMContentLoaded", () => {
     const posts = document.querySelectorAll('.postText');
     posts.forEach(post => {
-      const contentType = (post.dataset.type || '').toLowerCase();
-      const rawContent = post.dataset.content || '';
+      const type = (post.dataset.type || '').toLowerCase();
+      const raw = post.dataset.content || '';
 
-      // Handle "text/markdown" and variants like "text/markdown; charset=utf-8"
-      if (contentType.startsWith("text/markdown") && rawContent) {
-        const html = marked.parse(rawContent);
-        post.innerHTML = html;
+      if (type.startsWith("text/markdown") && raw) {
+        post.innerHTML = marked.parse(raw);
       }
     });
   });
