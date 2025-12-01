@@ -7,6 +7,7 @@ from adminpage.models import HostedImage
 from entries.models import Entry, Like, Comment
 from entries.services import _ensure_author
 from django.utils import timezone
+import uuid
 
 
 @csrf_exempt
@@ -174,7 +175,7 @@ def newLike(request): # works for entry likes and comment likes
             return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
 
     like = Like.objects.create(
-        fqid=data.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+        fqid=data.get('id') or f"{author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}",
         author=author,
         object_fqid=object_fqid,
         published=data.get('published'),
@@ -208,7 +209,7 @@ def newComment(request):
         return {'status': 'error', 'error': 'entry_not_found'}
 
     comment = Comment.objects.create(
-        fqid=data.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+        fqid=data.get('id') or f"{author.id}/commented/{uuid.uuid4()}" or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
         author=author,
         entry=entry,
         content=data.get('comment') or data.get('content') or '',

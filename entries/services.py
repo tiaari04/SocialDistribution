@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.forms.models import model_to_dict
 from federation.utils import send_like_to_federation, send_comment_to_federation, sync_remote_authors
 from django.utils.dateparse import parse_datetime
+import uuid
 
 
 def process_federated_public_post(payload: dict) -> dict:
@@ -29,6 +30,9 @@ def process_federated_public_post(payload: dict) -> dict:
     existing_entry = Entry.objects.filter(fqid=fqid).first()
     content_type = payload.get('content_type') or payload.get('contentType') or Entry.ContentType.MARKDOWN
     visibility = payload.get('visibility', Entry.Visibility.PUBLIC)
+
+    # get image url
+    image_url = (payload.get("image_url") or (payload.get("image") or {}).get("url") or "")
     
     if existing_entry:
         # Update existing entry
@@ -37,7 +41,7 @@ def process_federated_public_post(payload: dict) -> dict:
         existing_entry.description = payload.get('description', existing_entry.description)
         existing_entry.content_type = content_type
         existing_entry.visibility = visibility
-        existing_entry.image_url = payload.get('image_url', existing_entry.image_url)
+        existing_entry.image_url = image_url or existing_entry.image_url
         existing_entry.is_local = False
         existing_entry.web = payload.get('web', existing_entry.web)
         existing_entry.is_edited = payload.get('is_edited', existing_entry.is_edited)
@@ -57,7 +61,7 @@ def process_federated_public_post(payload: dict) -> dict:
         description=payload.get('description', ''),
         content_type=content_type,
         visibility=visibility,
-        image_url=payload.get('image_url', ''),
+        image_url=image_url,
         is_local=False,
         web=payload.get('web', ''),
         published=parse_datetime(payload.get('published')) if payload.get('published') else timezone.now(),
@@ -133,7 +137,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
 
     print(payload)
     typ = (payload.get('type') or '').lower()
-    print(typ)
     object_fqid = payload.get('id') or payload.get('object')
 
     InboxItem.objects.create(recipient=recipient, type=typ, object_fqid=object_fqid or '', payload=payload, received_at=timezone.now())
@@ -150,20 +153,17 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
             return {'status': 'error', 'error': 'missing_entry'}
 
         normalized_entry_fqid = entry_fqid
-        print("here1")
 
         if "/authors/" in entry_fqid and "/api/authors/" not in entry_fqid:
             # If so, replace the first instance of '/authors/' with '/api/authors/'
             normalized_entry_fqid = entry_fqid.replace("/authors/", "/api/authors/", 1).rstrip('/')
 
         try:
-            print(normalized_entry_fqid)
             entry = Entry.objects.get(fqid=normalized_entry_fqid)
         except Entry.DoesNotExist:
             return {'status': 'error', 'error': 'entry_not_found'}
-        print("here2")
         # Ensure comment has an fqid
-        comment_fqid = payload.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
+        comment_fqid = payload.get('id') or f"{author.id}/commented/{uuid.uuid4()}" or f"{entry.fqid}#comment-{timezone.now().timestamp()}"
 
         # Handle duplicate
         existing = Comment.objects.filter(fqid=comment_fqid).first()
@@ -200,7 +200,6 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         return {'status': 'created', 'object': comment}
 
     if typ == 'like':
-        print(payload)
         direction = payload.get('direction')
         object_fqid = payload.get('object_fqid') or payload.get('object')
         if not object_fqid:
@@ -224,7 +223,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                     return {'status': 'exists', 'object': existing}
             
             like = Like.objects.create(
-                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}",
                 author=author,
                 object_fqid=object_fqid,
                 published=payload.get('published') or timezone.now(),
@@ -257,7 +256,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 return {'status': 'exists', 'object': existing}
 
             like = Like.objects.create(
-                fqid=payload.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+                fqid=payload.get('id') or f"{author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}",
                 author=author,
                 object_fqid=object_fqid,
                 published=payload.get('published') or timezone.now(),
@@ -314,6 +313,8 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
         fqid = payload.get('fqid') or payload.get('id')
         if not fqid:
             return {'status': 'error', 'error': 'missing_fqid'}
+
+        image_url = (payload.get("image_url") or (payload.get("image") or {}).get("url") or "")
      
         # Update or create the entry
         entry, created = Entry.objects.update_or_create(
@@ -326,7 +327,7 @@ def process_inbox_for(recipient_serial: str, payload: dict) -> dict:
                 "description": payload.get('description', ''),
                 "content_type": payload.get('contentType') or payload.get('content_type', Entry.ContentType.MARKDOWN),
                 "visibility": payload.get('visibility', Entry.Visibility.PUBLIC),
-                "image_url": payload.get('image_url') or (payload.get('image', {}).get('url')) or '',
+                "image_url": image_url,
                 "web": payload.get('web', ''),
                 "published": payload.get('published') or timezone.now(),
                 "is_local": False,

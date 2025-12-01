@@ -11,6 +11,7 @@ from django.utils import timezone
 from .utils import resolve_author_from_request
 from authors.models import Author
 from django.forms.models import model_to_dict
+import uuid
 
 
 
@@ -21,6 +22,7 @@ class SmallPage(PageNumberPagination):
 class EntryCommentsViewSet(viewsets.ViewSet):
     pagination_class = SmallPage
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def _resolve_entry(self, author_serial=None, entry_serial=None, entry_fqid=None):
         if entry_fqid:
@@ -55,7 +57,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         published = data.get('published') or timezone.now()
 
         comment = Comment.objects.create(
-            fqid=fqid or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+            fqid=fqid or f"{req_author.id}/commented/{uuid.uuid4()}" or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
             author=req_author,
             entry=entry,
             content=content or '',
@@ -78,6 +80,8 @@ class EntryCommentsViewSet(viewsets.ViewSet):
 
 class EntryLikesViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
+    
     def _resolve_entry(self, author_serial=None, entry_serial=None, entry_fqid=None):
         if entry_fqid:
             return get_object_or_404(Entry, fqid=entry_fqid)
@@ -114,7 +118,7 @@ class EntryLikesViewSet(viewsets.ViewSet):
                 serializer = LikeSerializer(existing)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-        liked_fqid = request.data.get('id') or f"{entry.fqid}#like-{timezone.now().timestamp()}"
+        liked_fqid = request.data.get('id') or f"{req_author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}"
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=entry.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
 
@@ -132,6 +136,7 @@ class EntryLikesViewSet(viewsets.ViewSet):
 
 class CommentLikesViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
     def _resolve_comment(self, author_serial=None, entry_serial=None, entry_fqid=None, comment_fqid=None):
         return get_object_or_404(Comment, fqid=comment_fqid)
 
@@ -168,7 +173,7 @@ class CommentLikesViewSet(viewsets.ViewSet):
                 serializer = LikeSerializer(existing)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-        liked_fqid = request.data.get('id') or f"{comment.fqid}#like-{timezone.now().timestamp()}"
+        liked_fqid = request.data.get('id') or f"{req_author.id}/liked/{uuid.uuid4()}" or f"{object_fqid}#like-{timezone.now().timestamp()}"
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=comment.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
