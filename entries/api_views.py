@@ -57,7 +57,7 @@ class EntryCommentsViewSet(viewsets.ViewSet):
         published = data.get('published') or timezone.now()
 
         comment = Comment.objects.create(
-            fqid=fqid or f"{entry.fqid}/commented/{uuid.uuid4()}",
+            fqid=fqid or f"{req_author.id}/commented/{uuid.uuid4()}",
             author=req_author,
             entry=entry,
             content=content or '',
@@ -118,7 +118,7 @@ class EntryLikesViewSet(viewsets.ViewSet):
                 serializer = LikeSerializer(existing)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-        liked_fqid = request.data.get('id') or f"{entry.fqid}/liked/{uuid.uuid4()}"
+        liked_fqid = request.data.get('id') or f"{req_author.id}/liked/{uuid.uuid4()}"
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=entry.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
 
@@ -173,7 +173,7 @@ class CommentLikesViewSet(viewsets.ViewSet):
                 serializer = LikeSerializer(existing)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-        liked_fqid = request.data.get('id') or f"{comment.fqid}/liked/{uuid.uuid4()}"
+        liked_fqid = request.data.get('id') or f"{req_author.id}/liked/{uuid.uuid4()}"
         like = Like.objects.create(fqid=liked_fqid, author=req_author, object_fqid=comment.fqid, published=timezone.now())
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
