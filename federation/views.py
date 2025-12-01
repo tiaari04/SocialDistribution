@@ -174,7 +174,7 @@ def newLike(request): # works for entry likes and comment likes
             return JsonResponse({'status': 'exists', 'object': data.get('fqid')}, status=200)
 
     like = Like.objects.create(
-        fqid=data.get('id') or f"{object_fqid}#like-{timezone.now().timestamp()}",
+        fqid=data.get('id') or f"{object_fqid}/liked/{uuid.uuid4()}",
         author=author,
         object_fqid=object_fqid,
         published=data.get('published'),
@@ -208,7 +208,7 @@ def newComment(request):
         return {'status': 'error', 'error': 'entry_not_found'}
 
     comment = Comment.objects.create(
-        fqid=data.get('id') or f"{entry.fqid}#comment-{timezone.now().timestamp()}",
+        fqid=data.get('id') or f"{entry.fqid}/commented/{uuid.uuid4()}",
         author=author,
         entry=entry,
         content=data.get('comment') or data.get('content') or '',
