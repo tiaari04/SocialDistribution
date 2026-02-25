@@ -5,7 +5,7 @@ See [the web page](https://uofa-cmput404.github.io/general/project.html) for a d
 
 ## Live Demo
 https://cmput404-project-red-tiandra-994713c1815d.herokuapp.com/<br>
-Username: github_user123<br>
+Username: github_user<br>
 Password: iamauser123
 
 ## Team Members
